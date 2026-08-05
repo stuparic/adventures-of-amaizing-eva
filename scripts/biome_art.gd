@@ -75,14 +75,18 @@ static func draw_island(parent: Node2D, biome: String, center: Vector2,
 	# Tamniji donji deo tla - daje osecaj zapremine.
 	_half_ring(parent, center, shape, 0.97, pal["ground2"])
 
+	# Gustina prati POVRSINU ostrva: na 700x470 treba ~4x vise nego na
+	# 350x230. Referenca je 300x190 (originalna velicina).
+	var density := clampf((size.x * size.y) / (300.0 * 190.0), 0.5, 5.0)
+
 	# Vegetacija i detalji po biomu.
 	match biome:
-		"livada":   _decor_livada(parent, center, size, pal, rng)
-		"plaza":    _decor_plaza(parent, center, size, pal, rng)
-		"dzungla":  _decor_dzungla(parent, center, size, pal, rng)
-		"pustinja": _decor_pustinja(parent, center, size, pal, rng)
-		"sneg":     _decor_sneg(parent, center, size, pal, rng)
-		"vulkan":   _decor_vulkan(parent, center, size, pal, rng)
+		"livada":   _decor_livada(parent, center, size, pal, rng, density)
+		"plaza":    _decor_plaza(parent, center, size, pal, rng, density)
+		"dzungla":  _decor_dzungla(parent, center, size, pal, rng, density)
+		"pustinja": _decor_pustinja(parent, center, size, pal, rng, density)
+		"sneg":     _decor_sneg(parent, center, size, pal, rng, density)
+		"vulkan":   _decor_vulkan(parent, center, size, pal, rng, density)
 
 
 ## Nepravilan zatvoren oblik: jedinicni radijusi sa "wobble"-om.
@@ -126,25 +130,29 @@ static func size_hint(shape: Array[Vector2]) -> float:
 
 ## Livada: listopadno drvece, cvetici, jezerce.
 static func _decor_livada(parent: Node2D, c: Vector2, size: Vector2,
-		pal: Dictionary, rng: RandomNumberGenerator) -> void:
-	_lake(parent, c + Vector2(size.x * 0.18, size.y * 0.2), size.x * 0.17, rng)
-	for i in 7:
-		var p := _spot(c, size, rng, 0.66)
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	var lake_c := c + Vector2(size.x * 0.18, size.y * 0.2)
+	var lake_r := size.x * 0.17
+	_lake(parent, lake_c, lake_r, rng)
+
+	# Drvece i cvetici izbegavaju jezero - inace "rastu" iz vode.
+	for i in int(7 * dens):
+		var p := _spot_avoiding(c, size, rng, 0.66, lake_c, lake_r * 1.25)
 		_tree_round(parent, p, rng.randf_range(0.8, 1.15),
 			Color(0.28, 0.55, 0.3), Color(0.42, 0.7, 0.38), rng)
-	for i in 12:
-		var p := _spot(c, size, rng, 0.78)
+	for i in int(12 * dens):
+		var p := _spot_avoiding(c, size, rng, 0.78, lake_c, lake_r * 1.1)
 		_flower(parent, p, rng)
 
 
 ## Plaza: palme, suncobrani-oblici, skoljke, mnogo peska.
 static func _decor_plaza(parent: Node2D, c: Vector2, size: Vector2,
-		pal: Dictionary, rng: RandomNumberGenerator) -> void:
-	for i in 5:
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	for i in int(5 * dens):
 		var p := _spot(c, size, rng, 0.6)
 		_palm(parent, p, rng.randf_range(0.85, 1.2), rng)
 	# Skoljke i kamencici na pesku.
-	for i in 10:
+	for i in int(10 * dens):
 		var p := _spot(c, size, rng, 0.9)
 		_poly(parent, Color(1, 0.94, 0.88, 0.9), _blob_pts(p, rng.randf_range(2.5, 4.5), 7))
 	# Plicak-laguna.
@@ -153,18 +161,18 @@ static func _decor_plaza(parent: Node2D, c: Vector2, size: Vector2,
 
 ## Dzungla: gusto, visoko drvece u tri sloja, lijane, tamno.
 static func _decor_dzungla(parent: Node2D, c: Vector2, size: Vector2,
-		pal: Dictionary, rng: RandomNumberGenerator) -> void:
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
 	# Gusta podloga - tamne mrlje lisca.
-	for i in 14:
+	for i in int(14 * dens):
 		var p := _spot(c, size, rng, 0.85)
 		_poly(parent, Color(0.16, 0.4, 0.2, 0.5),
 			_blob_pts(p, rng.randf_range(9.0, 18.0), 9))
-	for i in 11:
+	for i in int(11 * dens):
 		var p := _spot(c, size, rng, 0.7)
 		_tree_tall(parent, p, rng.randf_range(0.95, 1.4),
 			Color(0.13, 0.36, 0.18), Color(0.24, 0.52, 0.26), rng)
 	# Nekoliko svetlijih krosnji na vrhu.
-	for i in 4:
+	for i in int(4 * dens):
 		var p := _spot(c, size, rng, 0.5)
 		_blob(parent, p + Vector2(0, -22), rng.randf_range(11.0, 16.0),
 			Color(0.32, 0.62, 0.3))
@@ -172,44 +180,44 @@ static func _decor_dzungla(parent: Node2D, c: Vector2, size: Vector2,
 
 ## Pustinja: kaktusi, dine, stene, bez vode.
 static func _decor_pustinja(parent: Node2D, c: Vector2, size: Vector2,
-		pal: Dictionary, rng: RandomNumberGenerator) -> void:
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
 	# Dine - svetle lucne mrlje.
-	for i in 5:
+	for i in int(5 * dens):
 		var p := _spot(c, size, rng, 0.8)
 		var w := rng.randf_range(26.0, 48.0)
 		_poly(parent, Color(0.98, 0.9, 0.66, 0.55), [
 			p + Vector2(-w, 4), p + Vector2(-w * 0.4, -7),
 			p + Vector2(w * 0.5, -5), p + Vector2(w, 5),
 		])
-	for i in 6:
+	for i in int(6 * dens):
 		var p := _spot(c, size, rng, 0.68)
 		_cactus(parent, p, rng.randf_range(0.85, 1.25), rng)
 	# Stene.
-	for i in 5:
+	for i in int(5 * dens):
 		var p := _spot(c, size, rng, 0.82)
 		_rock(parent, p, rng.randf_range(5.0, 11.0), pal["accent"], rng)
 
 
 ## Sneg: jelke, smetovi, zaledjeno jezero, kamen koji vri iz snega.
 static func _decor_sneg(parent: Node2D, c: Vector2, size: Vector2,
-		pal: Dictionary, rng: RandomNumberGenerator) -> void:
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
 	# Zaledjeno jezero.
 	var lp := c + Vector2(size.x * 0.16, size.y * 0.2)
 	_poly(parent, Color(0.7, 0.85, 0.95), _blob_pts(lp, size.x * 0.16, 14))
 	_poly(parent, Color(0.85, 0.93, 0.99, 0.7), _blob_pts(lp, size.x * 0.12, 12))
 
-	for i in 8:
-		var p := _spot(c, size, rng, 0.68)
+	for i in int(8 * dens):
+		var p := _spot_avoiding(c, size, rng, 0.68, lp, size.x * 0.2)
 		_fir(parent, p, rng.randf_range(0.85, 1.3), rng)
 	# Smetovi.
-	for i in 7:
+	for i in int(7 * dens):
 		var p := _spot(c, size, rng, 0.85)
 		_blob(parent, p, rng.randf_range(6.0, 13.0), Color(1, 1, 1, 0.75))
 
 
 ## Vulkan: krater sa lavom, tokovi lave, mrtvo drvo, pepeo.
 static func _decor_vulkan(parent: Node2D, c: Vector2, size: Vector2,
-		pal: Dictionary, rng: RandomNumberGenerator) -> void:
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
 	# Krater u sredini-gore.
 	var kp := c + Vector2(size.x * 0.05, -size.y * 0.16)
 	var kr := size.x * 0.2
@@ -218,11 +226,11 @@ static func _decor_vulkan(parent: Node2D, c: Vector2, size: Vector2,
 	_poly(parent, Color(1, 0.68, 0.2), _blob_pts(kp, kr * 0.34, 10))
 
 	# Tokovi lave koji se spustaju od kratera.
-	for i in 4:
+	for i in int(4 * dens):
 		var ang := TAU * float(i) / 4.0 + rng.randf_range(-0.4, 0.4)
 		var pts: Array[Vector2] = [kp]
 		var cur := kp
-		for step in 5:
+		for step in int(5 * dens):
 			cur += Vector2(cos(ang), sin(ang) * 0.7) * rng.randf_range(14.0, 24.0)
 			ang += rng.randf_range(-0.35, 0.35)
 			pts.append(cur)
@@ -230,15 +238,25 @@ static func _decor_vulkan(parent: Node2D, c: Vector2, size: Vector2,
 		_ribbon(parent, pts, 2.6, Color(1, 0.75, 0.28, 0.9))
 
 	# Mrtvo drvo i stene.
-	for i in 4:
+	for i in int(4 * dens):
 		var p := _spot(c, size, rng, 0.72)
 		_dead_tree(parent, p, rng.randf_range(0.8, 1.15))
-	for i in 6:
+	for i in int(6 * dens):
 		var p := _spot(c, size, rng, 0.82)
 		_rock(parent, p, rng.randf_range(4.0, 9.0), Color(0.2, 0.17, 0.19), rng)
 
 
 # --- POJEDINACNI ELEMENTI ---
+
+## Kao _spot, ali izbegava krug (npr. jezero) - do 12 pokusaja.
+static func _spot_avoiding(c: Vector2, size: Vector2, rng: RandomNumberGenerator,
+		inset: float, avoid_c: Vector2, avoid_r: float) -> Vector2:
+	for t in 12:
+		var p := _spot(c, size, rng, inset)
+		if p.distance_to(avoid_c) > avoid_r:
+			return p
+	return _spot(c, size, rng, inset * 0.5)
+
 
 ## Slucajna tacka unutar ostrva (elipsa, `inset` koliko blize centru).
 static func _spot(c: Vector2, size: Vector2, rng: RandomNumberGenerator,

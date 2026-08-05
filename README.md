@@ -65,9 +65,15 @@ vizualni identitet tog ostrva:
 | Snežne planine | jelke pod snegom, smetovi, zaledjeno jezero |
 | Vatreni vulkan | krater sa lavom, tokovi lave, mrtvo drvo, pepeo |
 
-Izmedju su sitna bezimena ostrvca, a putevi su **morske brazde** — Eva
-putuje brodicem od ostrva do ostrva. Tacka nivoa je na obali, kao
-pristaniste, da se vidi ceo bioma.
+Ostrva su **velika i dominiraju kadrom** — okean je vezni prostor, ne
+glavni sadrzaj. Izmedju je samo nekoliko malih ostrvaca radi flavora.
+
+Putevi su **morske brazde** — Eva putuje brodicem od ostrva do ostrva.
+Tacka nivoa je **bova u vodi** ispred ostrva (sa odsjajem), da ne
+zaklanja bioma.
+
+Gustina vegetacije prati povrsinu ostrva, pa veliko ostrvo nije prazno.
+Drvece i cvetici izbegavaju jezera.
 
 Art se generise kodom u [scripts/biome_art.gd](scripts/biome_art.gd),
 deterministicki (fiksan seed) — mapa je ista pri svakom pokretanju.

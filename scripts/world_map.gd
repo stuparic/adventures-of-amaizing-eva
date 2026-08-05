@@ -137,17 +137,9 @@ func _build_scenery() -> void:
 		var isz: Vector2 = d.get("island_size", Vector2(280, 180))
 		BiomeArt.draw_island(scenery, biome, pos, isz, 1000 + i * 137)
 
-	# Mala bezimena ostrvca izmedju - arhipelag deluje veci.
-	var extra := [
-		Vector2(600, 830), Vector2(1180, 300), Vector2(1800, 420),
-		Vector2(2440, 800), Vector2(3040, 330), Vector2(1080, 900),
-		Vector2(2200, 880), Vector2(3200, 850),
-	]
-	var biomes := ["livada", "plaza", "dzungla", "plaza", "sneg", "livada",
-		"pustinja", "vulkan"]
-	for i in extra.size():
-		var sz := Vector2(rng.randf_range(70.0, 120.0), rng.randf_range(48.0, 80.0))
-		BiomeArt.draw_island(scenery, biomes[i], extra[i], sz, 5000 + i * 97)
+	# Mnogo bezimenih ostrvaca - okean treba da bude PUN, ne prazan.
+	# Bioma svakog prati najblize veliko ostrvo, pa se svet oseca povezano.
+	_scatter_islets(rng)
 
 
 ## Brodic pod Evom - na mapi putuje morem od ostrva do ostrva.
@@ -180,10 +172,50 @@ func _build_boat() -> void:
 	])
 
 
+## Nekoliko malih ostrvaca radi flavora - NE gomila. Glavna ostrva su
+## velika i dominiraju kadrom; ovi su samo detalj u prolazu.
+func _scatter_islets(rng: RandomNumberGenerator) -> void:
+	# Rucno izabrane pozicije u prazninama izmedju velikih ostrva.
+	var spots := [
+		[Vector2(620, 900), "livada", 150.0],
+		[Vector2(1180, 380), "plaza", 130.0],
+		[Vector2(1850, 980), "dzungla", 145.0],
+		[Vector2(2450, 360), "pustinja", 135.0],
+		[Vector2(3050, 1000), "sneg", 140.0],
+		[Vector2(1720, 620), "plaza", 105.0],
+		[Vector2(2980, 640), "vulkan", 115.0],
+	]
+	for i in spots.size():
+		var pos: Vector2 = spots[i][0]
+		var biome: String = spots[i][1]
+		var w: float = spots[i][2]
+		var sz := Vector2(w, w * rng.randf_range(0.6, 0.72))
+		BiomeArt.draw_island(scenery, biome, pos, sz, 5000 + i * 131)
+
 ## Talasi: kratke bele crtice po okeanu, gusce blizu ostrva.
 func _add_ocean_waves(rng: RandomNumberGenerator) -> void:
+	# Jata riba - male tamne tackice u grupama.
+	for school in 8:
+		var cx := rng.randf_range(-300.0, 3450.0)
+		var cy := rng.randf_range(60.0, 1280.0)
+		for f in rng.randi_range(4, 8):
+			var fp := Vector2(cx + rng.randf_range(-22.0, 22.0),
+				cy + rng.randf_range(-12.0, 12.0))
+			_poly(scenery, Color(0.24, 0.42, 0.55, 0.35), [
+				fp + Vector2(-3.4, 0), fp + Vector2(0, -1.7),
+				fp + Vector2(3.4, 0), fp + Vector2(0, 1.7),
+			])
+
+	# Nekoliko dalekih jedrilica - svet je naseljen.
+	for i in 3:
+		var p := Vector2(rng.randf_range(0.0, 3700.0), rng.randf_range(180.0, 1080.0))
+		_poly(scenery, Color(1, 1, 1, 0.5), [
+			p + Vector2(-5, 3), p + Vector2(5, 3), p + Vector2(4, 5), p + Vector2(-4, 5)])
+		_poly(scenery, Color(1, 1, 1, 0.55), [
+			p + Vector2(0.5, -7), p + Vector2(5, 2), p + Vector2(0.5, 2)])
+
 	for i in 90:
-		var p := Vector2(rng.randf_range(-200.0, 3900.0), rng.randf_range(80.0, 1000.0))
+		var p := Vector2(rng.randf_range(-400.0, 3600.0), rng.randf_range(20.0, 1320.0))
 		var w := rng.randf_range(9.0, 20.0)
 		var a := Color(1, 1, 1, rng.randf_range(0.1, 0.24))
 		_poly(scenery, a, [
@@ -340,8 +372,14 @@ func _add_dot(index: int) -> void:
 	add_child(dot)
 	_dots.append(dot)
 
-	var shadow := _circle(DOT_R + 4.0, Color(0.2, 0.25, 0.3, 0.2))
-	shadow.position = Vector2(3, 5)
+	# Odsjaj na vodi ispod bove - tacka "pluta", ne visi u vazduhu.
+	var reflect := _circle(DOT_R * 0.9, Color(1, 1, 1, 0.16))
+	reflect.position = Vector2(0, DOT_R * 0.75)
+	reflect.scale = Vector2(1.1, 0.32)
+	dot.add_child(reflect)
+
+	var shadow := _circle(DOT_R + 4.0, Color(0.15, 0.3, 0.42, 0.28))
+	shadow.position = Vector2(3, 6)
 	dot.add_child(shadow)
 
 	var ring_col := C_ROAD_DONE if done else (Color(1, 1, 1, 0.92) if unlocked and exists else C_LOCKED)
@@ -552,9 +590,12 @@ func _process(delta: float) -> void:
 		target.y += sin(_t * 3.0) * 5.0
 		eva_marker.position = eva_marker.position.lerp(target, delta * 7.0)
 		# Kamera prati izbor - ali ne ako je korisnik sam pomerio mapu.
+		# Cilja ostrvo, ne bovu: bova je u vodi ispod ostrva, pa bi kadar
+		# ispao previse nisko.
 		if not _free_camera:
-			var cam_target: Vector2 = _dots[_selected].position + Vector2(0, -20.0)
-			camera.position = camera.position.lerp(cam_target, delta * 4.0)
+			var d := Game.level_data(_selected)
+			var isl: Vector2 = d.get("island", _dots[_selected].position)
+			camera.position = camera.position.lerp(isl, delta * 4.0)
 
 	for i in _dots.size():
 		var s := 1.0
