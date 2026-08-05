@@ -162,6 +162,37 @@
 			#rotate { display: flex; }
 		}
 
+		/* --- "Zaglavilo se" (stari kes) --- */
+		#stuck {
+			position: fixed;
+			left: 50%;
+			bottom: 18px;
+			transform: translateX(-50%);
+			display: none;
+			flex-direction: column;
+			align-items: center;
+			gap: 9px;
+			padding: 13px 17px;
+			border-radius: 13px;
+			background: rgba(20, 40, 65, .92);
+			color: #fff;
+			font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+			font-size: 13px;
+			text-align: center;
+			z-index: 18;
+		}
+		#stuck.show { display: flex; }
+		#stuck button {
+			border: 0;
+			border-radius: 9px;
+			padding: 9px 20px;
+			background: #ffd93d;
+			color: #33291a;
+			font-size: 14px;
+			font-weight: 700;
+			cursor: pointer;
+		}
+
 		/* --- Poruka o gresci --- */
 		#err {
 			position: fixed;
@@ -214,6 +245,11 @@
 		<p>Igra je lepsa kad je telefon polozen</p>
 	</div>
 
+	<div id="stuck">
+		<p>Ucitavanje traje duze nego obicno.</p>
+		<button id="stuck-btn">Osvezi igru</button>
+	</div>
+
 	<div id="err">
 		<h2>Igra ne moze da se pokrene</h2>
 		<code id="err-msg"></code>
@@ -247,6 +283,8 @@
 				}
 			},
 		}).then(function () {
+			loaded = true;
+			stuckBox.classList.remove('show');
 			fill.style.width = '100%';
 			boot.classList.add('done');
 			setTimeout(() => boot.remove(), 500);
@@ -257,12 +295,62 @@
 		});
 
 		// Service worker - Chrome zahteva registrovan SW za "instaliraj" opciju.
+		//
+		// VAZNO: SW kesira index.html/js/wasm/pck. Bez logike ispod, nova
+		// verzija igre se ne bi videla dok korisnik ne zatvori SVE tabove -
+		// izgledalo bi kao da deploy nije prosao.
 		if ('serviceWorker' in navigator) {
 			window.addEventListener('load', function () {
 				navigator.serviceWorker.register('index.service.worker.js')
+					.then(function (reg) {
+						// Godotov SW ocekuje OBICAN STRING, ne objekt:
+						//   'update' -> skipWaiting + claim + navigate (osvezi)
+						//   'claim'  -> samo preuzmi kontrolu
+						//   'clear'  -> obrisi kes
+						// (proverено u index.service.worker.js)
+						function applyUpdate() {
+							if (reg.waiting) reg.waiting.postMessage('update');
+						}
+
+						reg.update().catch(function () {});
+						applyUpdate();   // ako SW ceka od ranije
+
+						reg.addEventListener('updatefound', function () {
+							var sw = reg.installing;
+							if (!sw) return;
+							sw.addEventListener('statechange', function () {
+								if (sw.state === 'installed') applyUpdate();
+							});
+						});
+
+						// Dete drzi igru otvorenu dugo - proveravaj periodicno.
+						setInterval(function () { reg.update().catch(function () {}); }, 60000);
+					})
 					.catch(function () { /* PWA nije kriticna - igra radi i bez nje */ });
 			});
 		}
+
+		// Ako se igra ne ucita na vreme, verovatno je zaglavljen stari kes.
+		// Dugme brise kes + SW i reloaduje - resenje bez "obrisi podatke sajta".
+		var loaded = false;
+		var stuckBox = document.getElementById('stuck');
+		setTimeout(function () {
+			if (!loaded) stuckBox.classList.add('show');
+		}, 25000);
+
+		document.getElementById('stuck-btn').addEventListener('click', async function () {
+			try {
+				if (window.caches) {
+					var keys = await caches.keys();
+					await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+				}
+				if (navigator.serviceWorker) {
+					var regs = await navigator.serviceWorker.getRegistrations();
+					await Promise.all(regs.map(function (r) { return r.unregister(); }));
+				}
+			} catch (e) { /* i bez ovoga probaj reload */ }
+			window.location.reload();
+		});
 
 		// --- Skrivanje browser trake ---
 		//
