@@ -77,6 +77,21 @@ To je sve — mapa, put, otkljucavanje i statistika rade sami. Nivo bez
 
 Pozicije tacaka na mapi su `map_pos` u istoj tabeli.
 
+## Pauza kad se prozor sakrije
+
+Kad prebacis aplikaciju, minimizujes prozor ili zakljucas telefon:
+igra se **pauzira** i zvuk se **utisa** (meko, 0.12s). Kad se vratis,
+nastavlja gde je stala i zvuk se vraca.
+
+Bitno na telefonu — Eva ne moze da padne u rupu dok se ne gleda.
+
+Radi preko dva odvojena signala, jer nijedan sam nije dovoljan:
+- `NOTIFICATION_APPLICATION_FOCUS_OUT` — desktop
+- `document.visibilitychange` (+ `pagehide`/`blur`) — telefon, gde Godot
+  cesto ne dobije focus event pri prebacivanju aplikacije
+
+Kod: [autoload/pause_manager.gd](autoload/pause_manager.gd)
+
 ## Kontrole
 
 | Akcija | Tasteri |

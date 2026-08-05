@@ -24,6 +24,7 @@ config/icon="res://icon.svg"
 
 Game="*res://autoload/game.gd"
 Audio="*res://autoload/audio.gd"
+PauseMgr="*res://autoload/pause_manager.gd"
 
 [display]
 
