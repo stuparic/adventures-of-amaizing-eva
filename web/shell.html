@@ -36,6 +36,11 @@
 			display: block;
 			border: 0;
 			outline: none;
+			/* KLJUCNO: bez ovoga browser preuzima skrol/pinch na canvasu
+			   pre Godota, pa zumiranje u igri ne radi. body{touch-action}
+			   se NE nasledjuje na canvas - mora eksplicitno. */
+			touch-action: none;
+			-ms-touch-action: none;
 		}
 		#canvas:focus { outline: none; }
 
@@ -80,6 +85,41 @@
 		}
 
 		#boot p { font-size: clamp(13px, 3.4vw, 16px); opacity: .85; }
+
+		/* --- Kontrole mape (HTML, ne Godot UI) ---
+		   Rade preko window.evaZoomIn/Out/Home koje registruje world_map.gd.
+		   Ne zavise od Godotovog input sistema, koji na webu nije pouzdan
+		   za skrol i pinch. --- */
+		#mapctl {
+			position: fixed;
+			right: 12px;
+			top: 50%;
+			transform: translateY(-50%);
+			display: none;
+			flex-direction: column;
+			gap: 9px;
+			z-index: 14;
+		}
+		#mapctl.show { display: flex; }
+		#mapctl button {
+			width: 54px;
+			height: 54px;
+			border: 3px solid rgba(255, 255, 255, .9);
+			border-radius: 15px;
+			background: rgba(30, 55, 85, .82);
+			color: #fff;
+			font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+			font-size: 24px;
+			font-weight: 700;
+			cursor: pointer;
+			-webkit-tap-highlight-color: transparent;
+			box-shadow: 0 3px 10px rgba(0, 0, 0, .28);
+		}
+		#mapctl button:active {
+			background: rgba(60, 100, 150, .95);
+			transform: scale(.94);
+		}
+		#mz-home { font-size: 15px !important; }
 
 		/* --- "Dodaj na pocetni ekran" (samo u browseru na telefonu) --- */
 		#install {
@@ -229,6 +269,12 @@
 		<p id="boot-msg">Ucitavanje...</p>
 	</div>
 
+	<div id="mapctl">
+		<button id="mz-in"  aria-label="Zumiraj">+</button>
+		<button id="mz-home" aria-label="Nazad na Evu">Eva</button>
+		<button id="mz-out" aria-label="Odzumiraj">&#8722;</button>
+	</div>
+
 	<div id="install">
 		<button id="install-x" aria-label="Zatvori">×</button>
 		<div class="txt">
@@ -351,6 +397,98 @@
 			} catch (e) { /* i bez ovoga probaj reload */ }
 			window.location.reload();
 		});
+
+		// --- Kontrole mape ---
+		// Prikazi ih tek kad igra registruje svoj API (znaci mapa je aktivna).
+		var mapctl = document.getElementById('mapctl');
+		function bindMapCtl() {
+			var pairs = [['mz-in', 'evaZoomIn'], ['mz-out', 'evaZoomOut'], ['mz-home', 'evaHome']];
+			pairs.forEach(function (pair) {
+				var el = document.getElementById(pair[0]);
+				var fn = pair[1];
+				['click', 'touchend'].forEach(function (t) {
+					el.addEventListener(t, function (e) {
+						e.preventDefault();
+						e.stopPropagation();
+						if (typeof window[fn] === 'function') window[fn]();
+					}, { passive: false });
+				});
+			});
+		}
+		bindMapCtl();
+
+		// Igra registruje evaZoomIn tek kad se mapa ucita - proveravaj.
+		setInterval(function () {
+			var live = typeof window.evaZoomIn === 'function';
+			mapctl.classList.toggle('show', live);
+		}, 500);
+
+		// Skrol misa/trackpada -> zum igre. Godotov PanGesture na webu je
+		// nepouzdan, pa presrecemo wheel sami.
+		canvas.addEventListener('wheel', function (e) {
+			e.preventDefault();
+			if (typeof window.evaZoomIn !== 'function') return;
+			if (e.deltaY > 0) window.evaZoomOut();
+			else window.evaZoomIn();
+		}, { passive: false });
+
+		// --- Pomeranje mape prevlacenjem (mis i prst) ---
+		// Ide preko window.evaPan koji igra cita svaki frejm. Godotov
+		// drag input na webu je nepouzdan, pa ovo radimo sami.
+		var panning = false, panLast = null, panMoved = 0;
+
+		function panStart(x, y) { panning = true; panLast = {x: x, y: y}; panMoved = 0; }
+		function panMove(x, y) {
+			if (!panning || !panLast) return;
+			var dx = x - panLast.x, dy = y - panLast.y;
+			panMoved += Math.abs(dx) + Math.abs(dy);
+			panLast = {x: x, y: y};
+			if (typeof window.evaPan === 'function') window.evaPan(dx, dy);
+		}
+		function panEnd() { panning = false; panLast = null; }
+
+		canvas.addEventListener('pointerdown', function (e) {
+			if (typeof window.evaPan !== 'function') return;   // nije mapa
+			panStart(e.clientX, e.clientY);
+		});
+		canvas.addEventListener('pointermove', function (e) {
+			if (!panning) return;
+			panMove(e.clientX, e.clientY);
+		});
+		['pointerup', 'pointercancel', 'pointerleave'].forEach(function (t) {
+			canvas.addEventListener(t, panEnd);
+		});
+
+		// Dva prsta = pinch zum.
+		var pinchDist = 0;
+		canvas.addEventListener('touchmove', function (e) {
+			if (e.touches.length !== 2) return;
+			e.preventDefault();
+            panEnd();
+			var dx = e.touches[0].clientX - e.touches[1].clientX;
+			var dy = e.touches[0].clientY - e.touches[1].clientY;
+			var d = Math.hypot(dx, dy);
+			if (pinchDist > 0 && typeof window.evaZoomIn === 'function') {
+				var diff = d - pinchDist;
+				if (Math.abs(diff) > 12) {
+					if (diff > 0) window.evaZoomIn(); else window.evaZoomOut();
+					pinchDist = d;
+				}
+			} else {
+				pinchDist = d;
+			}
+		}, { passive: false });
+		canvas.addEventListener('touchend', function () { pinchDist = 0; });
+
+		// Blokiraj browserov skrol/pinch na canvasu - inace on preuzme
+		// gest i Godot ga nikad ne vidi. passive:false je obavezno da
+		// preventDefault() radi.
+		['wheel', 'gesturestart', 'gesturechange', 'gestureend'].forEach(function (t) {
+			canvas.addEventListener(t, function (e) { e.preventDefault(); },
+				{ passive: false });
+		});
+		// Dupli tap na iOS-u zumira stranicu - blokiraj i to.
+		document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
 
 		// --- Skrivanje browser trake ---
 		//

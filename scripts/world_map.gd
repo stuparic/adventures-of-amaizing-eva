@@ -27,8 +27,8 @@ const C_TEXT := Color(0.22, 0.3, 0.42)
 const StarIcon := preload("res://scenes/hud_star.tscn")
 
 ## Granice zuma. MANJI broj = vidi se VISE mape.
-const ZOOM_MIN := 0.4
-const ZOOM_MAX := 1.4
+const ZOOM_MIN := 0.18
+const ZOOM_MAX := 1.5
 const ZOOM_STEP := 0.12
 
 @onready var camera: Camera2D = $Camera
@@ -49,6 +49,8 @@ var _touches: Dictionary = {}
 var _pinch_start_dist := 0.0
 var _pinch_start_zoom := 1.0
 var _zoom_initialized := false
+var _is_web := OS.has_feature("web")
+
 
 ## Pomeranje mape prevlacenjem (drag). Kad korisnik pomeri mapu, kamera
 ## prestaje da prati izabranu tacku dok ne izabere drugu.
@@ -68,6 +70,12 @@ func _ready() -> void:
 	# tastature ili pinch gesta (koji se razlikuju po platformi).
 	($UI/ZoomBox/In as Button).pressed.connect(func() -> void: _zoom_by(ZOOM_STEP * 1.6))
 	($UI/ZoomBox/Out as Button).pressed.connect(func() -> void: _zoom_by(-ZOOM_STEP * 1.6))
+	# Web: izlozi zum HTML dugmadima iz shell.html preko JavaScriptBridge.
+	# Godotov input na webu nije pouzdan za skrol/pinch, pa HTML dugmad
+	# pozivaju ovo direktno.
+	if OS.has_feature("web"):
+		_expose_web_api()
+
 	($UI/ZoomBox/Home as Button).pressed.connect(func() -> void:
 		# Vrati kameru na izabranu tacku (ako je mapa odvucena).
 		_free_camera = false
@@ -103,7 +111,7 @@ func _fit_zoom() -> void:
 		# Prvi frejm na webu moze da vrati 0 - probaj iz viewporta.
 		short_side = minf(get_viewport().get_visible_rect().size.x,
 			get_viewport().get_visible_rect().size.y)
-	_target_zoom = 0.5 if short_side < 500.0 else 0.62
+	_target_zoom = 0.42 if short_side < 500.0 else 0.5
 	_zoom = _target_zoom
 	camera.zoom = Vector2(_zoom, _zoom)
 
@@ -497,6 +505,9 @@ func _poly_pts(parent: Node, col: Color, points: PackedVector2Array) -> void:
 func _process(delta: float) -> void:
 	_t += delta
 
+	if _is_web:
+		_poll_web_commands()
+
 	# Glatko zumiranje.
 	_zoom = lerpf(_zoom, _target_zoom, delta * 8.0)
 	camera.zoom = Vector2(_zoom, _zoom)
@@ -619,6 +630,40 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("jump") \
 			or (event is InputEventKey and event.pressed and event.keycode == KEY_ENTER):
 		_enter_level()
+
+
+## Web: napravi "postansko sanduce" u JS-u koje igra cita svaki frejm.
+##
+## create_callback() NE radi ovde - registruje funkciju u window, ali se
+## GDScript telo nikad ne izvrsi (potvrdjeno logovanjem). Zato HTML dugmad
+## samo upisuju broj u window.evaCmd, a _poll_web_commands() ga cita.
+func _expose_web_api() -> void:
+	JavaScriptBridge.eval("""
+		window.evaCmd = 0;
+		window.evaZoomIn  = function () { window.evaCmd = 1; };
+		window.evaZoomOut = function () { window.evaCmd = 2; };
+		window.evaHome    = function () { window.evaCmd = 3; };
+		window.evaPan     = function (dx, dy) {
+			window.evaPanX = (window.evaPanX || 0) + dx;
+			window.evaPanY = (window.evaPanY || 0) + dy;
+		};
+	""", true)
+
+
+## Procitaj i izvrsi komandu iz JS-a. Zove se iz _process (samo web).
+func _poll_web_commands() -> void:
+	var cmd: int = int(JavaScriptBridge.eval("var c = window.evaCmd || 0; window.evaCmd = 0; c;", true))
+	match cmd:
+		1: _zoom_by(ZOOM_STEP * 1.6)
+		2: _zoom_by(-ZOOM_STEP * 1.6)
+		3: _free_camera = false
+
+	# Pomeranje mape prevlacenjem preko JS-a (mis i prst).
+	var px: float = float(JavaScriptBridge.eval("var x = window.evaPanX || 0; window.evaPanX = 0; x;", true))
+	var py: float = float(JavaScriptBridge.eval("var y = window.evaPanY || 0; window.evaPanY = 0; y;", true))
+	if absf(px) > 0.01 or absf(py) > 0.01:
+		camera.position -= Vector2(px, py) / _zoom
+		_free_camera = true
 
 
 func _zoom_by(delta_zoom: float) -> void:
