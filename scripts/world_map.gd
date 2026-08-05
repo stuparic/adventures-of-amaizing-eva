@@ -50,6 +50,12 @@ var _pinch_start_dist := 0.0
 var _pinch_start_zoom := 1.0
 var _zoom_initialized := false
 
+## Pomeranje mape prevlacenjem (drag). Kad korisnik pomeri mapu, kamera
+## prestaje da prati izabranu tacku dok ne izabere drugu.
+var _dragging := false
+var _drag_last := Vector2.ZERO
+var _free_camera := false
+
 
 func _ready() -> void:
 	_selected = _first_playable()
@@ -62,6 +68,11 @@ func _ready() -> void:
 	# tastature ili pinch gesta (koji se razlikuju po platformi).
 	($UI/ZoomBox/In as Button).pressed.connect(func() -> void: _zoom_by(ZOOM_STEP * 1.6))
 	($UI/ZoomBox/Out as Button).pressed.connect(func() -> void: _zoom_by(-ZOOM_STEP * 1.6))
+	($UI/ZoomBox/Home as Button).pressed.connect(func() -> void:
+		# Vrati kameru na izabranu tacku (ako je mapa odvucena).
+		_free_camera = false
+		Audio.play("checkpoint")
+	)
 
 	Audio.play_music()
 
@@ -356,6 +367,7 @@ func _add_dot(index: int) -> void:
 			_enter_level()
 		else:
 			_selected = index
+			_free_camera = false
 			_update_selection()
 			Audio.play("checkpoint")
 	)
@@ -493,9 +505,10 @@ func _process(delta: float) -> void:
 		var target: Vector2 = _dots[_selected].position + Vector2(0, -DOT_R - 30.0)
 		target.y += sin(_t * 3.0) * 5.0
 		eva_marker.position = eva_marker.position.lerp(target, delta * 7.0)
-		# Kamera glatko prati izbor.
-		var cam_target: Vector2 = _dots[_selected].position + Vector2(0, -20.0)
-		camera.position = camera.position.lerp(cam_target, delta * 4.0)
+		# Kamera prati izbor - ali ne ako je korisnik sam pomerio mapu.
+		if not _free_camera:
+			var cam_target: Vector2 = _dots[_selected].position + Vector2(0, -20.0)
+			camera.position = camera.position.lerp(cam_target, delta * 4.0)
 
 	for i in _dots.size():
 		var s := 1.0
@@ -518,6 +531,26 @@ func _input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			_zoom_by(-ZOOM_STEP)
 			return
+
+	# --- POMERANJE MAPE: prevlacenje misem ---
+	if event is InputEventMouseButton and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+		var mb := event as InputEventMouseButton
+		if mb.pressed:
+			_dragging = true
+			_drag_last = mb.position
+		else:
+			_dragging = false
+		# NE vracaj - klik mora da stigne i do dugmadi na tackama.
+
+	if event is InputEventMouseMotion and _dragging:
+		var mm := event as InputEventMouseMotion
+		# Deli sa zumom: pomeraj u svetu, ne u pikselima ekrana.
+		var d: Vector2 = (mm.position - _drag_last) / _zoom
+		if d.length() > 0.5:
+			camera.position -= d
+			_drag_last = mm.position
+			_free_camera = true
+		return
 
 	# Na WEBU skrol dolazi kao pan gesture, ne kao WHEEL_UP/DOWN.
 	if event is InputEventPanGesture:
@@ -548,7 +581,18 @@ func _input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventScreenDrag:
-		_touches[event.index] = event.position
+		var dg := event as InputEventScreenDrag
+		# Jedan prst = pomeranje mape. Dva prsta = zum (ispod).
+		if _touches.size() <= 1:
+			var prev: Vector2 = _touches.get(dg.index, dg.position)
+			var d: Vector2 = (dg.position - prev) / _zoom
+			if d.length() > 0.5:
+				camera.position -= d
+				_free_camera = true
+			_touches[dg.index] = dg.position
+			return
+
+		_touches[dg.index] = dg.position
 		if _touches.size() >= 2:
 			var keys := _touches.keys()
 			var p0: Vector2 = _touches[keys[0]]
@@ -586,6 +630,7 @@ func _move_selection(step: int) -> void:
 	if next == _selected:
 		return
 	_selected = next
+	_free_camera = false   # opet prati izbor
 	_update_selection()
 	Audio.play("checkpoint")
 

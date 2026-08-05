@@ -53,6 +53,18 @@ zatvorene tacke sa oznakom "uskoro".
 Nivo se otkljucava kad zavrsis prethodni. Napredak i najbolji rezultat
 (zvezdice + vreme) se cuvaju, pa prezive zatvaranje browsera.
 
+Putevi su krivudavi (Bezier krive), a mapa ima reku, jezera i drvece.
+
+**Kretanje po mapi:**
+
+| Akcija | Kako |
+|---|---|
+| Izaberi nivo | strelice, ili klik/dodir na tacku |
+| Udji u nivo | SPACE, ili ponovni klik na izabranu tacku |
+| Zumiraj | dugmad **+** / **−** dole desno, skrol misa, tasteri +/−, pinch |
+| Pomeri mapu | prevuci misem ili prstom |
+| Vrati kameru | dugme **Eva** dole desno |
+
 ### Kako da dodas nov nivo
 
 1. Napravi scenu, npr. `scenes/level_plaza.tscn` (kopiraj `main.tscn` i
