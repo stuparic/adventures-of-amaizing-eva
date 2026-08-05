@@ -15,6 +15,8 @@ const C_ROAD_DONE := Color(0.98, 0.85, 0.35)
 const C_LOCKED := Color(0.62, 0.62, 0.66)
 const C_TEXT := Color(0.22, 0.3, 0.42)
 
+const StarIcon := preload("res://scenes/hud_star.tscn")
+
 @onready var camera: Camera2D = $Camera
 @onready var title: Label = $UI/Title
 @onready var info: Label = $UI/Info
@@ -131,12 +133,16 @@ func _add_dot(index: int) -> void:
 	# nema, prikazuju se kao prazne kockice. Katanac crtam poligonima.
 	if not (exists and unlocked):
 		_add_lock(dot)
+	elif done:
+		# ★ kao znak ne postoji u web fontu - crtaj poligon.
+		var st := StarIcon.instantiate() as Node2D
+		st.scale = Vector2(1.15, 1.15)
+		dot.add_child(st)
 	else:
 		var mark := Label.new()
-		mark.text = "★" if done else str(index + 1)
-		mark.add_theme_font_size_override("font_size", 30 if done else 26)
-		mark.add_theme_color_override("font_color",
-			Color(0.95, 0.72, 0.1) if done else C_TEXT)
+		mark.text = str(index + 1)
+		mark.add_theme_font_size_override("font_size", 26)
+		mark.add_theme_color_override("font_color", C_TEXT)
 		mark.add_theme_constant_override("outline_size", 5)
 		mark.add_theme_color_override("font_outline_color", Color(1, 1, 1, 0.8))
 		mark.size = Vector2(DOT_R * 2, DOT_R * 2)
@@ -278,7 +284,7 @@ func _update_selection() -> void:
 		if b.is_empty():
 			info.text = "SPACE ili dodir = igraj"
 		else:
-			info.text = "Najbolje: ★ %d   vreme %d:%02d" % [
+			info.text = "Najbolje: %d zvezdica   vreme %d:%02d" % [
 				int(b.get("stars", 0)),
 				int(b.get("time", 0.0)) / 60,
 				int(b.get("time", 0.0)) % 60,
