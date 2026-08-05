@@ -58,46 +58,71 @@ const ISLANDS: Array[Dictionary] = [
 ## Nivoi na RAZLICITIM ostrvima spajaju se MORSKIM putem (brodicem).
 ##
 ## Kad napravis nov nivo: upisi `scene`. Prazan `scene` = "uskoro".
+## NIVOI. `island` je id ostrva; `pos` je pozicija tacke.
+## `kind` odredjuje TIP nivoa:
+##   "platform"  - skakanje, kao klasicni Mario
+##   "dots"      - spoji tacke po brojevima
+##   "color"     - bojenje slike
+##   "dress"     - obuci lutku
+##   "match"     - spoji parove
+##   "count"     - prebroj i izaberi
+##
+## Nivoi na ISTOM ostrvu spajaju se KOPNENIM putem (Eva ide peske).
+## Nivoi na RAZLICITIM ostrvima spajaju se MORSKIM putem (brodicem).
 const LEVELS: Array[Dictionary] = [
-	# --- Zelena livada: 3 nivoa ---
-	{"id": "livada_1", "name": "Prvi koraci", "scene": "res://scenes/main.tscn",
-	 "island": "livada", "pos": Vector2(140, 640)},
-	{"id": "livada_2", "name": "Preko potoka", "scene": "",
-	 "island": "livada", "pos": Vector2(380, 810)},
+	# --- Zelena livada ---
+	{"id": "livada_1", "name": "Prvi koraci", "scene": "res://scenes/levels/livada_1.tscn",
+	 "island": "livada", "pos": Vector2(140, 640), "kind": "platform",
+	 "friend": "maca"},
+	{"id": "livada_2", "name": "Spoji zvezdice", "scene": "res://scenes/levels/livada_2.tscn",
+	 "island": "livada", "pos": Vector2(380, 810), "kind": "dots",
+	 "friend": "zeka"},
 	{"id": "livada_3", "name": "Kroz šumu", "scene": "",
-	 "island": "livada", "pos": Vector2(600, 620)},
+	 "island": "livada", "pos": Vector2(600, 620), "kind": "platform",
+	 "friend": "veverica"},
 
-	# --- Sunčana plaža: 2 nivoa ---
-	{"id": "plaza_1", "name": "Peščana staza", "scene": "",
-	 "island": "plaza", "pos": Vector2(990, 260)},
+	# --- Sunčana plaža ---
+	{"id": "plaza_1", "name": "Oboji školjku", "scene": "",
+	 "island": "plaza", "pos": Vector2(990, 260), "kind": "color",
+	 "friend": "delfin"},
 	{"id": "plaza_2", "name": "Palmin gaj", "scene": "",
-	 "island": "plaza", "pos": Vector2(1340, 380)},
+	 "island": "plaza", "pos": Vector2(1340, 380), "kind": "platform",
+	 "friend": "ptica"},
 
-	# --- Divlja džungla: 3 nivoa ---
+	# --- Divlja džungla ---
 	{"id": "dzungla_1", "name": "Gusto lišće", "scene": "",
-	 "island": "dzungla", "pos": Vector2(1660, 800)},
-	{"id": "dzungla_2", "name": "Skrivena reka", "scene": "",
-	 "island": "dzungla", "pos": Vector2(1930, 990)},
-	{"id": "dzungla_3", "name": "Visoke krošnje", "scene": "",
-	 "island": "dzungla", "pos": Vector2(2180, 790)},
+	 "island": "dzungla", "pos": Vector2(1660, 800), "kind": "platform",
+	 "friend": "panda"},
+	{"id": "dzungla_2", "name": "Nadji parove", "scene": "",
+	 "island": "dzungla", "pos": Vector2(1930, 990), "kind": "match",
+	 "friend": "koala"},
+	{"id": "dzungla_3", "name": "Skrivena reka", "scene": "",
+	 "island": "dzungla", "pos": Vector2(2180, 790), "kind": "platform",
+	 "friend": "kornjaca"},
 
-	# --- Zlatna pustinja: 2 nivoa ---
+	# --- Zlatna pustinja ---
 	{"id": "pustinja_1", "name": "Vruće dine", "scene": "",
-	 "island": "pustinja", "pos": Vector2(2560, 260)},
-	{"id": "pustinja_2", "name": "Kaktus polje", "scene": "",
-	 "island": "pustinja", "pos": Vector2(2950, 380)},
+	 "island": "pustinja", "pos": Vector2(2560, 260), "kind": "platform",
+	 "friend": "lisica"},
+	{"id": "pustinja_2", "name": "Obuci Budžumboru", "scene": "",
+	 "island": "pustinja", "pos": Vector2(2950, 380), "kind": "dress",
+	 "friend": "sova"},
 
-	# --- Ledeni vrhovi: 2 nivoa ---
+	# --- Ledeni vrhovi ---
 	{"id": "sneg_1", "name": "Snežna staza", "scene": "",
-	 "island": "sneg", "pos": Vector2(3360, 830)},
-	{"id": "sneg_2", "name": "Ledena pećina", "scene": "",
-	 "island": "sneg", "pos": Vector2(3750, 950)},
+	 "island": "sneg", "pos": Vector2(3360, 830), "kind": "platform",
+	 "friend": "pingvin"},
+	{"id": "sneg_2", "name": "Prebroj pahulje", "scene": "",
+	 "island": "sneg", "pos": Vector2(3750, 950), "kind": "count",
+	 "friend": "jez"},
 
-	# --- Vatrena gora: 2 nivoa ---
+	# --- Vatrena gora ---
 	{"id": "vulkan_1", "name": "Crna staza", "scene": "",
-	 "island": "vulkan", "pos": Vector2(4210, 300)},
+	 "island": "vulkan", "pos": Vector2(4210, 300), "kind": "platform",
+	 "friend": "macak"},
 	{"id": "vulkan_2", "name": "Vrh vulkana", "scene": "",
-	 "island": "vulkan", "pos": Vector2(4580, 420)},
+	 "island": "vulkan", "pos": Vector2(4580, 420), "kind": "platform",
+	 "friend": "kuca"},
 ]
 
 ## Koji su nivoi zavrseni - kljuc je `id` iz LEVELS.
@@ -108,6 +133,9 @@ var best: Dictionary = {}
 
 ## Koji nivo se trenutno igra (indeks u LEVELS).
 var current_level: int = 0
+
+## Ime prijatelja spasenog u zadnjem nivou (za winning screen).
+var rescued_friend := "prijatelja"
 
 
 func level_count() -> int:

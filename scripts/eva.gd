@@ -31,6 +31,24 @@ var _facing := 1
 
 var _base_gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity", 900.0)
 
+## --- MOCI ---
+## Postavlja nivo: "" (nista), "double_jump", "swim", "glide", "light".
+var power := ""
+
+## Dupli skok: da li je drugi skok jos dostupan.
+var _air_jumps := 0
+const AIR_JUMPS_MAX := 1
+
+## Plivanje: da li je u vodi i da li ume da pliva.
+var _in_water := false
+var _can_swim := false
+const SWIM_UP := -130.0        # koliko snazno pliva nagore
+const SWIM_GRAVITY := 0.18     # u vodi gravitacija je slaba
+const SWIM_MAX_FALL := 90.0
+
+## Lebdenje: dok drzi skok u vazduhu, pada mnogo sporije.
+const GLIDE_GRAVITY := 0.22
+
 
 func _ready() -> void:
 	add_to_group("player")
@@ -91,6 +109,7 @@ func _tick_timers(delta: float) -> void:
 
 	if is_on_floor():
 		_coyote_timer = Game.COYOTE_TIME
+		_air_jumps = AIR_JUMPS_MAX      # dupli skok se puni na tlu
 	else:
 		_coyote_timer = maxf(_coyote_timer - delta, 0.0)
 
@@ -98,10 +117,24 @@ func _tick_timers(delta: float) -> void:
 
 
 func _apply_gravity(delta: float) -> void:
+	# U VODI: gravitacija je slaba, a drzanje skoka plivа nagore.
+	if _in_water:
+		var wg := _base_gravity * SWIM_GRAVITY
+		if _can_swim and Input.is_action_pressed("jump"):
+			velocity.y = maxf(velocity.y + SWIM_UP * delta * 6.0, SWIM_UP)
+		else:
+			velocity.y = minf(velocity.y + wg * delta, SWIM_MAX_FALL)
+		return
+
 	if is_on_floor():
 		return
 
 	var g := _base_gravity * Game.PLAYER_GRAVITY_SCALE
+
+	# LEBDENJE: dok drzi skok i pada, spusta se kao na padobranu.
+	if power == "glide" and velocity.y > 0.0 and Input.is_action_pressed("jump"):
+		velocity.y = minf(velocity.y + _base_gravity * GLIDE_GRAVITY * delta, 110.0)
+		return
 
 	# Milost 1: kad drzi skok, pada jos sporije -> skok se "produzava",
 	# a kad pusti, pada malo brze. Daje osecaj kontrole bez preciznosti.
@@ -128,12 +161,26 @@ func _handle_jump() -> void:
 	if Input.is_action_just_pressed("jump"):
 		_jump_buffer_timer = Game.JUMP_BUFFER_TIME
 
+	# U vodi skok = plivanje, obradjeno u _apply_gravity.
+	if _in_water:
+		return
+
 	if _jump_buffer_timer > 0.0 and _coyote_timer > 0.0:
 		velocity.y = Game.PLAYER_JUMP_VELOCITY
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
 		_squash(0.7, 1.3)
 		Audio.play("jump")
+		return
+
+	# DUPLI SKOK: u vazduhu, ako je moc dostupna i jos ima skokova.
+	if power == "double_jump" and _jump_buffer_timer > 0.0 and _air_jumps > 0:
+		velocity.y = Game.PLAYER_JUMP_VELOCITY * 0.88
+		_jump_buffer_timer = 0.0
+		_air_jumps -= 1
+		_squash(0.75, 1.25)
+		Audio.play("jump", 0.14)
+		_spawn_jump_puff()
 
 
 func _animate(delta: float) -> void:
@@ -181,6 +228,48 @@ func hurt() -> void:
 
 	if Game.hearts <= 0:
 		_die()
+
+
+## Zove ga voda (Area2D iz nivoa) kad Eva ude/izade.
+func enter_water(can_swim: bool) -> void:
+	if _in_water:
+		return
+	_in_water = true
+	_can_swim = can_swim
+	# Ulazak u vodu koci pad - bez ovoga "propadne" kroz plicak.
+	velocity.y = minf(velocity.y, 60.0)
+	Audio.play("land", 0.12)
+
+	if not can_swim:
+		# Ne ume da pliva - voda je opasna, gubi srce i vraca se.
+		hurt()
+
+
+func exit_water() -> void:
+	_in_water = false
+
+
+func is_in_water() -> bool:
+	return _in_water
+
+
+## Oblacic pri duplom skoku - vizualni znak da je moc iskoriscena.
+func _spawn_jump_puff() -> void:
+	var puff := Polygon2D.new()
+	puff.color = Color(1, 1, 1, 0.7)
+	var pts := PackedVector2Array()
+	for i in 8:
+		var a := TAU * float(i) / 8.0
+		pts.append(Vector2(cos(a), sin(a) * 0.6) * 7.0)
+	puff.polygon = pts
+	puff.position = Vector2(0, 12)
+	add_child(puff)
+
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(puff, "scale", Vector2(2.2, 1.2), 0.3)
+	tw.tween_property(puff, "modulate:a", 0.0, 0.3)
+	tw.chain().tween_callback(puff.queue_free)
 
 
 ## Pad u rupu - nikad instant smrt, samo jedno srce i vracanje na checkpoint.

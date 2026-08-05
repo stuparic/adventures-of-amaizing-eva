@@ -1,0 +1,88 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/friend.gd" id="1_friend"]
+
+[sub_resource type="RectangleShape2D" id="Rect_friend"]
+size = Vector2(34, 40)
+
+[node name="Friend" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_friend")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+shape = SubResource("Rect_friend")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Cage" type="Node2D" parent="Visual"]
+
+[node name="Bar1" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(-12, 0)
+color = Color(0.62, 0.62, 0.7, 1)
+polygon = PackedVector2Array(-1, -18, 1, -18, 1, 14, -1, 14)
+
+[node name="Bar1Shine" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(-12.6, 0)
+color = Color(0.82, 0.82, 0.9, 1)
+polygon = PackedVector2Array(-0.35, -18, 0.35, -18, 0.35, 14, -0.35, 14)
+
+[node name="Bar2" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(-4, 0)
+color = Color(0.62, 0.62, 0.7, 1)
+polygon = PackedVector2Array(-1, -18, 1, -18, 1, 14, -1, 14)
+
+[node name="Bar2Shine" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(-4.6, 0)
+color = Color(0.82, 0.82, 0.9, 1)
+polygon = PackedVector2Array(-0.35, -18, 0.35, -18, 0.35, 14, -0.35, 14)
+
+[node name="Bar3" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(4, 0)
+color = Color(0.62, 0.62, 0.7, 1)
+polygon = PackedVector2Array(-1, -18, 1, -18, 1, 14, -1, 14)
+
+[node name="Bar3Shine" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(3.4, 0)
+color = Color(0.82, 0.82, 0.9, 1)
+polygon = PackedVector2Array(-0.35, -18, 0.35, -18, 0.35, 14, -0.35, 14)
+
+[node name="Bar4" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(12, 0)
+color = Color(0.62, 0.62, 0.7, 1)
+polygon = PackedVector2Array(-1, -18, 1, -18, 1, 14, -1, 14)
+
+[node name="Bar4Shine" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(11.4, 0)
+color = Color(0.82, 0.82, 0.9, 1)
+polygon = PackedVector2Array(-0.35, -18, 0.35, -18, 0.35, 14, -0.35, 14)
+
+[node name="Top" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(0, -18)
+color = Color(0.5, 0.5, 0.58, 1)
+polygon = PackedVector2Array(-14, -2, 14, -2, 14, 1, -14, 1)
+
+[node name="TopShine" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(0, -19.4)
+color = Color(0.75, 0.75, 0.84, 1)
+polygon = PackedVector2Array(-14, -0.6, 14, -0.6, 14, 0.6, -14, 0.6)
+
+[node name="Hook" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(0, -22)
+color = Color(0.5, 0.5, 0.58, 1)
+polygon = PackedVector2Array(-1, -2.5, 1, -2.5, 1, 2.5, -1, 2.5)
+
+[node name="Bottom" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(0, 14)
+color = Color(0.5, 0.5, 0.58, 1)
+polygon = PackedVector2Array(-14, -1, 14, -1, 14, 2, -14, 2)
+
+[node name="Lock" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(0, 8)
+color = Color(0.85, 0.7, 0.25, 1)
+polygon = PackedVector2Array(-2.4, -2, 2.4, -2, 2.4, 2.4, -2.4, 2.4)
+
+[node name="LockHole" type="Polygon2D" parent="Visual/Cage"]
+position = Vector2(0, 8.4)
+color = Color(0.45, 0.35, 0.12, 1)
+polygon = PackedVector2Array(-0.7, -0.7, 0.7, -0.7, 0.7, 0.7, -0.7, 0.7)

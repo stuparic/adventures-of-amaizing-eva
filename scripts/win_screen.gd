@@ -72,7 +72,7 @@ func show_result(stars: int, total: int, time_text: String) -> void:
 	visible = true
 
 	title.text = "BRAVO EVA!"
-	subtitle.text = "Spasila si macu Čarlija"
+	subtitle.text = "Spasila si %s" % Game.rescued_friend
 	hint.text = "M = mapa   ·   R = ponovo"
 
 	stars_value.text = "0"
