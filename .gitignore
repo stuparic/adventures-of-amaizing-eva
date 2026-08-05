@@ -1,0 +1,18 @@
+# Godot 4
+.godot/
+/android/
+
+# Web build izlaz - generise ga GitHub Actions, ne commituje se
+build/
+
+# macOS
+.DS_Store
+
+# Snimljeni glas je licni - ne ide u javni repo.
+# (Ako zelis da ga podelis, obrisi ovih 6 linija.)
+audio/voice_win.wav
+audio/voice_win.wav.import
+audio/voice_win.ogg
+audio/voice_win.ogg.import
+audio/voice_win.mp3
+audio/voice_win.mp3.import

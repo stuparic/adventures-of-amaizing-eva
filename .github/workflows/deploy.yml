@@ -1,0 +1,75 @@
+name: Build i deploy na GitHub Pages
+
+# Build-uje web verziju igre i objavljuje je na GitHub Pages.
+# Pokrece se na svaki push u main, ili rucno iz Actions taba.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Ako pushujes dva puta brzo, prekini stari build.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  GODOT_VERSION: 4.7.1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skini Godot i export template
+        run: |
+          BASE="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          curl -fsSL -o godot.zip "${BASE}/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fsSL -o templates.tpz "${BASE}/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          unzip -q godot.zip
+          mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
+          chmod +x /usr/local/bin/godot
+
+          # Template mora da bude u ~/.local/share/godot/export_templates/<verzija>.stable
+          unzip -q templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+
+      - name: Uvezi projekat
+        # Prvi prolaz generise .godot/ (uvoz assetа). Godot vrati non-zero
+        # kod pri --import cak i kad uspe, pa `|| true`.
+        run: godot --headless --import || true
+
+      - name: Build web verzije
+        run: |
+          mkdir -p build/web
+          godot --headless --export-release "Web" build/web/index.html
+          ls -la build/web/
+
+      - name: Provera da build nije prazan
+        run: |
+          test -f build/web/index.html || { echo "NEMA index.html"; exit 1; }
+          test -f build/web/index.wasm || { echo "NEMA index.wasm"; exit 1; }
+          test -f build/web/index.pck  || { echo "NEMA index.pck";  exit 1; }
+          echo "Build OK: $(du -sh build/web | cut -f1)"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
