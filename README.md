@@ -5,7 +5,17 @@ Budzumbora (roze haljina, narandzasta kosa) idu kroz nivo da spasu macu iz kavez
 
 Godot 4.7 · besplatno · bez ikakvih zavisnosti
 
-## Pokretanje
+## ▶ Igraj u browseru
+
+**https://stuparic.github.io/adventures-of-amaizing-eva/**
+
+Radi na kompjuteru i tabletu, bez instalacije. Prvo otvaranje ucitava ~44 MB,
+posle toga browser kesira pa je odmah tu.
+
+Web verzija se build-uje automatski na svaki push
+([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).
+
+## Pokretanje lokalno
 
 ```bash
 open -a Godot project.godot
