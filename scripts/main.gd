@@ -115,6 +115,8 @@ func _ready() -> void:
 
 	_hud = get_node("HUD")
 	_win_screen = get_node("WinScreen")
+	_win_screen.map_requested.connect(_go_to_map)
+	_win_screen.replay_requested.connect(_restart)
 	Game.level_won.connect(_on_won)
 	Game.player_died.connect(_on_died)
 	Game.hearts_changed.connect(_on_hearts_changed)
@@ -131,6 +133,9 @@ func _process(_delta: float) -> void:
 		Audio.toggle_mute()
 		_hud.show_banner("Zvuk ISKLJUCEN" if Audio.is_muted() else "Zvuk UKLJUCEN",
 			Color(0.35, 0.4, 0.5), 1.0)
+
+	if Input.is_action_just_pressed("world_map"):
+		_go_to_map()
 
 	if _eva != null and not _level_over and _eva.global_position.y > FALL_LIMIT:
 		_eva.fall_out()
@@ -301,6 +306,10 @@ func _on_won() -> void:
 	_level_over = true
 	Game.stop_timer()
 
+	# Upisi napredak: otkljucava sledeci nivo na mapi i pamti najbolji rezultat.
+	Game.mark_completed(Game.current_level, Game.stars_collected, Game.elapsed_seconds())
+	Game.save_progress()
+
 	# Kratka pauza da dete vidi kavez kako se otvara i Carlija kako skace,
 	# pa tek onda winning screen.
 	await get_tree().create_timer(1.2).timeout
@@ -327,3 +336,9 @@ func _restart_soft() -> void:
 
 func _restart() -> void:
 	get_tree().reload_current_scene()
+
+
+## Vrati se na mapu sveta.
+func _go_to_map() -> void:
+	Audio.stop_music()
+	get_tree().change_scene_to_file("res://scenes/world_map.tscn")

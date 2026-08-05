@@ -5,6 +5,7 @@ extends CanvasLayer
 ## "namotavaju" - detetu je to nagrada koju gleda, ne tekst koji cita.
 
 signal replay_requested
+signal map_requested
 
 @onready var dim: ColorRect = $Dim
 @onready var panel: Control = $Center/Panel
@@ -14,6 +15,8 @@ signal replay_requested
 @onready var time_value: Label = $Center/Panel/Rows/Stats/TimeBox/Value
 @onready var hint: Label = $Center/Panel/Rows/Hint
 @onready var confetti: Node2D = $Confetti
+@onready var btn_map: Button = $Center/Panel/Rows/Buttons/Map
+@onready var btn_again: Button = $Center/Panel/Rows/Buttons/Again
 
 var _shown := false
 var _panel_scale := 1.0
@@ -28,6 +31,16 @@ const PANEL_MARGIN := 0.92
 func _ready() -> void:
 	visible = false
 	layer = 10
+
+	btn_map.pressed.connect(func() -> void:
+		Audio.play("star")
+		map_requested.emit()
+	)
+	btn_again.pressed.connect(func() -> void:
+		Audio.play("jump")
+		replay_requested.emit()
+	)
+
 	_fit_panel()
 	get_viewport().size_changed.connect(_fit_panel)
 
@@ -53,7 +66,7 @@ func show_result(stars: int, total: int, time_text: String) -> void:
 
 	title.text = "BRAVO EVA!"
 	subtitle.text = "Spasila si macu Čarlija"
-	hint.text = "Pritisni R za novu igru"
+	hint.text = "M = mapa   ·   R = ponovo"
 
 	stars_value.text = "0"
 	time_value.text = time_text

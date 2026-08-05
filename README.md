@@ -43,6 +43,28 @@ Pa pritisni **F5** u editoru. Ili direktno iz terminala bez editora:
 /Applications/Godot.app/Contents/MacOS/Godot --path .
 ```
 
+## Mapa sveta
+
+Igra pocinje na **mapi sveta** — tacke po klimatskim predelima, spojene
+isprekidanim putevima. Za sad postoji **Zelena livada**; ostalih pet
+(plaza, dzungla, pustinja, snezne planine, vulkan) su prikazani kao
+zatvorene tacke sa oznakom "uskoro".
+
+Nivo se otkljucava kad zavrsis prethodni. Napredak i najbolji rezultat
+(zvezdice + vreme) se cuvaju, pa prezive zatvaranje browsera.
+
+### Kako da dodas nov nivo
+
+1. Napravi scenu, npr. `scenes/level_plaza.tscn` (kopiraj `main.tscn` i
+   promeni tabele u skripti).
+2. U [autoload/game.gd](autoload/game.gd), u `LEVELS`, upisi putanju u
+   `scene` za taj predeo.
+
+To je sve — mapa, put, otkljucavanje i statistika rade sami. Nivo bez
+`scene` se automatski prikazuje kao "uskoro".
+
+Pozicije tacaka na mapi su `map_pos` u istoj tabeli.
+
 ## Kontrole
 
 | Akcija | Tasteri |
@@ -50,7 +72,8 @@ Pa pritisni **F5** u editoru. Ili direktno iz terminala bez editora:
 | Kretanje | strelice levo/desno, ili A/D, ili gamepad |
 | Skok | SPACE, strelica gore, W, ili A na gamepadu |
 | Restart nivoa | R |
-| Zvuk on/off | M |
+| Mapa sveta | M ili ESC |
+| Zvuk on/off | N |
 
 ## Sta je uradjeno za tezinu detetu od 5 godina
 

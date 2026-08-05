@@ -29,6 +29,164 @@ const RESPAWN_DELAY := 0.6
 ## da winning screen moze da prikaze "12 / 29".
 var total_stars: int = 0
 
+# --- NIVOI I MAPA SVETA ---
+
+## Definicija svih nivoa. `scene` je prazan za nivoe koji jos ne postoje -
+## na mapi se prikazuju kao zatvorene tacke ("Uskoro").
+##
+## Kad napravis nov nivo: napisi scenu i upisi putanju u `scene`.
+## Sve ostalo (mapa, putevi, otkljucavanje) radi samo.
+const LEVELS: Array[Dictionary] = [
+	{
+		"id": "livada",
+		"name": "Zelena livada",
+		"scene": "res://scenes/main.tscn",
+		"map_pos": Vector2(140, 330),
+		"color": Color(0.42, 0.72, 0.38),
+	},
+	{
+		"id": "plaza",
+		"name": "Peščana plaža",
+		"scene": "",
+		"map_pos": Vector2(330, 250),
+		"color": Color(0.95, 0.85, 0.5),
+	},
+	{
+		"id": "dzungla",
+		"name": "Zelena džungla",
+		"scene": "",
+		"map_pos": Vector2(520, 330),
+		"color": Color(0.2, 0.55, 0.3),
+	},
+	{
+		"id": "pustinja",
+		"name": "Vruća pustinja",
+		"scene": "",
+		"map_pos": Vector2(700, 240),
+		"color": Color(0.93, 0.7, 0.35),
+	},
+	{
+		"id": "sneg",
+		"name": "Snežne planine",
+		"scene": "",
+		"map_pos": Vector2(880, 320),
+		"color": Color(0.85, 0.92, 0.98),
+	},
+	{
+		"id": "vulkan",
+		"name": "Vatreni vulkan",
+		"scene": "",
+		"map_pos": Vector2(1060, 230),
+		"color": Color(0.85, 0.35, 0.2),
+	},
+]
+
+## Koji su nivoi zavrseni - kljuc je `id` iz LEVELS.
+var completed: Dictionary = {}
+
+## Najbolji rezultat po nivou: { id: {"stars": int, "time": float} }
+var best: Dictionary = {}
+
+## Koji nivo se trenutno igra (indeks u LEVELS).
+var current_level: int = 0
+
+
+func level_count() -> int:
+	return LEVELS.size()
+
+
+func level_data(index: int) -> Dictionary:
+	if index < 0 or index >= LEVELS.size():
+		return {}
+	return LEVELS[index]
+
+
+## Nivo postoji ako ima scenu. Ostali su "uskoro".
+func level_exists(index: int) -> bool:
+	var d := level_data(index)
+	return d.has("scene") and String(d["scene"]) != ""
+
+
+## Nivo je otkljucan ako je prvi, ili ako je prethodni zavrsen.
+func level_unlocked(index: int) -> bool:
+	if index <= 0:
+		return true
+	var prev := level_data(index - 1)
+	return prev.has("id") and completed.has(prev["id"])
+
+
+func level_completed(index: int) -> bool:
+	var d := level_data(index)
+	return d.has("id") and completed.has(d["id"])
+
+
+## Upisi rezultat i zapamti najbolji (najvise zvezdica, pa najkrace vreme).
+func mark_completed(index: int, stars: int, seconds: float) -> void:
+	var d := level_data(index)
+	if not d.has("id"):
+		return
+	var id: String = d["id"]
+	completed[id] = true
+
+	var prev: Dictionary = best.get(id, {})
+	var better := prev.is_empty() \
+		or stars > int(prev.get("stars", -1)) \
+		or (stars == int(prev.get("stars", -1)) and seconds < float(prev.get("time", 1e9)))
+	if better:
+		best[id] = {"stars": stars, "time": seconds}
+
+
+func best_for(index: int) -> Dictionary:
+	var d := level_data(index)
+	if not d.has("id"):
+		return {}
+	return best.get(d["id"], {})
+
+
+# --- CUVANJE NAPRETKA ---
+# Na webu ide u IndexedDB (Godot to radi sam za user://), pa napredak
+# prezivi zatvaranje browsera.
+
+const SAVE_PATH := "user://progress.json"
+
+
+func _ready() -> void:
+	load_progress()
+
+
+func save_progress() -> void:
+	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if f == null:
+		return
+	f.store_string(JSON.stringify({"completed": completed, "best": best}))
+	f.close()
+
+
+func load_progress() -> void:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return
+	var f := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if f == null:
+		return
+	var raw := f.get_as_text()
+	f.close()
+
+	var data: Variant = JSON.parse_string(raw)
+	if typeof(data) != TYPE_DICTIONARY:
+		return
+	var d: Dictionary = data
+	if d.has("completed") and typeof(d["completed"]) == TYPE_DICTIONARY:
+		completed = d["completed"]
+	if d.has("best") and typeof(d["best"]) == TYPE_DICTIONARY:
+		best = d["best"]
+
+
+## Za testiranje: obrisi napredak.
+func reset_progress() -> void:
+	completed.clear()
+	best.clear()
+	save_progress()
+
 # --- Stanje tokom igre ---
 var hearts: int = MAX_HEARTS
 var stars_collected: int = 0
