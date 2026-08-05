@@ -53,8 +53,11 @@ zatvorene tacke sa oznakom "uskoro".
 Nivo se otkljucava kad zavrsis prethodni. Napredak i najbolji rezultat
 (zvezdice + vreme) se cuvaju, pa prezive zatvaranje browsera.
 
-Mapa je **arhipelag** — svaki nivo je na svom ostrvu, a bioma nivoa je
-vizualni identitet tog ostrva:
+Mapa je **arhipelag** sa **14 nivoa na 6 ostrva**. Na jednom ostrvu je
+vise nivoa — Eva ide **peske** izmedju njih (zemljana staza), a
+**brodicem** kad prelazi na drugo ostrvo (morska brazda).
+
+Bioma ostrva je vizualni identitet nivoa koji su na njemu:
 
 | Ostrvo | Kako izgleda |
 |---|---|
@@ -93,8 +96,14 @@ Nova ostrva se dodaju upisom `biome`, `island` i `island_size` u LEVELS.
 
 1. Napravi scenu, npr. `scenes/level_plaza.tscn` (kopiraj `main.tscn` i
    promeni tabele u skripti).
-2. U [autoload/game.gd](autoload/game.gd), u `LEVELS`, upisi putanju u
-   `scene` za taj predeo.
+2. U [autoload/game.gd](autoload/game.gd) nadji taj nivo u `LEVELS` i
+   upisi putanju u `scene`.
+
+Nov nivo na postojecem ostrvu: dodaj unos u `LEVELS` sa `island` = id
+ostrva i `pos` na tom ostrvu. Put se sam nacrta kao kopneni.
+
+Novo ostrvo: dodaj unos u `ISLANDS` (id, biome, pos, size), pa nivoe
+koji na njega pokazuju.
 
 To je sve — mapa, put, otkljucavanje i statistika rade sami. Nivo bez
 `scene` se automatski prikazuje kao "uskoro".

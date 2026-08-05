@@ -20,27 +20,27 @@ color = Color(0.6, 0.84, 0.94, 1)
 
 [node name="Ocean" type="Polygon2D" parent="."]
 color = Color(0.42, 0.68, 0.86, 1)
-polygon = PackedVector2Array(-1500, -1200, 5200, -1200, 5200, 2200, -1500, 2200)
+polygon = PackedVector2Array(-1800, -1400, 6800, -1400, 6800, 2600, -1800, 2600)
 
 [node name="Scenery" type="Node2D" parent="."]
 
 [node name="Cloud1" type="Polygon2D" parent="."]
-position = Vector2(420, 180)
+position = Vector2(600, 120)
 color = Color(1, 1, 1, 0.78)
 polygon = PackedVector2Array(-42, 10, -25, -10, 3, -16, 26, -6, 42, 10)
 
 [node name="Cloud2" type="Polygon2D" parent="."]
-position = Vector2(1600, 130)
+position = Vector2(2200, 90)
 color = Color(1, 1, 1, 0.7)
 polygon = PackedVector2Array(-48, 11, -29, -12, 4, -18, 30, -7, 48, 11)
 
 [node name="Cloud3" type="Polygon2D" parent="."]
-position = Vector2(2900, 190)
+position = Vector2(4000, 140)
 color = Color(1, 1, 1, 0.75)
 polygon = PackedVector2Array(-38, 9, -23, -10, 3, -14, 24, -5, 38, 9)
 
 [node name="EvaMarker" type="Node2D" parent="."]
-position = Vector2(320, 590)
+position = Vector2(140, 570)
 z_index = 3
 
 [node name="Eva" parent="EvaMarker" instance=ExtResource("3_eva")]
@@ -57,7 +57,7 @@ position = Vector2(24, -2)
 script = null
 
 [node name="Camera" type="Camera2D" parent="."]
-position = Vector2(320, 620)
+position = Vector2(140, 600)
 position_smoothing_enabled = true
 position_smoothing_speed = 4.0
 

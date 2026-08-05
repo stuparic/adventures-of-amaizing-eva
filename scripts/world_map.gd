@@ -23,13 +23,20 @@ const C_ROAD := Color(1, 1, 1, 0.42)
 const C_ROAD_EDGE := Color(0.55, 0.78, 0.9, 0.5)
 const C_ROAD_DONE := Color(1, 0.9, 0.45, 0.85)
 const C_ROAD_DONE_EDGE := Color(0.9, 0.7, 0.25, 0.6)
+## Kopneni put (unutar ostrva) - zemljana staza.
+const C_LAND := Color(0.85, 0.75, 0.55)
+const C_LAND_EDGE := Color(0.68, 0.56, 0.4)
+const C_LAND_DONE := Color(0.98, 0.84, 0.34)
+const C_LAND_DONE_EDGE := Color(0.82, 0.64, 0.22)
+const LAND_W := 11.0
+
 const C_LOCKED := Color(0.62, 0.62, 0.66)
 const C_TEXT := Color(0.22, 0.3, 0.42)
 
 const StarIcon := preload("res://scenes/hud_star.tscn")
 
 ## Granice zuma. MANJI broj = vidi se VISE mape.
-const ZOOM_MIN := 0.22
+const ZOOM_MIN := 0.16
 const ZOOM_MAX := 1.6
 const ZOOM_STEP := 0.12
 
@@ -129,13 +136,12 @@ func _build_scenery() -> void:
 	# Talasi po okeanu - daju osecaj vode, ne praznog plavog polja.
 	_add_ocean_waves(rng)
 
-	# Jedno ostrvo po nivou, svako sa svojim biomom.
-	for i in Game.level_count():
-		var d := Game.level_data(i)
-		var biome := String(d.get("biome", "livada"))
-		var pos: Vector2 = d.get("island", d["map_pos"])
-		var isz: Vector2 = d.get("island_size", Vector2(280, 180))
-		BiomeArt.draw_island(scenery, biome, pos, isz, 1000 + i * 137)
+	# Ostrva iz ISLANDS - na jednom moze da bude vise nivoa.
+	for i in Game.island_count():
+		var isl := Game.island_data(i)
+		BiomeArt.draw_island(scenery, String(isl["biome"]),
+			isl["pos"], isl["size"], 1000 + i * 137)
+
 
 	# Mnogo bezimenih ostrvaca - okean treba da bude PUN, ne prazan.
 	# Bioma svakog prati najblize veliko ostrvo, pa se svet oseca povezano.
@@ -177,13 +183,14 @@ func _build_boat() -> void:
 func _scatter_islets(rng: RandomNumberGenerator) -> void:
 	# Rucno izabrane pozicije u prazninama izmedju velikih ostrva.
 	var spots := [
-		[Vector2(620, 900), "livada", 150.0],
-		[Vector2(1180, 380), "plaza", 130.0],
-		[Vector2(1850, 980), "dzungla", 145.0],
-		[Vector2(2450, 360), "pustinja", 135.0],
-		[Vector2(3050, 1000), "sneg", 140.0],
-		[Vector2(1720, 620), "plaza", 105.0],
-		[Vector2(2980, 640), "vulkan", 115.0],
+		[Vector2(760, 1010), "livada", 150.0],
+		[Vector2(1620, 240), "plaza", 130.0],
+		[Vector2(2400, 1080), "dzungla", 150.0],
+		[Vector2(3220, 240), "pustinja", 135.0],
+		[Vector2(4120, 1040), "sneg", 145.0],
+		[Vector2(1500, 620), "plaza", 100.0],
+		[Vector2(3160, 640), "sneg", 110.0],
+		[Vector2(4800, 700), "vulkan", 120.0],
 	]
 	for i in spots.size():
 		var pos: Vector2 = spots[i][0]
@@ -297,28 +304,73 @@ func _build_map() -> void:
 		_add_dot(i)
 
 
-## Krivudav put: kvadratna Bezier kriva, kontrolna tacka pomerena u stranu
-## po `bend` iz LEVELS. Isprekidan, sa tamnijim obodom.
+## Put izmedju dva nivoa. Dve vrste:
+##   KOPNENI (isto ostrvo)  - zemljana staza, Eva ide peske
+##   MORSKI (drugo ostrvo)  - bela brazda, Eva ide brodicem
+##
+## Oba su krivudava: kvadratna Bezier kriva sa kontrolnom tackom
+## pomerenom u stranu, plus sitno "vijuganje" da linija ne bude
+## matematicki glatka nego organska.
 func _add_curved_road(parent: Node2D, from_index: int) -> void:
-	var a: Vector2 = Game.level_data(from_index)["map_pos"]
-	var b: Vector2 = Game.level_data(from_index + 1)["map_pos"]
-	var bend: float = float(Game.level_data(from_index).get("bend", 0.0))
+	var a: Vector2 = Game.level_data(from_index)["pos"]
+	var b: Vector2 = Game.level_data(from_index + 1)["pos"]
+	var land := Game.same_island(from_index, from_index + 1)
+	var done := Game.level_completed(from_index)
+
+	# Kopneni put krivuda manje (staza po ostrvu), morski vise (plovidba).
+	var span := a.distance_to(b)
+	var bend := span * (0.16 if land else 0.3)
+	# Naizmenicno gore/dole, da putevi ne budu svi u istu stranu.
+	if from_index % 2 == 1:
+		bend = -bend
 
 	var mid := (a + b) * 0.5
 	var dir := (b - a).normalized()
 	var normal := Vector2(-dir.y, dir.x)
 	var ctrl := mid + normal * bend
 
-	var done := Game.level_completed(from_index)
-	var col := C_ROAD_DONE if done else C_ROAD
-	var edge := C_ROAD_DONE_EDGE if done else C_ROAD_EDGE
+	var col: Color
+	var edge: Color
+	if land:
+		col = C_LAND_DONE if done else C_LAND
+		edge = C_LAND_DONE_EDGE if done else C_LAND_EDGE
+	else:
+		col = C_ROAD_DONE if done else C_ROAD
+		edge = C_ROAD_DONE_EDGE if done else C_ROAD_EDGE
 
-	# Uzorkuj krivu.
+	# Uzorkuj krivu + dodaj organsko vijuganje.
+	var wob := RandomNumberGenerator.new()
+	wob.seed = 700 + from_index * 53
 	var pts: Array = []
 	for i in CURVE_STEPS + 1:
-		pts.append(_bezier(a, ctrl, b, float(i) / float(CURVE_STEPS)))
+		var t := float(i) / float(CURVE_STEPS)
+		var base := _bezier(a, ctrl, b, t)
+		# Vijuganje: sinus po duzini, jace u sredini nego na krajevima.
+		var taper := sin(t * PI)
+		var amp := (7.0 if land else 11.0) * taper
+		var phase := t * (5.0 if land else 3.2) * TAU
+		base += normal * sin(phase + wob.randf() * 0.4) * amp * 0.35
+		pts.append(base)
 
-	# Isprekidane crtice: hodaj po krivoj i seci na DASH_LEN / DASH_GAP.
+	if land:
+		# Kopneni put je PUNA staza, ne isprekidan - Eva ide peske.
+		var inset := DOT_R + 6.0
+		var trimmed: Array = []
+		for pt in pts:
+			if pt.distance_to(a) > inset and pt.distance_to(b) > inset:
+				trimmed.append(pt)
+		if trimmed.size() >= 2:
+			_ribbon(parent, trimmed, LAND_W + 5.0, edge)
+			_ribbon(parent, trimmed, LAND_W, col)
+			# Kamencici duz staze.
+			for i in range(2, trimmed.size() - 2, 4):
+				var pp: Vector2 = trimmed[i]
+				_poly(parent, Color(0.72, 0.66, 0.54, 0.7),
+					_ring_pts(pp + Vector2(wob.randf_range(-3, 3), wob.randf_range(-3, 3)),
+						wob.randf_range(1.4, 2.4), 6))
+		return
+
+	# Morski put: isprekidana brazda.
 	var inset := DOT_R + 7.0
 	var walked := 0.0
 	var dash_on := true
@@ -327,12 +379,9 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 	for i in pts.size() - 1:
 		var p1: Vector2 = pts[i]
 		var p2: Vector2 = pts[i + 1]
-		# Ne crtaj unutar krugova tacaka.
 		if p1.distance_to(a) < inset or p1.distance_to(b) < inset:
 			continue
-
 		walked += p1.distance_to(p2)
-
 		if dash_on:
 			if current.is_empty():
 				current.append(p1)
@@ -350,6 +399,16 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 		_dash(parent, current, edge, col)
 
 
+## Krug od tacaka - za kamencice.
+func _ring_pts(center: Vector2, r: float, seg: int) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in seg:
+		var ang := TAU * float(i) / float(seg)
+		pts.append(center + Vector2(cos(ang), sin(ang) * 0.85) * r)
+	return pts
+
+
+
 ## Jedna crtica: obod pa ispuna.
 func _dash(parent: Node2D, line: Array, edge: Color, fill: Color) -> void:
 	if line.size() < 2:
@@ -360,7 +419,7 @@ func _dash(parent: Node2D, line: Array, edge: Color, fill: Color) -> void:
 
 func _add_dot(index: int) -> void:
 	var data := Game.level_data(index)
-	var pos: Vector2 = data["map_pos"]
+	var pos: Vector2 = data["pos"]
 	var exists := Game.level_exists(index)
 	var unlocked := Game.level_unlocked(index)
 	var done := Game.level_completed(index)
@@ -372,27 +431,32 @@ func _add_dot(index: int) -> void:
 	add_child(dot)
 	_dots.append(dot)
 
-	# Odsjaj na vodi ispod bove - tacka "pluta", ne visi u vazduhu.
-	var reflect := _circle(DOT_R * 0.9, Color(1, 1, 1, 0.16))
-	reflect.position = Vector2(0, DOT_R * 0.75)
-	reflect.scale = Vector2(1.1, 0.32)
-	dot.add_child(reflect)
+	# Boja prstena prati bioma ostrva - tacka pripada svom predelu.
+	var isl := Game.island_of(index)
+	var biome_col: Color = BiomeArt.PALETTES.get(
+		String(isl.get("biome", "livada")), BiomeArt.PALETTES["livada"])["ground"]
 
-	var shadow := _circle(DOT_R + 4.0, Color(0.15, 0.3, 0.42, 0.28))
-	shadow.position = Vector2(3, 6)
+	# Senka na tlu.
+	var shadow := _circle(DOT_R * 1.05, Color(0.15, 0.2, 0.28, 0.22))
+	shadow.position = Vector2(2, DOT_R * 0.5)
+	shadow.scale = Vector2(1.15, 0.4)
 	dot.add_child(shadow)
 
-	var ring_col := C_ROAD_DONE if done else (Color(1, 1, 1, 0.92) if unlocked and exists else C_LOCKED)
-	dot.add_child(_circle(DOT_R, ring_col))
+	# Spoljni prsten - bela ivica, pa boja biomа.
+	dot.add_child(_circle(DOT_R + 3.0, Color(1, 1, 1, 0.95)))
+	dot.add_child(_circle(DOT_R, biome_col.darkened(0.15) if not done else C_ROAD_DONE))
+	# Unutrasnji krug - svetliji, da broj lezi na cistoj podlozi.
+	dot.add_child(_circle(DOT_R - 6.0, Color(0.99, 0.98, 0.94)))
 
-	var fill: Color = data["color"]
-	if not (unlocked and exists):
-		fill = Color(0.72, 0.72, 0.75)
-	dot.add_child(_circle(DOT_R - 5.0, fill))
-
-	var shine := _circle(DOT_R * 0.4, Color(1, 1, 1, 0.3))
-	shine.position = Vector2(-DOT_R * 0.3, -DOT_R * 0.33)
+	# Sjaj gore levo - medaljon nije ravan.
+	var shine := _circle(DOT_R * 0.42, Color(1, 1, 1, 0.55))
+	shine.position = Vector2(-DOT_R * 0.28, -DOT_R * 0.32)
 	dot.add_child(shine)
+
+	# Zatvoreni su sivi i blago prozirni.
+	if not (exists and unlocked):
+		dot.modulate = Color(0.78, 0.79, 0.82, 0.92)
+
 
 	# Oznaka: katanac / zvezdica / broj. NE emoji - web font ih nema.
 	if not (exists and unlocked):
@@ -593,9 +657,9 @@ func _process(delta: float) -> void:
 		# Cilja ostrvo, ne bovu: bova je u vodi ispod ostrva, pa bi kadar
 		# ispao previse nisko.
 		if not _free_camera:
-			var d := Game.level_data(_selected)
-			var isl: Vector2 = d.get("island", _dots[_selected].position)
-			camera.position = camera.position.lerp(isl, delta * 4.0)
+			# Cilja malo iznad tacke - vidi se i ostrvo iza nje.
+			var target_c: Vector2 = _dots[_selected].position + Vector2(0, -40.0)
+			camera.position = camera.position.lerp(target_c, delta * 4.0)
 
 	for i in _dots.size():
 		var s := 1.0
@@ -773,6 +837,8 @@ func _move_selection(step: int) -> void:
 
 func _update_selection() -> void:
 	var data := Game.level_data(_selected)
+	var isl := Game.island_of(_selected)
+	# Naslov: ime nivoa, pa ostrvo manjim tekstom u info liniji.
 	title.text = String(data.get("name", ""))
 
 	if not Game.level_exists(_selected):
@@ -782,7 +848,7 @@ func _update_selection() -> void:
 	else:
 		var b := Game.best_for(_selected)
 		if b.is_empty():
-			info.text = "SPACE ili dodir = igraj     +/- zum"
+			info.text = "%s  ·  SPACE ili dodir = igraj" % String(isl.get("name", ""))
 		else:
 			info.text = "Najbolje: %d zvezdica   vreme %d:%02d" % [
 				int(b.get("stars", 0)),

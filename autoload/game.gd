@@ -36,73 +36,68 @@ var total_stars: int = 0
 ##
 ## Kad napravis nov nivo: napisi scenu i upisi putanju u `scene`.
 ## Sve ostalo (mapa, putevi, otkljucavanje) radi samo.
+## OSTRVA - definisana odvojeno od nivoa, jer na jednom ostrvu moze da
+## bude vise nivoa. `biome` odredjuje kako ostrvo izgleda.
+const ISLANDS: Array[Dictionary] = [
+	{"id": "livada",   "name": "Zelena livada",   "biome": "livada",
+	 "pos": Vector2(340, 700),   "size": Vector2(760, 520)},
+	{"id": "plaza",    "name": "Sunčana plaža",   "biome": "plaza",
+	 "pos": Vector2(1180, 300),  "size": Vector2(700, 470)},
+	{"id": "dzungla",  "name": "Divlja džungla",  "biome": "dzungla",
+	 "pos": Vector2(1900, 880),  "size": Vector2(800, 540)},
+	{"id": "pustinja", "name": "Zlatna pustinja", "biome": "pustinja",
+	 "pos": Vector2(2760, 300),  "size": Vector2(740, 490)},
+	{"id": "sneg",     "name": "Ledeni vrhovi",   "biome": "sneg",
+	 "pos": Vector2(3560, 880),  "size": Vector2(760, 510)},
+	{"id": "vulkan",   "name": "Vatrena gora",    "biome": "vulkan",
+	 "pos": Vector2(4400, 340),  "size": Vector2(720, 500)},
+]
+
+## NIVOI. `island` je id ostrva; `pos` je pozicija tacke.
+## Nivoi na ISTOM ostrvu spajaju se KOPNENIM putem (Eva ide peske).
+## Nivoi na RAZLICITIM ostrvima spajaju se MORSKIM putem (brodicem).
+##
+## Kad napravis nov nivo: upisi `scene`. Prazan `scene` = "uskoro".
 const LEVELS: Array[Dictionary] = [
-	{
-		"id": "livada",
-		"name": "Zelena livada",
-		"scene": "res://scenes/main.tscn",
-		"biome": "livada",
-		"map_pos": Vector2(300, 1010),
-		"island": Vector2(300, 700),
-		"island_size": Vector2(700, 470),
-		"bend": 120.0,
-		"color": Color(0.42, 0.72, 0.38),
-	},
-	{
-		"id": "plaza",
-		"name": "Peščana plaža",
-		"scene": "",
-		"biome": "plaza",
-		"map_pos": Vector2(900, 560),
-		"island": Vector2(900, 250),
-		"island_size": Vector2(660, 440),
-		"bend": -150.0,
-		"color": Color(0.96, 0.86, 0.5),
-	},
-	{
-		"id": "dzungla",
-		"name": "Zelena džungla",
-		"scene": "",
-		"biome": "dzungla",
-		"map_pos": Vector2(1500, 1150),
-		"island": Vector2(1500, 830),
-		"island_size": Vector2(740, 500),
-		"bend": 170.0,
-		"color": Color(0.16, 0.5, 0.26),
-	},
-	{
-		"id": "pustinja",
-		"name": "Vruća pustinja",
-		"scene": "",
-		"biome": "pustinja",
-		"map_pos": Vector2(2120, 570),
-		"island": Vector2(2120, 255),
-		"island_size": Vector2(690, 460),
-		"bend": -160.0,
-		"color": Color(0.94, 0.72, 0.34),
-	},
-	{
-		"id": "sneg",
-		"name": "Snežne planine",
-		"scene": "",
-		"biome": "sneg",
-		"map_pos": Vector2(2720, 1160),
-		"island": Vector2(2720, 840),
-		"island_size": Vector2(710, 480),
-		"bend": 150.0,
-		"color": Color(0.87, 0.93, 0.99),
-	},
-	{
-		"id": "vulkan",
-		"name": "Vatreni vulkan",
-		"scene": "",
-		"biome": "vulkan",
-		"map_pos": Vector2(3340, 590),
-		"island": Vector2(3340, 280),
-		"island_size": Vector2(680, 470),
-		"bend": 0.0,
-		"color": Color(0.86, 0.33, 0.2),
-	},
+	# --- Zelena livada: 3 nivoa ---
+	{"id": "livada_1", "name": "Prvi koraci", "scene": "res://scenes/main.tscn",
+	 "island": "livada", "pos": Vector2(140, 640)},
+	{"id": "livada_2", "name": "Preko potoka", "scene": "",
+	 "island": "livada", "pos": Vector2(380, 810)},
+	{"id": "livada_3", "name": "Kroz šumu", "scene": "",
+	 "island": "livada", "pos": Vector2(600, 620)},
+
+	# --- Sunčana plaža: 2 nivoa ---
+	{"id": "plaza_1", "name": "Peščana staza", "scene": "",
+	 "island": "plaza", "pos": Vector2(990, 260)},
+	{"id": "plaza_2", "name": "Palmin gaj", "scene": "",
+	 "island": "plaza", "pos": Vector2(1340, 380)},
+
+	# --- Divlja džungla: 3 nivoa ---
+	{"id": "dzungla_1", "name": "Gusto lišće", "scene": "",
+	 "island": "dzungla", "pos": Vector2(1660, 800)},
+	{"id": "dzungla_2", "name": "Skrivena reka", "scene": "",
+	 "island": "dzungla", "pos": Vector2(1930, 990)},
+	{"id": "dzungla_3", "name": "Visoke krošnje", "scene": "",
+	 "island": "dzungla", "pos": Vector2(2180, 790)},
+
+	# --- Zlatna pustinja: 2 nivoa ---
+	{"id": "pustinja_1", "name": "Vruće dine", "scene": "",
+	 "island": "pustinja", "pos": Vector2(2560, 260)},
+	{"id": "pustinja_2", "name": "Kaktus polje", "scene": "",
+	 "island": "pustinja", "pos": Vector2(2950, 380)},
+
+	# --- Ledeni vrhovi: 2 nivoa ---
+	{"id": "sneg_1", "name": "Snežna staza", "scene": "",
+	 "island": "sneg", "pos": Vector2(3360, 830)},
+	{"id": "sneg_2", "name": "Ledena pećina", "scene": "",
+	 "island": "sneg", "pos": Vector2(3750, 950)},
+
+	# --- Vatrena gora: 2 nivoa ---
+	{"id": "vulkan_1", "name": "Crna staza", "scene": "",
+	 "island": "vulkan", "pos": Vector2(4210, 300)},
+	{"id": "vulkan_2", "name": "Vrh vulkana", "scene": "",
+	 "island": "vulkan", "pos": Vector2(4580, 420)},
 ]
 
 ## Koji su nivoi zavrseni - kljuc je `id` iz LEVELS.
@@ -117,6 +112,34 @@ var current_level: int = 0
 
 func level_count() -> int:
 	return LEVELS.size()
+
+
+func island_count() -> int:
+	return ISLANDS.size()
+
+
+func island_data(index: int) -> Dictionary:
+	if index < 0 or index >= ISLANDS.size():
+		return {}
+	return ISLANDS[index]
+
+
+## Ostrvo na kome je dati nivo.
+func island_of(level_index: int) -> Dictionary:
+	var d := level_data(level_index)
+	if not d.has("island"):
+		return {}
+	for isl in ISLANDS:
+		if isl["id"] == d["island"]:
+			return isl
+	return {}
+
+
+## Da li su dva nivoa na istom ostrvu? Ako jesu, put je KOPNENI.
+func same_island(a: int, b: int) -> bool:
+	var da := level_data(a)
+	var db := level_data(b)
+	return da.has("island") and db.has("island") and da["island"] == db["island"]
 
 
 func level_data(index: int) -> Dictionary:
