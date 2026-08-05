@@ -16,11 +16,32 @@ signal replay_requested
 @onready var confetti: Node2D = $Confetti
 
 var _shown := false
+var _panel_scale := 1.0
+
+
+## Na uskom ekranu panel se skalira da tekst ostane citljiv i da
+## panel ne izadje van ekrana.
+const PANEL_WIDTH := 560.0
+const PANEL_MARGIN := 0.92
 
 
 func _ready() -> void:
 	visible = false
 	layer = 10
+	_fit_panel()
+	get_viewport().size_changed.connect(_fit_panel)
+
+
+## Uklopi panel u sirinu ekrana (telefon u portretu je uzak).
+func _fit_panel() -> void:
+	var vp := get_viewport().get_visible_rect().size
+	if vp.x <= 0.0:
+		return
+	# Nikad ne uvecavaj preko 1.0 - samo smanji ako ne staje.
+	var s := minf(1.0, (vp.x * PANEL_MARGIN) / PANEL_WIDTH)
+	panel.pivot_offset = Vector2(PANEL_WIDTH * 0.5, 170.0)
+	panel.scale = Vector2(s, s)
+	_panel_scale = s
 
 
 ## Prikazi ekran sa rezultatom.
@@ -39,7 +60,7 @@ func show_result(stars: int, total: int, time_text: String) -> void:
 
 	# Ulazna animacija: zatamnjenje, pa panel uleti odozgo.
 	dim.modulate.a = 0.0
-	panel.scale = Vector2(0.75, 0.75)
+	panel.scale = _panel_scale * Vector2(0.75, 0.75)
 	panel.modulate.a = 0.0
 
 	# Konfeti krecu odmah - ne vezuj ih na kraj tween lanca.
@@ -48,7 +69,7 @@ func show_result(stars: int, total: int, time_text: String) -> void:
 	var tw := create_tween()
 	tw.tween_property(dim, "modulate:a", 1.0, 0.4)
 	tw.parallel().tween_property(panel, "modulate:a", 1.0, 0.4)
-	tw.parallel().tween_property(panel, "scale", Vector2.ONE, 0.6) \
+	tw.parallel().tween_property(panel, "scale", _panel_scale * Vector2.ONE, 0.6) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 	# Brojac zvezdica se "namotava" do konacne cifre.

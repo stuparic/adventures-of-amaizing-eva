@@ -8,6 +8,16 @@ signal respawned
 @onready var body_visual: Node2D = $Visual
 @onready var stomp_area: Area2D = $StompArea
 @onready var hurt_area: Area2D = $HurtArea
+@onready var camera: Camera2D = $Camera
+
+## Koliko sirok deo sveta kamera pokazuje, u pikselima.
+## MANJI broj = veci likovi. Na telefonu (uzak ekran) treba manji da
+## Eva i Carli ostanu krupni; na desktopu veci da se vidi vise nivoa.
+const WORLD_WIDTH_PHONE := 380.0
+const WORLD_WIDTH_DESKTOP := 570.0
+
+## Ispod ove sirine ekrana racunamo da je telefon.
+const PHONE_MAX_WIDTH := 820.0
 
 var _coyote_timer := 0.0
 var _jump_buffer_timer := 0.0
@@ -23,6 +33,31 @@ func _ready() -> void:
 	add_to_group("player")
 	stomp_area.body_entered.connect(_on_stomp)
 	hurt_area.body_entered.connect(_on_hurt)
+
+	_fit_camera()
+	get_viewport().size_changed.connect(_fit_camera)
+
+
+## Namesti zum tako da likovi budu iste velicine na svakom ekranu.
+##
+## Bez ovoga: zum je fiksan, pa na telefonu (uzak ekran) kamera pokazuje
+## previse sveta i Eva ispadne sitna - tekst i likovi se ne vide.
+func _fit_camera() -> void:
+	# Racunaj iz VELICINE PROZORA, ne iz visible_rect: visible_rect je
+	# virtualna velicina (1280 px) koju stretch daje, a nama treba stvarna
+	# sirina ekrana da znamo da li je telefon.
+	var screen_w := float(DisplayServer.window_get_size().x)
+	var vp := get_viewport().get_visible_rect().size
+	if vp.x <= 0.0 or screen_w <= 0.0:
+		return
+
+	var is_phone := screen_w < PHONE_MAX_WIDTH
+	var target_width := WORLD_WIDTH_PHONE if is_phone else WORLD_WIDTH_DESKTOP
+
+	# Zum se racuna iz VIRTUALNE sirine (vp.x) jer kamera radi u tom prostoru.
+	var z := vp.x / target_width
+	camera.zoom = Vector2(z, z)
+	camera.offset = Vector2(24.0, 10.0) * (2.25 / z)
 
 
 func _physics_process(delta: float) -> void:

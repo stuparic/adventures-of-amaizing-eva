@@ -5,8 +5,15 @@ extends CanvasLayer
 @onready var hearts_box: HBoxContainer = $Margin/Rows/Hearts
 @onready var star_count: Label = $Margin/Rows/Stars/Count
 @onready var banner: Label = $Banner
+@onready var rows: VBoxContainer = $Margin/Rows
+
+## Na uskom ekranu (telefon) HUD i banner se uvecavaju - inace su
+## srca i zvezdice sitni i dete ih ne vidi.
+const PHONE_MAX_WIDTH := 820.0
+const PHONE_UI_SCALE := 1.7
 
 var _heart_nodes: Array[Label] = []
+var _banner_base_size := 34
 
 
 func _ready() -> void:
@@ -25,6 +32,19 @@ func _ready() -> void:
 	_on_hearts(Game.hearts)
 	_on_stars(Game.stars_collected)
 	banner.modulate.a = 0.0
+
+	_fit_ui()
+	get_viewport().size_changed.connect(_fit_ui)
+
+
+## Uvecaj HUD i banner na malim ekranima.
+func _fit_ui() -> void:
+	# Velicina prozora, ne visible_rect - vidi komentar u eva.gd::_fit_camera.
+	var w := float(DisplayServer.window_get_size().x)
+	var s := PHONE_UI_SCALE if w > 0.0 and w < PHONE_MAX_WIDTH else 1.0
+
+	rows.scale = Vector2(s, s)
+	banner.add_theme_font_size_override("font_size", int(_banner_base_size * s))
 
 
 func _on_hearts(value: int) -> void:
