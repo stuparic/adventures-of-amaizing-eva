@@ -24,19 +24,19 @@ polygon = PackedVector2Array(-1200, -800, 3000, -800, 3000, 1400, -1200, 1400)
 
 [node name="LandShadow" type="Polygon2D" parent="."]
 color = Color(0.34, 0.56, 0.72, 1)
-polygon = PackedVector2Array(-700, 148, -300, 112, 60, 158, 420, 108, 800, 152, 1180, 104, 1560, 150, 1940, 110, 2350, 152, 2350, 712, -700, 712)
+polygon = PackedVector2Array(-700, 78, -300, 32, 60, 92, 420, 26, 800, 86, 1180, 22, 1560, 88, 1940, 30, 2350, 90, 2350, 812, -700, 812)
 
 [node name="LandSand" type="Polygon2D" parent="."]
 color = Color(0.93, 0.88, 0.68, 1)
-polygon = PackedVector2Array(-700, 136, -300, 100, 60, 146, 420, 96, 800, 140, 1180, 92, 1560, 138, 1940, 98, 2350, 140, 2350, 698, -700, 698)
+polygon = PackedVector2Array(-700, 62, -300, 18, 60, 76, 420, 12, 800, 70, 1180, 8, 1560, 72, 1940, 16, 2350, 74, 2350, 796, -700, 796)
 
 [node name="Land" type="Polygon2D" parent="."]
 color = Color(0.76, 0.87, 0.62, 1)
-polygon = PackedVector2Array(-700, 162, -300, 126, 60, 172, 420, 122, 800, 166, 1180, 118, 1560, 164, 1940, 124, 2350, 166, 2350, 676, -700, 676)
+polygon = PackedVector2Array(-700, 96, -300, 50, 60, 110, 420, 44, 800, 104, 1180, 40, 1560, 106, 1940, 48, 2350, 108, 2350, 772, -700, 772)
 
 [node name="LandTint" type="Polygon2D" parent="."]
 color = Color(0.69, 0.83, 0.56, 0.5)
-polygon = PackedVector2Array(-700, 440, 2350, 396, 2350, 676, -700, 676)
+polygon = PackedVector2Array(-700, 470, 2350, 424, 2350, 772, -700, 772)
 
 [node name="Scenery" type="Node2D" parent="."]
 
@@ -115,38 +115,6 @@ theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 27
 text = "Zelena livada"
 horizontal_alignment = 1
-
-[node name="ZoomBox" type="VBoxContainer" parent="UI"]
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -74.0
-offset_top = -248.0
-offset_right = -14.0
-offset_bottom = -72.0
-grow_horizontal = 0
-grow_vertical = 0
-theme_override_constants/separation = 8
-
-[node name="In" type="Button" parent="UI/ZoomBox"]
-custom_minimum_size = Vector2(56, 56)
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "+"
-
-[node name="Home" type="Button" parent="UI/ZoomBox"]
-custom_minimum_size = Vector2(56, 46)
-layout_mode = 2
-theme_override_font_sizes/font_size = 17
-text = "Eva"
-
-[node name="Out" type="Button" parent="UI/ZoomBox"]
-custom_minimum_size = Vector2(56, 56)
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "-"
 
 [node name="Info" type="Label" parent="UI"]
 mouse_filter = 2

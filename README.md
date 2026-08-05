@@ -1,4 +1,4 @@
-# Adventure of Amazing Eva
+# Evine Avanture
 
 2D side-scroller platformer. Eva (5 god., plava kosa, plave oci) i njena lutka
 Budzumbora (roze haljina, narandzasta kosa) idu kroz nivo da spasu macu iz kaveza.
@@ -61,9 +61,9 @@ Putevi su krivudavi (Bezier krive), a mapa ima reku, jezera i drvece.
 |---|---|
 | Izaberi nivo | strelice, ili klik/dodir na tacku |
 | Udji u nivo | SPACE, ili ponovni klik na izabranu tacku |
-| Zumiraj | dugmad **+** / **−** dole desno, skrol misa, tasteri +/−, pinch |
+| Zumiraj | dugmad **+** / **−** desno na sredini, skrol misa, pinch |
 | Pomeri mapu | prevuci misem ili prstom |
-| Vrati kameru | dugme **Eva** dole desno |
+| Vrati kameru | dugme **Eva** desno na sredini |
 
 ### Kako da dodas nov nivo
 

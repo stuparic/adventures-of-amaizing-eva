@@ -14,8 +14,8 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
-config/name="Adventure of Amazing Eva"
-config/description="Eva i njena lutka Budzumbora spasavaju macu."
+config/name="Evine Avanture"
+config/description="Eva i njena lutka Budzumbora spasavaju macu Carlija."
 run/main_scene="res://scenes/world_map.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"

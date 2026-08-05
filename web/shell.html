@@ -264,7 +264,7 @@
 	</canvas>
 
 	<div id="boot">
-		<h1>Adventure of Amazing Eva</h1>
+		<h1>Evine Avanture</h1>
 		<div id="bar"><div id="fill"></div></div>
 		<p id="boot-msg">Ucitavanje...</p>
 	</div>
@@ -399,35 +399,48 @@
 		});
 
 		// --- Kontrole mape ---
-		// Prikazi ih tek kad igra registruje svoj API (znaci mapa je aktivna).
+		//
+		// SHELL definise API, NE igra. Ranije je shell cekao da Godot
+		// registruje window.evaZoomIn - ako eval zakasni ili se scena
+		// promeni, kontrole ostanu skrivene zauvek.
+		//
+		// Sada: shell upisuje komande u window.evaCmd od prvog frejma, a
+		// igra ih samo cita (_poll_web_commands). window.evaMapActive
+		// govori shell-u da li je mapa trenutno na ekranu.
+		window.evaCmd = 0;
+		window.evaPanX = 0;
+		window.evaPanY = 0;
+		window.evaMapActive = 0;
+		window.evaZoomIn  = function () { window.evaCmd = 1; };
+		window.evaZoomOut = function () { window.evaCmd = 2; };
+		window.evaHome    = function () { window.evaCmd = 3; };
+		window.evaPan = function (dx, dy) {
+			window.evaPanX += dx;
+			window.evaPanY += dy;
+		};
+
 		var mapctl = document.getElementById('mapctl');
-		function bindMapCtl() {
-			var pairs = [['mz-in', 'evaZoomIn'], ['mz-out', 'evaZoomOut'], ['mz-home', 'evaHome']];
-			pairs.forEach(function (pair) {
-				var el = document.getElementById(pair[0]);
-				var fn = pair[1];
-				['click', 'touchend'].forEach(function (t) {
-					el.addEventListener(t, function (e) {
-						e.preventDefault();
-						e.stopPropagation();
-						if (typeof window[fn] === 'function') window[fn]();
-					}, { passive: false });
-				});
+		[['mz-in', window.evaZoomIn], ['mz-home', window.evaHome],
+		 ['mz-out', window.evaZoomOut]].forEach(function (pair) {
+			var el = document.getElementById(pair[0]);
+			var fn = pair[1];
+			['click', 'touchend'].forEach(function (t) {
+				el.addEventListener(t, function (e) {
+					e.preventDefault();
+					e.stopPropagation();
+					fn();
+				}, { passive: false });
 			});
-		}
-		bindMapCtl();
+		});
 
-		// Igra registruje evaZoomIn tek kad se mapa ucita - proveravaj.
+		// Prikazi kontrole samo dok je mapa aktivna (igra postavlja flag).
 		setInterval(function () {
-			var live = typeof window.evaZoomIn === 'function';
-			mapctl.classList.toggle('show', live);
-		}, 500);
+			mapctl.classList.toggle('show', window.evaMapActive === 1);
+		}, 400);
 
-		// Skrol misa/trackpada -> zum igre. Godotov PanGesture na webu je
-		// nepouzdan, pa presrecemo wheel sami.
+		// Skrol misa/trackpada -> zum igre.
 		canvas.addEventListener('wheel', function (e) {
 			e.preventDefault();
-			if (typeof window.evaZoomIn !== 'function') return;
 			if (e.deltaY > 0) window.evaZoomOut();
 			else window.evaZoomIn();
 		}, { passive: false });
@@ -448,7 +461,7 @@
 		function panEnd() { panning = false; panLast = null; }
 
 		canvas.addEventListener('pointerdown', function (e) {
-			if (typeof window.evaPan !== 'function') return;   // nije mapa
+			if (window.evaMapActive !== 1) return;   // pomeranje samo na mapi
 			panStart(e.clientX, e.clientY);
 		});
 		canvas.addEventListener('pointermove', function (e) {
@@ -468,7 +481,7 @@
 			var dx = e.touches[0].clientX - e.touches[1].clientX;
 			var dy = e.touches[0].clientY - e.touches[1].clientY;
 			var d = Math.hypot(dx, dy);
-			if (pinchDist > 0 && typeof window.evaZoomIn === 'function') {
+			if (pinchDist > 0 && window.evaMapActive === 1) {
 				var diff = d - pinchDist;
 				if (Math.abs(diff) > 12) {
 					if (diff > 0) window.evaZoomIn(); else window.evaZoomOut();

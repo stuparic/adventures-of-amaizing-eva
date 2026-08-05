@@ -27,7 +27,7 @@ const C_TEXT := Color(0.22, 0.3, 0.42)
 const StarIcon := preload("res://scenes/hud_star.tscn")
 
 ## Granice zuma. MANJI broj = vidi se VISE mape.
-const ZOOM_MIN := 0.18
+const ZOOM_MIN := 0.3
 const ZOOM_MAX := 1.5
 const ZOOM_STEP := 0.12
 
@@ -60,6 +60,13 @@ var _free_camera := false
 
 
 func _ready() -> void:
+	# Evina instanca nosi svoju Camera2D. Ugasi je i uzmi kontrolu -
+	# inace render prati nju, a zoom mapine kamere nema efekta.
+	var eva_cam := get_node_or_null("EvaMarker/Eva/Camera") as Camera2D
+	if eva_cam != null:
+		eva_cam.enabled = false
+	camera.make_current()
+
 	_selected = _first_playable()
 	_build_scenery()
 	_build_map()
@@ -68,19 +75,12 @@ func _ready() -> void:
 
 	# Vidljiva dugmad za zum - rade svuda, bez zavisnosti od skrola,
 	# tastature ili pinch gesta (koji se razlikuju po platformi).
-	($UI/ZoomBox/In as Button).pressed.connect(func() -> void: _zoom_by(ZOOM_STEP * 1.6))
-	($UI/ZoomBox/Out as Button).pressed.connect(func() -> void: _zoom_by(-ZOOM_STEP * 1.6))
 	# Web: izlozi zum HTML dugmadima iz shell.html preko JavaScriptBridge.
 	# Godotov input na webu nije pouzdan za skrol/pinch, pa HTML dugmad
 	# pozivaju ovo direktno.
 	if OS.has_feature("web"):
 		_expose_web_api()
 
-	($UI/ZoomBox/Home as Button).pressed.connect(func() -> void:
-		# Vrati kameru na izabranu tacku (ako je mapa odvucena).
-		_free_camera = false
-		Audio.play("checkpoint")
-	)
 
 	Audio.play_music()
 
@@ -632,35 +632,50 @@ func _unhandled_input(event: InputEvent) -> void:
 		_enter_level()
 
 
-## Web: napravi "postansko sanduce" u JS-u koje igra cita svaki frejm.
+## Web: kaži shell-u da je mapa aktivna, pa da prikaze kontrole.
 ##
-## create_callback() NE radi ovde - registruje funkciju u window, ali se
-## GDScript telo nikad ne izvrsi (potvrdjeno logovanjem). Zato HTML dugmad
-## samo upisuju broj u window.evaCmd, a _poll_web_commands() ga cita.
+## API (window.evaCmd, evaZoomIn...) definise SHELL, ne igra.
+## create_callback() ne radi ovde - registruje funkciju u window, ali se
+## GDScript telo nikad ne izvrsi (potvrdjeno logovanjem). Zato igra samo
+## CITA broj iz window.evaCmd svaki frejm.
 func _expose_web_api() -> void:
-	JavaScriptBridge.eval("""
-		window.evaCmd = 0;
-		window.evaZoomIn  = function () { window.evaCmd = 1; };
-		window.evaZoomOut = function () { window.evaCmd = 2; };
-		window.evaHome    = function () { window.evaCmd = 3; };
-		window.evaPan     = function (dx, dy) {
-			window.evaPanX = (window.evaPanX || 0) + dx;
-			window.evaPanY = (window.evaPanY || 0) + dy;
-		};
-	""", true)
+	JavaScriptBridge.eval("window.evaMapActive = 1;", true)
+
+
+func _exit_tree() -> void:
+	# Sakrij kontrole kad izadjemo sa mape (npr. ulazak u nivo).
+	if _is_web:
+		JavaScriptBridge.eval("window.evaMapActive = 0;", true)
 
 
 ## Procitaj i izvrsi komandu iz JS-a. Zove se iz _process (samo web).
+## Jedan eval za sve tri vrednosti - manje prelaza JS<->WASM po frejmu.
 func _poll_web_commands() -> void:
-	var cmd: int = int(JavaScriptBridge.eval("var c = window.evaCmd || 0; window.evaCmd = 0; c;", true))
-	match cmd:
+	var raw: Variant = JavaScriptBridge.eval("""
+		(function () {
+			var c = window.evaCmd || 0;
+			var x = window.evaPanX || 0;
+			var y = window.evaPanY || 0;
+			window.evaCmd = 0;
+			window.evaPanX = 0;
+			window.evaPanY = 0;
+			return c + ',' + x.toFixed(2) + ',' + y.toFixed(2);
+		})();
+	""", true)
+	if raw == null:
+		return
+
+	var parts := String(raw).split(",")
+	if parts.size() < 3:
+		return
+
+	match int(parts[0]):
 		1: _zoom_by(ZOOM_STEP * 1.6)
 		2: _zoom_by(-ZOOM_STEP * 1.6)
 		3: _free_camera = false
 
-	# Pomeranje mape prevlacenjem preko JS-a (mis i prst).
-	var px: float = float(JavaScriptBridge.eval("var x = window.evaPanX || 0; window.evaPanX = 0; x;", true))
-	var py: float = float(JavaScriptBridge.eval("var y = window.evaPanY || 0; window.evaPanY = 0; y;", true))
+	var px := float(parts[1])
+	var py := float(parts[2])
 	if absf(px) > 0.01 or absf(py) > 0.01:
 		camera.position -= Vector2(px, py) / _zoom
 		_free_camera = true
