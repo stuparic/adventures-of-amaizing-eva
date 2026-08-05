@@ -20,43 +20,27 @@ color = Color(0.6, 0.84, 0.94, 1)
 
 [node name="Ocean" type="Polygon2D" parent="."]
 color = Color(0.42, 0.68, 0.86, 1)
-polygon = PackedVector2Array(-1200, -800, 3000, -800, 3000, 1400, -1200, 1400)
-
-[node name="LandShadow" type="Polygon2D" parent="."]
-color = Color(0.34, 0.56, 0.72, 1)
-polygon = PackedVector2Array(-700, 78, -300, 32, 60, 92, 420, 26, 800, 86, 1180, 22, 1560, 88, 1940, 30, 2350, 90, 2350, 812, -700, 812)
-
-[node name="LandSand" type="Polygon2D" parent="."]
-color = Color(0.93, 0.88, 0.68, 1)
-polygon = PackedVector2Array(-700, 62, -300, 18, 60, 76, 420, 12, 800, 70, 1180, 8, 1560, 72, 1940, 16, 2350, 74, 2350, 796, -700, 796)
-
-[node name="Land" type="Polygon2D" parent="."]
-color = Color(0.76, 0.87, 0.62, 1)
-polygon = PackedVector2Array(-700, 96, -300, 50, 60, 110, 420, 44, 800, 104, 1180, 40, 1560, 106, 1940, 48, 2350, 108, 2350, 772, -700, 772)
-
-[node name="LandTint" type="Polygon2D" parent="."]
-color = Color(0.69, 0.83, 0.56, 0.5)
-polygon = PackedVector2Array(-700, 470, 2350, 424, 2350, 772, -700, 772)
+polygon = PackedVector2Array(-1500, -1200, 5200, -1200, 5200, 2200, -1500, 2200)
 
 [node name="Scenery" type="Node2D" parent="."]
 
 [node name="Cloud1" type="Polygon2D" parent="."]
-position = Vector2(260, 34)
+position = Vector2(420, 180)
 color = Color(1, 1, 1, 0.78)
 polygon = PackedVector2Array(-42, 10, -25, -10, 3, -16, 26, -6, 42, 10)
 
 [node name="Cloud2" type="Polygon2D" parent="."]
-position = Vector2(900, 18)
+position = Vector2(1600, 130)
 color = Color(1, 1, 1, 0.7)
 polygon = PackedVector2Array(-48, 11, -29, -12, 4, -18, 30, -7, 48, 11)
 
 [node name="Cloud3" type="Polygon2D" parent="."]
-position = Vector2(1520, 38)
+position = Vector2(2900, 190)
 color = Color(1, 1, 1, 0.75)
 polygon = PackedVector2Array(-38, 9, -23, -10, 3, -14, 24, -5, 38, 9)
 
 [node name="EvaMarker" type="Node2D" parent="."]
-position = Vector2(170, 340)
+position = Vector2(320, 590)
 z_index = 3
 
 [node name="Eva" parent="EvaMarker" instance=ExtResource("3_eva")]
@@ -73,7 +57,7 @@ position = Vector2(24, -2)
 script = null
 
 [node name="Camera" type="Camera2D" parent="."]
-position = Vector2(170, 380)
+position = Vector2(320, 620)
 position_smoothing_enabled = true
 position_smoothing_speed = 4.0
 

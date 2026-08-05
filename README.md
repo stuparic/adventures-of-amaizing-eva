@@ -53,7 +53,25 @@ zatvorene tacke sa oznakom "uskoro".
 Nivo se otkljucava kad zavrsis prethodni. Napredak i najbolji rezultat
 (zvezdice + vreme) se cuvaju, pa prezive zatvaranje browsera.
 
-Putevi su krivudavi (Bezier krive), a mapa ima reku, jezera i drvece.
+Mapa je **arhipelag** — svaki nivo je na svom ostrvu, a bioma nivoa je
+vizualni identitet tog ostrva:
+
+| Ostrvo | Kako izgleda |
+|---|---|
+| Zelena livada | listopadno drvece, cvetici, jezerce |
+| Peščana plaža | palme sa kokosima, skoljke, laguna |
+| Zelena džungla | gusto visoko drvece u tri sloja, tamno tlo |
+| Vruća pustinja | kaktusi sa cvetovima, dine, stene |
+| Snežne planine | jelke pod snegom, smetovi, zaledjeno jezero |
+| Vatreni vulkan | krater sa lavom, tokovi lave, mrtvo drvo, pepeo |
+
+Izmedju su sitna bezimena ostrvca, a putevi su **morske brazde** — Eva
+putuje brodicem od ostrva do ostrva. Tacka nivoa je na obali, kao
+pristaniste, da se vidi ceo bioma.
+
+Art se generise kodom u [scripts/biome_art.gd](scripts/biome_art.gd),
+deterministicki (fiksan seed) — mapa je ista pri svakom pokretanju.
+Nova ostrva se dodaju upisom `biome`, `island` i `island_size` u LEVELS.
 
 **Kretanje po mapi:**
 

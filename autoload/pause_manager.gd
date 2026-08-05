@@ -102,6 +102,8 @@ func _process(delta: float) -> void:
 		return
 	_web_check_timer = 0.0
 
+	if get_tree() == null:
+		return
 	var hidden := int(JavaScriptBridge.eval("window.evaHidden || 0;", true)) == 1
 	if hidden and not _paused_by_us:
 		pause_game()
@@ -128,7 +130,10 @@ func pause_game() -> void:
 	if _fade_tween == null or not _fade_tween.is_valid():
 		_saved_volume_db = AudioServer.get_bus_volume_db(_master_bus)
 
-	get_tree().paused = true
+	var tree := get_tree()
+	if tree == null:
+		return
+	tree.paused = true
 	if _overlay != null:
 		_overlay.visible = true
 	_fade_audio(-80.0, FADE_OUT)
@@ -139,7 +144,10 @@ func resume_game() -> void:
 		return
 	_paused_by_us = false
 
-	get_tree().paused = false
+	var tree := get_tree()
+	if tree == null:
+		return
+	tree.paused = false
 	if _overlay != null:
 		_overlay.visible = false
 	# Ne vracaj zvuk ako je korisnik rucno iskljucio (taster N).

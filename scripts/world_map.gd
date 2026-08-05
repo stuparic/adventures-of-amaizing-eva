@@ -12,23 +12,25 @@ extends Node2D
 ##   klik / dodir    - izaberi, pa ponovo za ulaz
 
 const DOT_R := 34.0            # poluprecnik tacke nivoa
-const ROAD_W := 9.0            # sirina puta
-const DASH_LEN := 17.0         # duzina crtice na putu
-const DASH_GAP := 13.0         # praznina izmedju crtica
+const ROAD_W := 7.0            # sirina puta
+const DASH_LEN := 26.0         # duzina crtice na putu
+const DASH_GAP := 20.0         # praznina izmedju crtica
 const CURVE_STEPS := 30        # segmenata po krivini (vise = glatkije)
 
-const C_ROAD := Color(0.86, 0.76, 0.58)
-const C_ROAD_EDGE := Color(0.72, 0.6, 0.42)
-const C_ROAD_DONE := Color(0.99, 0.86, 0.36)
-const C_ROAD_DONE_EDGE := Color(0.85, 0.68, 0.2)
+## Putevi su MORSKI - putujemo brodom od ostrva do ostrva.
+## Neotkljucan: bleda brazda. Zavrsen: zlatna, kao pozlacen trag.
+const C_ROAD := Color(1, 1, 1, 0.42)
+const C_ROAD_EDGE := Color(0.55, 0.78, 0.9, 0.5)
+const C_ROAD_DONE := Color(1, 0.9, 0.45, 0.85)
+const C_ROAD_DONE_EDGE := Color(0.9, 0.7, 0.25, 0.6)
 const C_LOCKED := Color(0.62, 0.62, 0.66)
 const C_TEXT := Color(0.22, 0.3, 0.42)
 
 const StarIcon := preload("res://scenes/hud_star.tscn")
 
 ## Granice zuma. MANJI broj = vidi se VISE mape.
-const ZOOM_MIN := 0.3
-const ZOOM_MAX := 1.5
+const ZOOM_MIN := 0.22
+const ZOOM_MAX := 1.6
 const ZOOM_STEP := 0.12
 
 @onready var camera: Camera2D = $Camera
@@ -49,6 +51,7 @@ var _touches: Dictionary = {}
 var _pinch_start_dist := 0.0
 var _pinch_start_zoom := 1.0
 var _zoom_initialized := false
+var _boat: Node2D
 var _is_web := OS.has_feature("web")
 
 
@@ -70,6 +73,7 @@ func _ready() -> void:
 	_selected = _first_playable()
 	_build_scenery()
 	_build_map()
+	_build_boat()
 	_fit_zoom()
 	_update_selection()
 
@@ -111,7 +115,7 @@ func _fit_zoom() -> void:
 		# Prvi frejm na webu moze da vrati 0 - probaj iz viewporta.
 		short_side = minf(get_viewport().get_visible_rect().size.x,
 			get_viewport().get_visible_rect().size.y)
-	_target_zoom = 0.42 if short_side < 500.0 else 0.5
+	_target_zoom = 0.85 if short_side < 500.0 else 1.0
 	_zoom = _target_zoom
 	camera.zoom = Vector2(_zoom, _zoom)
 
@@ -120,43 +124,74 @@ func _fit_zoom() -> void:
 
 func _build_scenery() -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 4242   # fiksno: mapa izgleda isto pri svakom pokretanju
+	rng.seed = 20260805   # fiksno: arhipelag izgleda isto pri svakom pokretanju
 
-	# Reka vijuga kroz celu mapu - ide ispod puteva (z_index 0).
-	_add_river([
-		Vector2(-80, 235), Vector2(170, 300), Vector2(350, 200),
-		Vector2(570, 168), Vector2(770, 240), Vector2(990, 150),
-		Vector2(1210, 200), Vector2(1430, 145), Vector2(1720, 205),
+	# Talasi po okeanu - daju osecaj vode, ne praznog plavog polja.
+	_add_ocean_waves(rng)
+
+	# Jedno ostrvo po nivou, svako sa svojim biomom.
+	for i in Game.level_count():
+		var d := Game.level_data(i)
+		var biome := String(d.get("biome", "livada"))
+		var pos: Vector2 = d.get("island", d["map_pos"])
+		var isz: Vector2 = d.get("island_size", Vector2(280, 180))
+		BiomeArt.draw_island(scenery, biome, pos, isz, 1000 + i * 137)
+
+	# Mala bezimena ostrvca izmedju - arhipelag deluje veci.
+	var extra := [
+		Vector2(600, 830), Vector2(1180, 300), Vector2(1800, 420),
+		Vector2(2440, 800), Vector2(3040, 330), Vector2(1080, 900),
+		Vector2(2200, 880), Vector2(3200, 850),
+	]
+	var biomes := ["livada", "plaza", "dzungla", "plaza", "sneg", "livada",
+		"pustinja", "vulkan"]
+	for i in extra.size():
+		var sz := Vector2(rng.randf_range(70.0, 120.0), rng.randf_range(48.0, 80.0))
+		BiomeArt.draw_island(scenery, biomes[i], extra[i], sz, 5000 + i * 97)
+
+
+## Brodic pod Evom - na mapi putuje morem od ostrva do ostrva.
+func _build_boat() -> void:
+	_boat = Node2D.new()
+	_boat.z_index = 2
+	eva_marker.add_child(_boat)
+	eva_marker.move_child(_boat, 0)   # ispod Eve i Budzumbore
+
+	# Trup.
+	_poly(_boat, Color(0.62, 0.42, 0.26), [
+		Vector2(-26, 8), Vector2(26, 8), Vector2(20, 20), Vector2(-20, 20),
+	])
+	_poly(_boat, Color(0.74, 0.53, 0.34), [
+		Vector2(-26, 8), Vector2(26, 8), Vector2(24, 12), Vector2(-24, 12),
+	])
+	# Jarbol i jedro.
+	_poly(_boat, Color(0.5, 0.36, 0.22), [
+		Vector2(-1.6, -26), Vector2(1.6, -26), Vector2(1.6, 8), Vector2(-1.6, 8),
+	])
+	_poly(_boat, Color(1, 0.98, 0.94), [
+		Vector2(2.6, -24), Vector2(20, -4), Vector2(2.6, 4),
+	])
+	_poly(_boat, Color(0.95, 0.4, 0.55), [
+		Vector2(2.6, -24), Vector2(12, -13), Vector2(2.6, -9),
+	])
+	# Zastavica.
+	_poly(_boat, Color(0.98, 0.75, 0.25), [
+		Vector2(1.6, -26), Vector2(11, -23.5), Vector2(1.6, -21),
 	])
 
-	# Jezera - nepravilni oblici, ne pravilni krugovi.
-	_add_lake(Vector2(330, 610), 86.0, rng)
-	_add_lake(Vector2(950, 620), 70.0, rng)
-	_add_lake(Vector2(1520, 600), 74.0, rng)
 
-	# Drvece: gusce oko dzungle, redje oko pustinje i snega.
-	var spots := [
-		Vector2(40, 300), Vector2(60, 560), Vector2(280, 350),
-		Vector2(300, 430), Vector2(560, 360), Vector2(600, 620),
-		Vector2(640, 240), Vector2(880, 430), Vector2(900, 250),
-		Vector2(1000, 590), Vector2(1140, 480), Vector2(1180, 210),
-		Vector2(1240, 620), Vector2(1420, 250), Vector2(1480, 430),
-		Vector2(1560, 640), Vector2(1740, 480), Vector2(1780, 300),
-		Vector2(1860, 560), Vector2(-40, 420), Vector2(420, 610),
-		Vector2(700, 320), Vector2(1300, 380),
-	]
-	for i in spots.size():
-		_add_tree(spots[i], rng.randf() > 0.55, rng)
-
-	# Kamencici - da tlo ne bude prazno.
-	for i in 28:
-		var pos := Vector2(rng.randf_range(-40.0, 1760.0), rng.randf_range(210.0, 590.0))
-		var r := rng.randf_range(3.0, 7.0)
-		_poly(scenery, Color(0.66, 0.66, 0.62, 0.5), [
-			pos + Vector2(-r, 0), pos + Vector2(-r * 0.4, -r * 0.8),
-			pos + Vector2(r, -r * 0.3), pos + Vector2(r * 0.5, r * 0.7),
-			pos + Vector2(-r * 0.5, r * 0.8),
+## Talasi: kratke bele crtice po okeanu, gusce blizu ostrva.
+func _add_ocean_waves(rng: RandomNumberGenerator) -> void:
+	for i in 90:
+		var p := Vector2(rng.randf_range(-200.0, 3900.0), rng.randf_range(80.0, 1000.0))
+		var w := rng.randf_range(9.0, 20.0)
+		var a := Color(1, 1, 1, rng.randf_range(0.1, 0.24))
+		_poly(scenery, a, [
+			p + Vector2(-w, 0), p + Vector2(-w * 0.35, -2.2),
+			p + Vector2(w * 0.35, 0), p + Vector2(w, -1.6),
+			p + Vector2(w * 0.35, 1.4), p + Vector2(-w * 0.35, -0.6),
 		])
+
 
 
 ## Jezero: nepravilan poligon + svetliji obod (plicak) + odsjaj.
