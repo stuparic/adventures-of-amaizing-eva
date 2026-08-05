@@ -7,10 +7,13 @@ extends CanvasLayer
 @onready var banner: Label = $Banner
 @onready var rows: VBoxContainer = $Margin/Rows
 
-## Na uskom ekranu (telefon) HUD i banner se uvecavaju - inace su
-## srca i zvezdice sitni i dete ih ne vidi.
-const PHONE_MAX_WIDTH := 820.0
-const PHONE_UI_SCALE := 1.7
+## HUD i banner se uvecavaju na malim ekranima - inace su srca i
+## zvezdice sitni i dete ih ne vidi.
+## Klasa uredjaja po KRACOJ strani (telefon u landscape-u je sirok!).
+const PHONE_MAX_SHORT_SIDE := 500.0
+const TABLET_MAX_SHORT_SIDE := 780.0
+const PHONE_UI_SCALE := 2.1
+const TABLET_UI_SCALE := 1.5
 
 var _heart_nodes: Array[Label] = []
 var _banner_base_size := 34
@@ -39,9 +42,22 @@ func _ready() -> void:
 
 ## Uvecaj HUD i banner na malim ekranima.
 func _fit_ui() -> void:
-	# Velicina prozora, ne visible_rect - vidi komentar u eva.gd::_fit_camera.
-	var w := float(DisplayServer.window_get_size().x)
-	var s := PHONE_UI_SCALE if w > 0.0 and w < PHONE_MAX_WIDTH else 1.0
+	var win := DisplayServer.window_get_size()
+	if win.x <= 0 or win.y <= 0:
+		return
+	var short_side := float(mini(win.x, win.y))
+	var s := 1.0
+	if short_side < PHONE_MAX_SHORT_SIDE:
+		s = PHONE_UI_SCALE
+	elif short_side < TABLET_MAX_SHORT_SIDE:
+		s = TABLET_UI_SCALE
+
+	# Sa "expand" viewport moze da bude visi od baznih 720px - HUD je u tom
+	# prostoru pa se srazmerno smanji. Ogranici da ne postane ogroman.
+	var vp := get_viewport().get_visible_rect().size
+	if vp.y > 620.0:
+		s *= minf(vp.y / 620.0, 1.35)
+	s = minf(s, 2.4)
 
 	rows.scale = Vector2(s, s)
 	banner.add_theme_font_size_override("font_size", int(_banner_base_size * s))

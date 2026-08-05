@@ -11,13 +11,16 @@ signal respawned
 @onready var camera: Camera2D = $Camera
 
 ## Koliko sirok deo sveta kamera pokazuje, u pikselima.
-## MANJI broj = veci likovi. Na telefonu (uzak ekran) treba manji da
-## Eva i Carli ostanu krupni; na desktopu veci da se vidi vise nivoa.
-const WORLD_WIDTH_PHONE := 380.0
-const WORLD_WIDTH_DESKTOP := 570.0
+## MANJI broj = VECI likovi.
+const WORLD_WIDTH_PHONE := 300.0     # telefon: likovi krupni
+const WORLD_WIDTH_TABLET := 430.0
+const WORLD_WIDTH_DESKTOP := 560.0
 
-## Ispod ove sirine ekrana racunamo da je telefon.
-const PHONE_MAX_WIDTH := 820.0
+## Telefon se prepoznaje po KRACOJ strani ekrana, ne po sirini:
+## telefon u landscape-u je npr. 844x390 - sirok je, ali je i dalje telefon.
+## Sirina bi ga pogresno svrstala u desktop i likovi bi ispali sitni.
+const PHONE_MAX_SHORT_SIDE := 500.0
+const TABLET_MAX_SHORT_SIDE := 780.0
 
 var _coyote_timer := 0.0
 var _jump_buffer_timer := 0.0
@@ -46,15 +49,19 @@ func _fit_camera() -> void:
 	# Racunaj iz VELICINE PROZORA, ne iz visible_rect: visible_rect je
 	# virtualna velicina (1280 px) koju stretch daje, a nama treba stvarna
 	# sirina ekrana da znamo da li je telefon.
-	var screen_w := float(DisplayServer.window_get_size().x)
+	var win := DisplayServer.window_get_size()
 	var vp := get_viewport().get_visible_rect().size
-	if vp.x <= 0.0 or screen_w <= 0.0:
+	if vp.x <= 0.0 or win.x <= 0 or win.y <= 0:
 		return
 
-	var is_phone := screen_w < PHONE_MAX_WIDTH
-	var target_width := WORLD_WIDTH_PHONE if is_phone else WORLD_WIDTH_DESKTOP
+	# Kraca strana odredjuje klasu uredjaja - radi i u portretu i u landscape-u.
+	var short_side := float(mini(win.x, win.y))
+	var target_width := WORLD_WIDTH_DESKTOP
+	if short_side < PHONE_MAX_SHORT_SIDE:
+		target_width = WORLD_WIDTH_PHONE
+	elif short_side < TABLET_MAX_SHORT_SIDE:
+		target_width = WORLD_WIDTH_TABLET
 
-	# Zum se racuna iz VIRTUALNE sirine (vp.x) jer kamera radi u tom prostoru.
 	var z := vp.x / target_width
 	camera.zoom = Vector2(z, z)
 	camera.offset = Vector2(24.0, 10.0) * (2.25 / z)
