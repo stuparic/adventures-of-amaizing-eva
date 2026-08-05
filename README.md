@@ -9,8 +9,24 @@ Godot 4.7 · besplatno · bez ikakvih zavisnosti
 
 **https://stuparic.github.io/adventures-of-amaizing-eva/**
 
-Radi na kompjuteru i tabletu, bez instalacije. Prvo otvaranje ucitava ~44 MB,
+Radi na kompjuteru, tabletu i telefonu. Prvo otvaranje ucitava ~44 MB,
 posle toga browser kesira pa je odmah tu.
+
+### Na telefonu: dodaj na pocetni ekran
+
+Stranica ne moze sama da sakrije adresnu traku browsera — to je bezbednosno
+pravilo. Ali igra je PWA, pa kad je dodas na pocetni ekran otvara se **kao
+aplikacija: bez adresne trake, na ceo ekran, zakljucana u landscape**.
+
+- **iPhone (Safari):** Podeli (↑) → "Dodaj na pocetni ekran"
+- **Android (Chrome):** Meni (⋮) → "Dodaj na pocetni ekran"
+
+Igra sama prikaze ovo uputstvo posle par sekundi kad je otvoris u browseru
+na telefonu. Na Androidu i prvi dodir prebacuje u fullscreen (iOS Safari to
+ne podrzava).
+
+Igra se **samo u landscape-u** — u portretu prikaze "Okreni telefon", jer
+side-scroller u vertikalnom kadru ne radi.
 
 Web verzija se build-uje automatski na svaki push
 ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)).

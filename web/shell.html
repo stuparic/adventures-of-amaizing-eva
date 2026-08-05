@@ -11,6 +11,9 @@
 	<title>$GODOT_PROJECT_NAME</title>
 	<link rel="icon" href="$GODOT_PROJECT_ICON">
 	<link rel="apple-touch-icon" href="$GODOT_APPLE_TOUCH_ICON">
+	<!-- Manifest: bez njega "dodaj na pocetni ekran" ne daje fullscreen.
+	     Godot ga ubacuje samo u svoj default shell, custom mora sam. -->
+	<link rel="manifest" href="index.manifest.json">
 	<style>
 		* { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -77,6 +80,42 @@
 		}
 
 		#boot p { font-size: clamp(13px, 3.4vw, 16px); opacity: .85; }
+
+		/* --- "Dodaj na pocetni ekran" (samo u browseru na telefonu) --- */
+		#install {
+			position: fixed;
+			left: 8px;
+			right: 8px;
+			bottom: 8px;
+			display: none;
+			align-items: center;
+			gap: 10px;
+			padding: 11px 13px;
+			border-radius: 12px;
+			background: rgba(20, 40, 65, .9);
+			color: #fff;
+			font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+			font-size: 13px;
+			line-height: 1.45;
+			z-index: 16;
+			box-shadow: 0 4px 16px rgba(0, 0, 0, .3);
+		}
+		#install.show { display: flex; }
+		#install .txt { flex: 1; }
+		#install strong { display: block; font-size: 13px; }
+		#install span { opacity: .85; font-size: 12px; }
+		#install button {
+			flex: none;
+			width: 30px;
+			height: 30px;
+			border: 0;
+			border-radius: 15px;
+			background: rgba(255, 255, 255, .17);
+			color: #fff;
+			font-size: 19px;
+			line-height: 1;
+			cursor: pointer;
+		}
 
 		/* --- "Okreni telefon" (samo portret na telefonu) --- */
 		#rotate {
@@ -159,6 +198,14 @@
 		<p id="boot-msg">Ucitavanje...</p>
 	</div>
 
+	<div id="install">
+		<button id="install-x" aria-label="Zatvori">×</button>
+		<div class="txt">
+			<strong>Za igru bez trake browsera:</strong>
+			<span id="install-how">Dodaj na pocetni ekran</span>
+		</div>
+	</div>
+
 	<div id="rotate">
 		<div class="phone">
 			<div class="screen"></div>
@@ -208,6 +255,59 @@
 		}).catch(function (err) {
 			showError(err && err.message ? err.message : String(err));
 		});
+
+		// Service worker - Chrome zahteva registrovan SW za "instaliraj" opciju.
+		if ('serviceWorker' in navigator) {
+			window.addEventListener('load', function () {
+				navigator.serviceWorker.register('index.service.worker.js')
+					.catch(function () { /* PWA nije kriticna - igra radi i bez nje */ });
+			});
+		}
+
+		// --- Skrivanje browser trake ---
+		//
+		// Stranica NE MOZE sama da sakrije adresnu traku - to je bezbednosno
+		// pravilo browsera. Dva nacina koja rade:
+		//   1) Dodavanje na pocetni ekran (PWA manifest, display: fullscreen)
+		//      -> igra se otvara kao aplikacija, bez ikakvog browser UI.
+		//   2) Fullscreen API na dodir korisnika (radi na Androidu; iOS
+		//      Safari ga ne podrzava za obican element).
+		const standalone = window.matchMedia('(display-mode: fullscreen)').matches
+			|| window.matchMedia('(display-mode: standalone)').matches
+			|| window.navigator.standalone === true;
+
+		const isTouch = window.matchMedia('(pointer: coarse)').matches;
+		const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+			|| (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+		// Fullscreen na prvi dodir - jedini nacin koji browser dozvoljava.
+		function tryFullscreen() {
+			if (standalone || !isTouch) return;
+			const el = document.documentElement;
+			if (document.fullscreenElement) return;
+			const fn = el.requestFullscreen || el.webkitRequestFullscreen;
+			if (fn) {
+				fn.call(el, { navigationUI: 'hide' }).catch(function () {});
+			}
+			// Zakljucaj na landscape ako browser podrzava.
+			if (screen.orientation && screen.orientation.lock) {
+				screen.orientation.lock('landscape').catch(function () {});
+			}
+		}
+		document.addEventListener('pointerdown', tryFullscreen, { once: true });
+
+		// Uputstvo za dodavanje na pocetni ekran (samo u browseru, na telefonu).
+		if (isTouch && !standalone) {
+			const box = document.getElementById('install');
+			const how = document.getElementById('install-how');
+			how.textContent = isIOS
+				? 'Podeli (\u2191) \u2192 "Dodaj na po\u010Detni ekran"'
+				: 'Meni (\u22EE) \u2192 "Dodaj na po\u010Detni ekran"';
+			setTimeout(function () { box.classList.add('show'); }, 2600);
+			document.getElementById('install-x').addEventListener('click', function () {
+				box.classList.remove('show');
+			});
+		}
 
 		// Klik/dodir uvek vraca fokus na igru.
 		['pointerdown', 'touchstart'].forEach(function (ev) {
