@@ -190,6 +190,9 @@ func _wire_ui() -> void:
 	_hud = get_node("HUD")
 	_win_screen = get_node("WinScreen")
 	_win_screen.map_requested.connect(_go_to_map)
+	# Dugme MAPA iz HUD-a - vidljivo tokom cele igre.
+	if _hud.has_signal("map_requested"):
+		_hud.map_requested.connect(_go_to_map)
 	_win_screen.replay_requested.connect(_restart)
 
 

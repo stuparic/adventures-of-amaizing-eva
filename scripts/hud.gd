@@ -14,6 +14,11 @@ const StarScene := preload("res://scenes/hud_star.tscn")
 @onready var star_count: Label = $Margin/Rows/Stars/Count
 @onready var banner: Label = $Banner
 @onready var rows: VBoxContainer = $Margin/Rows
+@onready var map_button: Button = $MapButton
+@onready var mute_button: Button = $MuteButton
+
+## Signal koji nivo hvata - HUD ne zna kako se menja scena.
+signal map_requested
 
 ## HUD i banner se uvecavaju na malim ekranima - inace su srca i
 ## zvezdice sitni i dete ih ne vidi.
@@ -40,6 +45,13 @@ func _ready() -> void:
 	_on_hearts(Game.hearts)
 	_on_stars(Game.stars_collected)
 	banner.modulate.a = 0.0
+
+	map_button.pressed.connect(func() -> void:
+		Audio.play("checkpoint")
+		map_requested.emit()
+	)
+	mute_button.pressed.connect(_toggle_mute)
+	_refresh_mute()
 
 	_fit_ui()
 	get_viewport().size_changed.connect(_fit_ui)
@@ -84,6 +96,21 @@ func _fit_ui() -> void:
 
 	rows.scale = Vector2(s, s)
 	banner.add_theme_font_size_override("font_size", int(_banner_base_size * s))
+
+
+func _toggle_mute() -> void:
+	Audio.toggle_mute()
+	_refresh_mute()
+
+
+## Ikonica pokazuje stanje: zvuk radi ili je precrtan.
+func _refresh_mute() -> void:
+	if Audio.is_muted():
+		mute_button.text = "TIHO"
+		mute_button.modulate = Color(0.75, 0.75, 0.78)
+	else:
+		mute_button.text = "ZVUK"
+		mute_button.modulate = Color(1, 1, 1)
 
 
 ## Puno srce = jarko crveno. Prazno = sivo, izbledelo i malo manje.
