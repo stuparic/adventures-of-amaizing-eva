@@ -90,10 +90,10 @@ const LEVELS: Array[Dictionary] = [
 	 "friend": "ptica"},
 
 	# --- Divlja džungla ---
-	{"id": "dzungla_1", "name": "Gusto lišće", "scene": "",
+	{"id": "dzungla_1", "name": "Gusto lišće", "scene": "res://scenes/levels/dzungla_1.tscn",
 	 "island": "dzungla", "pos": Vector2(1660, 800), "kind": "platform",
 	 "friend": "panda"},
-	{"id": "dzungla_2", "name": "Nadji parove", "scene": "",
+	{"id": "dzungla_2", "name": "Nađi parove", "scene": "res://scenes/levels/dzungla_2.tscn",
 	 "island": "dzungla", "pos": Vector2(1930, 990), "kind": "match",
 	 "friend": "koala"},
 	{"id": "dzungla_3", "name": "Skrivena reka", "scene": "",

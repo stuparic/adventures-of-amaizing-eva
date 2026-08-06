@@ -1,0 +1,71 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/dzungla_1.gd" id="1_lvl"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" path="res://scenes/win_screen.tscn" id="3_win"]
+[ext_resource type="PackedScene" path="res://scenes/touch_controls.tscn" id="4_touch"]
+
+[node name="Level" type="Node2D"]
+script = ExtResource("1_lvl")
+
+[node name="Sky" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="Bg" type="ColorRect" parent="Sky"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.35, 0.6, 0.42, 1)
+
+[node name="Parallax" type="ParallaxBackground" parent="."]
+
+[node name="FarTrees" type="ParallaxLayer" parent="Parallax"]
+motion_scale = Vector2(0.2, 0.08)
+motion_mirroring = Vector2(600, 0)
+
+[node name="T1" type="Polygon2D" parent="Parallax/FarTrees"]
+position = Vector2(70, 40)
+color = Color(0.17, 0.38, 0.24, 1)
+polygon = PackedVector2Array(-70, 0, -40, -120, -10, 0)
+
+[node name="T2" type="Polygon2D" parent="Parallax/FarTrees"]
+position = Vector2(230, 40)
+color = Color(0.14, 0.33, 0.2, 1)
+polygon = PackedVector2Array(-85, 0, -45, -165, 5, 0)
+
+[node name="T3" type="Polygon2D" parent="Parallax/FarTrees"]
+position = Vector2(420, 40)
+color = Color(0.17, 0.38, 0.24, 1)
+polygon = PackedVector2Array(-65, 0, -30, -105, 20, 0)
+
+[node name="T4" type="Polygon2D" parent="Parallax/FarTrees"]
+position = Vector2(540, 40)
+color = Color(0.15, 0.35, 0.22, 1)
+polygon = PackedVector2Array(-60, 0, -25, -140, 15, 0)
+
+[node name="Mist" type="ParallaxLayer" parent="Parallax"]
+motion_scale = Vector2(0.45, 0.15)
+motion_mirroring = Vector2(440, 0)
+
+[node name="M1" type="Polygon2D" parent="Parallax/Mist"]
+position = Vector2(80, -140)
+color = Color(0.75, 0.9, 0.78, 0.3)
+polygon = PackedVector2Array(-40, 8, -24, -8, 4, -12, 26, -5, 40, 8)
+
+[node name="M2" type="Polygon2D" parent="Parallax/Mist"]
+position = Vector2(270, -190)
+color = Color(0.8, 0.92, 0.82, 0.26)
+polygon = PackedVector2Array(-46, 9, -28, -10, 4, -14, 28, -6, 44, 9)
+
+[node name="M3" type="Polygon2D" parent="Parallax/Mist"]
+position = Vector2(390, -110)
+color = Color(0.75, 0.9, 0.78, 0.3)
+polygon = PackedVector2Array(-32, 7, -18, -8, 4, -11, 22, -4, 34, 7)
+
+[node name="HUD" parent="." instance=ExtResource("2_hud")]
+
+[node name="WinScreen" parent="." instance=ExtResource("3_win")]
+
+[node name="TouchControls" parent="." instance=ExtResource("4_touch")]
