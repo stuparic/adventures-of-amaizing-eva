@@ -232,6 +232,69 @@ const SAVE_PATH := "user://progress.json"
 func _ready() -> void:
 	load_progress()
 
+	if OS.has_feature("web"):
+		_check_url_reset()
+		_expose_debug_api()
+
+
+## Reset preko URL-a: dodaj ?reset=1 na adresu igre.
+##   https://stuparic.github.io/adventures-of-amaizing-eva/?reset=1
+## Napredak se obrise pri ucitavanju, pa mozes odmah da igras od pocetka.
+func _check_url_reset() -> void:
+	var q: Variant = JavaScriptBridge.eval("window.location.search || '';", true)
+	if q == null:
+		return
+	var search := String(q)
+	if search.find("reset=1") >= 0:
+		reset_progress()
+		# Skini parametar iz adrese da reload ne resetuje ponovo.
+		JavaScriptBridge.eval("""
+			history.replaceState(null, '', window.location.pathname);
+		""", true)
+		print("Game: napredak obrisan (?reset=1)")
+
+
+## Debug API u konzoli. U browseru (F12 -> Console) napisi:
+##   evaReset()     - obrisi ceo napredak
+##   evaUnlockAll() - otkljucaj sve nivoe (za testiranje)
+##   evaStatus()    - ispisi sta je predjeno
+## Komanda se izvrsi pri sledecem frejmu (igra je cita iz window.evaDbg).
+func _expose_debug_api() -> void:
+	JavaScriptBridge.eval("""
+		window.evaDbg = 0;
+		window.evaReset     = function () { window.evaDbg = 1;
+			console.log('Eva: napredak ce biti obrisan...'); };
+		window.evaUnlockAll = function () { window.evaDbg = 2;
+			console.log('Eva: otkljucavam sve nivoe...'); };
+		window.evaStatus    = function () { window.evaDbg = 3; };
+	""", true)
+
+
+## Anketiraj debug komande iz konzole (samo web).
+func _process(_delta: float) -> void:
+	if not OS.has_feature("web"):
+		return
+	var raw: Variant = JavaScriptBridge.eval(
+		"var d = window.evaDbg || 0; window.evaDbg = 0; d;", true)
+	if raw == null:
+		return
+	match int(raw):
+		1:
+			reset_progress()
+			print("Game: napredak OBRISAN")
+			JavaScriptBridge.eval("console.log('Eva: napredak obrisan. Reload za pocetak.');", true)
+		2:
+			for lvl in LEVELS:
+				completed[lvl["id"]] = true
+			save_progress()
+			print("Game: svi nivoi otkljucani")
+			JavaScriptBridge.eval("console.log('Eva: svi nivoi otkljucani. Reload.');", true)
+		3:
+			var done := completed.keys()
+			print("Game: predjeno %d nivoa: %s" % [done.size(), done])
+			JavaScriptBridge.eval("console.log('Eva: predjeno %d nivoa: %s');" % [
+				done.size(), ", ".join(done)], true)
+
 
 func save_progress() -> void:
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)

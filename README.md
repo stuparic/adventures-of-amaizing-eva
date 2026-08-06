@@ -125,6 +125,33 @@ Radi preko dva odvojena signala, jer nijedan sam nije dovoljan:
 
 Kod: [autoload/pause_manager.gd](autoload/pause_manager.gd)
 
+## Reset napretka (bez UI-ja)
+
+**Najlakse — URL parametar:**
+
+```
+https://stuparic.github.io/adventures-of-amaizing-eva/?reset=1
+```
+
+Napredak se obrise pri ucitavanju, parametar se sam skine iz adrese.
+
+**Iz browser konzole** (F12 → Console):
+
+```js
+evaReset()      // obrisi napredak
+evaUnlockAll()  // otkljucaj sve nivoe (za testiranje)
+evaStatus()     // ispisi sta je predjeno
+```
+
+Posle komande reloaduj stranicu.
+
+**Rucno** (ako ostalo ne radi): F12 → Application → Storage →
+IndexedDB → `/userfs` → Delete database → reload.
+
+Napredak se cuva u `user://progress.json`, sto Godot na webu drzi u
+IndexedDB. Lokalno je u
+`~/Library/Application Support/Godot/app_userdata/Evine Avanture/`.
+
 ## Kontrole
 
 | Akcija | Tasteri |
