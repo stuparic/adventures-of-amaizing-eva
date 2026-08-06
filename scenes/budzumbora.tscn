@@ -14,17 +14,17 @@ scale = Vector2(0.85, 0.85)
 [node name="HairBack" type="Polygon2D" parent="Visual"]
 position = Vector2(0, -9)
 color = Color(0.85, 0.38, 0.05, 1)
-polygon = PackedVector2Array(-7, -8, -4, -9.6, 0, -10, 4, -9.6, 7, -8, 8, -3, 7.4, 1.4, 4.6, 3.2, -4.6, 3.2, -7.4, 1.4, -8, -3)
+polygon = PackedVector2Array(-7, -8, -4, -9.6, 0, -10, 4, -9.6, 7, -8, 8.2, -3, 8, 2.4, 6.4, 6.2, 3.4, 7.4, 0, 6.6, -3.4, 7.4, -6.4, 6.2, -8, 2.4, -8.2, -3)
 
 [node name="HairTailL" type="Polygon2D" parent="Visual"]
-position = Vector2(-6.6, -9)
+position = Vector2(-6.8, -9)
 color = Color(0.9, 0.42, 0.07, 1)
-polygon = PackedVector2Array(-1.8, -4.5, 0.8, -5, 1.2, 0, 0.9, 4.2, -0.5, 5, -1.9, 3.6)
+polygon = PackedVector2Array(-1.9, -5, 0.9, -5.4, 1.4, 0, 1.6, 4.5, 1.1, 8.4, -0.2, 9.6, -1.8, 8.8, -1.5, 4.5)
 
 [node name="HairTailR" type="Polygon2D" parent="Visual"]
-position = Vector2(6.6, -9)
+position = Vector2(6.8, -9)
 color = Color(0.9, 0.42, 0.07, 1)
-polygon = PackedVector2Array(-0.8, -5, 1.8, -4.5, 1.9, 3.6, 0.5, 5, -0.9, 4.2, -1.2, 0)
+polygon = PackedVector2Array(-0.9, -5.4, 1.9, -5, 1.5, 4.5, 1.8, 8.8, 0.2, 9.6, -1.1, 8.4, -1.6, 4.5, -1.4, 0)
 
 [node name="LegL" type="Polygon2D" parent="Visual"]
 position = Vector2(-2.6, 9)
@@ -179,35 +179,35 @@ polygon = PackedVector2Array(-5.9, -4.3, 6, -4.3, 6.3, 2.2, 4.2, 5.5, -4.2, 5.5,
 [node name="HairCap" type="Polygon2D" parent="Visual"]
 position = Vector2(0, -10)
 color = Color(0.95, 0.5, 0.12, 1)
-polygon = PackedVector2Array(-6.8, -3.4, -6.4, -5.4, -3.8, -7, 0, -7.6, 3.8, -7, 6.4, -5.4, 6.8, -3.4, 5.4, -4.4, 3.2, -5.6, 0, -6, -3.2, -5.6, -5.4, -4.4)
+polygon = PackedVector2Array(-7, -2.4, -6.6, -5, -4, -7, 0, -7.7, 4, -7, 6.6, -5, 7, -2.4, 5.8, -3.2, 5, -4.6, 3, -3.6, 1.4, -5.2, 0, -4.2, -1.4, -5.2, -3, -3.6, -5, -4.6, -5.8, -3.2)
 
 [node name="HairFringeL" type="Polygon2D" parent="Visual"]
-position = Vector2(-3.6, -14.2)
+position = Vector2(-3.2, -13.2)
 color = Color(1, 0.55, 0.16, 1)
-polygon = PackedVector2Array(-2.6, -0.4, -2.2, -2.2, 0.8, -2.6, 1.6, -1.2, 0.6, 0.4, -1.2, 0.8)
+polygon = PackedVector2Array(-3.4, -1.6, -2.8, -3.2, 0.6, -3.6, 2.2, -2.4, 1.4, 0.6, -0.4, 1.4, -2.4, 0.8)
 
 [node name="HairFringeR" type="Polygon2D" parent="Visual"]
-position = Vector2(3.6, -14.2)
+position = Vector2(3.2, -13.2)
 color = Color(1, 0.55, 0.16, 1)
-polygon = PackedVector2Array(2.6, -0.4, 2.2, -2.2, -0.8, -2.6, -1.6, -1.2, -0.6, 0.4, 1.2, 0.8)
+polygon = PackedVector2Array(3.4, -1.6, 2.8, -3.2, -0.6, -3.6, -2.2, -2.4, -1.4, 0.6, 0.4, 1.4, 2.4, 0.8)
 
 [node name="HairPartShine" type="Polygon2D" parent="Visual"]
-position = Vector2(-1.8, -15.2)
+position = Vector2(-1.6, -14.4)
 color = Color(1, 0.68, 0.32, 0.8)
 polygon = PackedVector2Array(-2.2, 0.6, -1.6, -0.8, 1.4, -1.2, 1.8, 0.2)
 
 [node name="BowL" type="Polygon2D" parent="Visual"]
-position = Vector2(-6.6, -12.6)
+position = Vector2(-5.4, -14.6)
 color = Color(0.96, 0.28, 0.58, 1)
 polygon = PackedVector2Array(-2.4, -1.4, 0, -0.5, 0, 1.4, -2.4, 1.8)
 
 [node name="BowR" type="Polygon2D" parent="Visual"]
-position = Vector2(-6.6, -12.6)
+position = Vector2(-5.4, -14.6)
 color = Color(1, 0.45, 0.7, 1)
 polygon = PackedVector2Array(0, -0.5, 2.2, -1.2, 2.2, 1.6, 0, 1.4)
 
 [node name="BowKnot" type="Polygon2D" parent="Visual"]
-position = Vector2(-6.6, -12.2)
+position = Vector2(-5.4, -14.2)
 color = Color(0.82, 0.2, 0.48, 1)
 polygon = PackedVector2Array(-0.7, -0.8, 0.7, -0.8, 0.7, 0.8, -0.7, 0.8)
 
