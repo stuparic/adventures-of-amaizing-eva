@@ -77,7 +77,7 @@ const LEVELS: Array[Dictionary] = [
 	{"id": "livada_2", "name": "Spoji zvezdice", "scene": "res://scenes/levels/livada_2.tscn",
 	 "island": "livada", "pos": Vector2(380, 810), "kind": "dots",
 	 "friend": "zeka"},
-	{"id": "livada_3", "name": "Kroz šumu", "scene": "",
+	{"id": "livada_3", "name": "Kroz šumu", "scene": "res://scenes/levels/livada_3.tscn",
 	 "island": "livada", "pos": Vector2(600, 620), "kind": "platform",
 	 "friend": "veverica"},
 

@@ -156,19 +156,81 @@ func _draw_dog(p: Node2D) -> void:
 
 
 func _draw_bunny(p: Node2D) -> void:
-	var fur := Color(0.96, 0.94, 0.92)
-	var dark := Color(0.84, 0.82, 0.82)
-	_poly(p, dark, [V(-8, -2), V(-6, -8), V(0, -11), V(6, -8), V(8, -2), V(7, 10), V(-7, 10)])
-	_poly(p, fur, [V(-7, -3), V(-5, -8), V(0, -10), V(5, -8), V(7, -3), V(6, 9), V(-6, 9)])
-	# Dugacke usi.
-	_poly(p, fur, [V(-5, -9), V(-7, -22), V(-3, -23), V(-1.5, -10)])
-	_poly(p, fur, [V(5, -9), V(7, -22), V(3, -23), V(1.5, -10)])
-	_poly(p, Color(0.98, 0.72, 0.76), [V(-4.6, -11), V(-5.6, -20), V(-3.4, -20.6), V(-2.6, -11.4)])
-	_poly(p, Color(0.98, 0.72, 0.76), [V(4.6, -11), V(5.6, -20), V(3.4, -20.6), V(2.6, -11.4)])
-	# Repic.
-	_circle(p, V(-8, 6), 3.4, fur)
-	_face(p, Color(0.4, 0.28, 0.3), -4.2, 3.0)
-	_muzzle(p, Color(1, 0.98, 0.96), Color(0.94, 0.55, 0.6))
+	var fur := Color(0.97, 0.95, 0.94)
+	var shade := Color(0.87, 0.84, 0.85)
+	var pink := Color(0.98, 0.72, 0.76)
+
+	# Repic - pahuljast, iza tela.
+	_circle(p, V(-8.5, 5.5), 4.2, shade)
+	_circle(p, V(-8.5, 5.0), 3.4, Color(1, 1, 1))
+
+	# Stopala - ispod tela, siroka.
+	_poly(p, shade, [V(-7, 8), V(-1.5, 8), V(-1, 11.5), V(-7.5, 11.5)])
+	_poly(p, shade, [V(1.5, 8), V(7, 8), V(7.5, 11.5), V(1, 11.5)])
+	_poly(p, fur, [V(-6.6, 8), V(-2, 8), V(-1.6, 10.8), V(-7, 10.8)])
+	_poly(p, fur, [V(2, 8), V(6.6, 8), V(7, 10.8), V(1.6, 10.8)])
+	# Prstici na stopalima.
+	for x in [-5.4, -4.0, 4.0, 5.4]:
+		_circle(p, V(x, 10.4), 0.8, pink)
+
+	# Telo - kruskasto, sire dole.
+	_poly(p, shade, [V(-7.5, -3), V(-5.5, -8), V(0, -10.5), V(5.5, -8),
+		V(7.5, -3), V(8, 5), V(5, 9), V(-5, 9), V(-8, 5)])
+	_poly(p, fur, [V(-6.6, -4), V(-4.8, -8), V(0, -9.8), V(4.8, -8),
+		V(6.6, -4), V(7, 4.6), V(4.4, 8.2), V(-4.4, 8.2), V(-7, 4.6)])
+	# Svetli trbuh.
+	_poly(p, Color(1, 1, 1), [V(-3.4, 0), V(3.4, 0), V(2.8, 7.6), V(-2.8, 7.6)])
+
+	# Prednje sapice.
+	_circle(p, V(-5.2, 3.4), 2.2, fur)
+	_circle(p, V(5.2, 3.4), 2.2, fur)
+
+	# Dugacke usi - blago razmaknute, sa roze unutrasnjoscu.
+	_poly(p, shade, [V(-5.4, -8), V(-8.4, -22), V(-4.6, -24.5), V(-2, -9)])
+	_poly(p, shade, [V(5.4, -8), V(8.4, -22), V(4.6, -24.5), V(2, -9)])
+	_poly(p, fur, [V(-5, -8.6), V(-7.8, -21.6), V(-4.8, -23.6), V(-2.6, -9.4)])
+	_poly(p, fur, [V(5, -8.6), V(7.8, -21.6), V(4.8, -23.6), V(2.6, -9.4)])
+	_poly(p, pink, [V(-4.8, -10.4), V(-6.6, -20.4), V(-4.9, -21.6), V(-3.4, -10.8)])
+	_poly(p, pink, [V(4.8, -10.4), V(6.6, -20.4), V(4.9, -21.6), V(3.4, -10.8)])
+
+	# Glava - okrugla, iznad tela.
+	_circle(p, V(0, -7), 7.4, shade)
+	_circle(p, V(0, -7.4), 6.9, fur)
+
+	# Obrazi.
+	_circle(p, V(-4.6, -5.4), 2.0, Color(0.99, 0.78, 0.8, 0.75))
+	_circle(p, V(4.6, -5.4), 2.0, Color(0.99, 0.78, 0.8, 0.75))
+
+	# Oci - velike, sa dva odsjaja.
+	_circle(p, V(-2.9, -8.4), 2.3, Color(0.99, 1, 0.98))
+	_circle(p, V(2.9, -8.4), 2.3, Color(0.99, 1, 0.98))
+	_circle(p, V(-2.9, -8.2), 1.8, Color(0.38, 0.26, 0.3))
+	_circle(p, V(2.9, -8.2), 1.8, Color(0.38, 0.26, 0.3))
+	_circle(p, V(-2.9, -8.1), 1.0, Color(0.12, 0.1, 0.12))
+	_circle(p, V(2.9, -8.1), 1.0, Color(0.12, 0.1, 0.12))
+	_circle(p, V(-3.5, -9.0), 0.75, Color(1, 1, 1))
+	_circle(p, V(2.3, -9.0), 0.75, Color(1, 1, 1))
+	_circle(p, V(-2.3, -7.4), 0.4, Color(1, 1, 1, 0.7))
+	_circle(p, V(3.5, -7.4), 0.4, Color(1, 1, 1, 0.7))
+
+	# Nosic i usta - Y oblik.
+	_poly(p, pink.darkened(0.1), [V(-1.1, -5.6), V(1.1, -5.6), V(0, -4.2)])
+	_poly(p, Color(0.6, 0.42, 0.44), [V(-0.3, -4.4), V(0.3, -4.4), V(0.3, -3.2), V(-0.3, -3.2)])
+	_poly(p, Color(0.6, 0.42, 0.44), [V(-0.3, -3.5), V(-2.4, -2.4), V(-2.1, -1.9), V(-0.1, -3.0)])
+	_poly(p, Color(0.6, 0.42, 0.44), [V(0.3, -3.5), V(2.4, -2.4), V(2.1, -1.9), V(0.1, -3.0)])
+
+	# Brkovi.
+	for sy in [-0.5, 0.6]:
+		_poly(p, Color(0.75, 0.7, 0.7, 0.8), [
+			V(-2.6, -4.2 + sy), V(-7.4, -5.0 + sy * 1.5),
+			V(-7.4, -4.5 + sy * 1.5), V(-2.6, -3.8 + sy)])
+		_poly(p, Color(0.75, 0.7, 0.7, 0.8), [
+			V(2.6, -4.2 + sy), V(7.4, -5.0 + sy * 1.5),
+			V(7.4, -4.5 + sy * 1.5), V(2.6, -3.8 + sy)])
+
+	# Zubici - zeka.
+	_poly(p, Color(1, 1, 1), [V(-1.0, -2.6), V(-0.15, -2.6), V(-0.15, -1.2), V(-1.0, -1.2)])
+	_poly(p, Color(1, 1, 1), [V(0.15, -2.6), V(1.0, -2.6), V(1.0, -1.2), V(0.15, -1.2)])
 
 
 func _draw_bird(p: Node2D) -> void:

@@ -155,11 +155,25 @@ func _fill_shape() -> void:
 	var fill := Polygon2D.new()
 	fill.color = Color(0.98, 0.85, 0.9, 0.0)
 	fill.polygon = pts
-	fill.z_index = 0
+	fill.z_index = -1
 	add_child(fill)
 
+	# Ispuna kratko zasija (dete vidi sta je nacrtalo), pa se sve skloni
+	# da zeka ima cist ekran za proslavu.
 	var tw := create_tween()
-	tw.tween_property(fill, "color", Color(0.98, 0.85, 0.9, 0.85), 0.7)
+	tw.tween_property(fill, "color", Color(0.99, 0.86, 0.92, 0.9), 0.5)
+	tw.tween_interval(0.5)
+	tw.tween_property(fill, "color", Color(0.99, 0.86, 0.92, 0.0), 0.5)
+	tw.parallel().tween_property(_lines, "modulate:a", 0.0, 0.5)
+	tw.parallel().tween_callback(_fade_dots)
+
+
+## Skloni zvezdice - proslava treba cist ekran.
+func _fade_dots() -> void:
+	for d in _dots:
+		var t := create_tween()
+		t.tween_property(d, "modulate:a", 0.0, 0.45)
+		t.parallel().tween_property(d, "scale", Vector2(0.4, 0.4), 0.45)
 
 
 func _shake(d: Node2D) -> void:

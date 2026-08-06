@@ -64,17 +64,90 @@ func win() -> void:
 	Game.mark_completed(Game.current_level, _steps_done, Game.elapsed_seconds())
 	Game.save_progress()
 
-	# Kavez se otvori.
-	if _friend != null:
-		var cage: Node2D = _friend.get_node("Visual/Cage")
-		var tw := create_tween()
-		tw.tween_property(cage, "modulate:a", 0.0, 0.45)
-		tw.parallel().tween_property(cage, "scale", Vector2(1.7, 1.7), 0.45)
-
-	_hud.show_banner("BRAVO!", Color(0.95, 0.4, 0.6), 2.0)
-
-	await get_tree().create_timer(1.6).timeout
+	_hud.show_banner("BRAVO!", Color(0.95, 0.4, 0.6), 1.6)
+	await _celebrate_friend()
 	_win_screen.show_result(_steps_done, _steps_total, Game.elapsed_string())
+
+
+## Proslava: kavez se raspadne, prijatelj doleti u centar, poraste i
+## poskakuje. Dete mora da VIDI koga je oslobodilo.
+func _celebrate_friend() -> void:
+	if _friend == null:
+		await get_tree().create_timer(1.2).timeout
+		return
+
+	var cage: Node2D = _friend.get_node("Visual/Cage")
+
+	# 1) Kavez puca - sipke se razlete na strane.
+	var i := 0
+	for bar in cage.get_children():
+		if not (bar is Polygon2D):
+			continue
+		var b := bar as Polygon2D
+		var dir := Vector2(-1.0 if i % 2 == 0 else 1.0, -0.5).normalized()
+		var tw := create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(b, "position", b.position + dir * 90.0, 0.5) \
+			.set_ease(Tween.EASE_OUT)
+		tw.tween_property(b, "rotation", randf_range(-2.5, 2.5), 0.5)
+		tw.tween_property(b, "modulate:a", 0.0, 0.5)
+		i += 1
+
+	Audio.play("stomp")
+	# Prijatelj ide iznad crteza tokom proslave.
+	_friend.z_index = 8
+	await get_tree().create_timer(0.35).timeout
+
+	# 2) Prijatelj skoci iz kaveza u centar ekrana i poraste.
+	var vis: Node2D = _friend.get_node("Visual")
+	var jump := create_tween()
+	jump.set_parallel(true)
+	jump.tween_property(_friend, "position", Vector2(0, 40), 0.7) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	jump.tween_property(_friend, "scale", Vector2(4.2, 4.2), 0.7) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	jump.tween_property(vis, "rotation", 0.0, 0.4)
+
+	_burst_confetti(Vector2(0, 40))
+	Audio.play("heart")
+	await get_tree().create_timer(0.8).timeout
+
+	# 3) Poskakuje od srece dok ceka panel.
+	var hop := create_tween().set_loops(3)
+	hop.tween_property(_friend, "position:y", 10.0, 0.28) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	hop.tween_property(_friend, "position:y", 40.0, 0.28) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+
+	await get_tree().create_timer(1.4).timeout
+
+
+## Konfeti oko oslobodjenog prijatelja.
+func _burst_confetti(center: Vector2) -> void:
+	var cols := [Color(1, 0.85, 0.25), Color(0.98, 0.55, 0.75),
+		Color(0.42, 0.72, 0.45), Color(0.35, 0.65, 0.95), Color(1, 1, 1)]
+	for i in 34:
+		var piece := Polygon2D.new()
+		var sz := randf_range(6.0, 13.0)
+		piece.color = cols[i % cols.size()]
+		piece.polygon = PackedVector2Array([
+			Vector2(-sz * 0.5, -sz * 0.5), Vector2(sz * 0.5, -sz * 0.5),
+			Vector2(sz * 0.5, sz * 0.5), Vector2(-sz * 0.5, sz * 0.5)])
+		piece.position = center
+		piece.z_index = 6
+		add_child(piece)
+
+		var ang := TAU * float(i) / 34.0 + randf_range(-0.2, 0.2)
+		var dist := randf_range(150.0, 340.0)
+		var target := center + Vector2(cos(ang), sin(ang)) * dist
+
+		var tw := create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(piece, "position", target, randf_range(0.7, 1.2)) \
+			.set_ease(Tween.EASE_OUT)
+		tw.tween_property(piece, "rotation", randf_range(-7.0, 7.0), 1.1)
+		tw.tween_property(piece, "modulate:a", 0.0, 1.1).set_delay(0.35)
+		tw.chain().tween_callback(piece.queue_free)
 
 
 func set_total_steps(n: int) -> void:
