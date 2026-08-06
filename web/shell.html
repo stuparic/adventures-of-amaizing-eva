@@ -345,27 +345,40 @@
 		// VAZNO: SW kesira index.html/js/wasm/pck. Bez logike ispod, nova
 		// verzija igre se ne bi videla dok korisnik ne zatvori SVE tabove -
 		// izgledalo bi kao da deploy nije prosao.
+		//
+		// NE koristimo reg.waiting.postMessage('update'). Godotov SW ima na
+		// vrhu message handlera:
+		//     if (event.origin !== self.origin) return;
+		// Za postMessage sa stranice na SW je event.origin PRAZAN STRING, pa
+		// taj uslov nikad nije zadovoljen i handler odmah izlazi. Poruka se
+		// tiho ignorise, novi SW ostane zauvek "waiting", a stari nastavlja
+		// da servira STARI index.pck iz kesa. Uninstall PWA ne pomaze - on
+		// ne brise Cache Storage. Zato radimo sve sa strane stranice.
 		if ('serviceWorker' in navigator) {
 			window.addEventListener('load', function () {
 				navigator.serviceWorker.register('index.service.worker.js')
 					.then(function (reg) {
-						// Godotov SW ocekuje OBICAN STRING, ne objekt:
-						//   'update' -> skipWaiting + claim + navigate (osvezi)
-						//   'claim'  -> samo preuzmi kontrolu
-						//   'clear'  -> obrisi kes
-						// (proverено u index.service.worker.js)
-						function applyUpdate() {
-							if (reg.waiting) reg.waiting.postMessage('update');
+						// Novi SW ceka? Pusti ga u promet bez postMessage:
+						// unregister ubija starog, reload registruje novog
+						// koji odmah preuzme kontrolu i obrise stare keseve
+						// (njegov 'activate' brise sve sa starim CACHE_NAME).
+						function takeOver() {
+							if (!reg.waiting) return;
+							if (sessionStorage.getItem('evaSwSwap')) return;  // samo jednom
+							sessionStorage.setItem('evaSwSwap', '1');
+							reg.unregister()
+								.then(function () { window.location.reload(); })
+								.catch(function () { window.location.reload(); });
 						}
 
 						reg.update().catch(function () {});
-						applyUpdate();   // ako SW ceka od ranije
+						takeOver();   // ako SW ceka od ranije
 
 						reg.addEventListener('updatefound', function () {
 							var sw = reg.installing;
 							if (!sw) return;
 							sw.addEventListener('statechange', function () {
-								if (sw.state === 'installed') applyUpdate();
+								if (sw.state === 'installed') takeOver();
 							});
 						});
 
@@ -373,6 +386,38 @@
 						setInterval(function () { reg.update().catch(function () {}); }, 60000);
 					})
 					.catch(function () { /* PWA nije kriticna - igra radi i bez nje */ });
+			});
+
+			// Drugi sloj zastite: uporedi verziju na mrezi sa onom koju je
+			// SW posluzio. Ako se razlikuju, kes je zaglavljen - obrisi ga
+			// i reloaduj. Ovo radi cak i kad SW nikad ne izadje iz "waiting".
+			window.addEventListener('load', function () {
+				setTimeout(function () {
+					fetch('version.txt?cb=' + Date.now(), { cache: 'no-store' })
+						.then(function (r) { return r.ok ? r.text() : null; })
+						.then(async function (live) {
+							if (!live) return;
+							live = live.trim();
+							var seen = localStorage.getItem('evaVersion');
+							if (seen === live) return;               // vec na najnovijoj
+							if (sessionStorage.getItem('evaPurge')) {  // vec probali
+								localStorage.setItem('evaVersion', live);
+								return;
+							}
+							sessionStorage.setItem('evaPurge', '1');
+							localStorage.setItem('evaVersion', live);
+							try {
+								if (window.caches) {
+									var keys = await caches.keys();
+									await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+								}
+								var regs = await navigator.serviceWorker.getRegistrations();
+								await Promise.all(regs.map(function (r) { return r.unregister(); }));
+							} catch (e) { /* probaj reload i bez ovoga */ }
+							window.location.reload();
+						})
+						.catch(function () { /* offline - nista */ });
+				}, 1200);
 			});
 		}
 

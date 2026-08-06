@@ -58,6 +58,15 @@ jobs:
           test -f build/web/index.pck  || { echo "NEMA index.pck";  exit 1; }
           echo "Build OK: $(du -sh build/web | cut -f1)"
 
+      # Otisak ove verzije. Shell ga cita sa `cache: no-store` i, ako se
+      # razlikuje od zapamcenog, brise kes i reloaduje. Bez ovoga zaglavljen
+      # service worker servira stari index.pck i posle uspesnog deploya -
+      # izgleda kao da novi nivoi ne postoje.
+      - name: Upisi verziju za proveru kesa
+        run: |
+          git rev-parse --short HEAD > build/web/version.txt
+          echo "verzija: $(cat build/web/version.txt)"
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
