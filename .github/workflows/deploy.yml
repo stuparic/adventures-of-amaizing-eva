@@ -80,5 +80,15 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      # timeout: podrazumevani limit u deploy-pages je 10 minuta (600s).
+      # Mereno 2026-08-06: Pages je usporio i korak je isao 602-605s, pa
+      # su tri deploya pala na timeoutu iako je build bio ispravan
+      # (artifact 13.51 MB, prakticno isti kao uspesni od 13.49 MB).
+      # Za uporedjivanje: uspesni deploy pre toga je trajao 547s - bio je
+      # 53s od ruba. Dizanje na 30 min daje rezervu za dalja usporenja;
+      # posao ceka GitHub, ne trosi vreme ako Pages odgovori brzo.
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          timeout: 1800000
+          error_count: 20
