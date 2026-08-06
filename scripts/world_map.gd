@@ -18,16 +18,23 @@ const DASH_GAP := 20.0         # praznina izmedju crtica
 const CURVE_STEPS := 30        # segmenata po krivini (vise = glatkije)
 
 ## Putevi su MORSKI - putujemo brodom od ostrva do ostrva.
-## NEPRELAZAN: jedva vidljive tackice. PRELAZAN: jasna zlatna brazda.
+## ZATVOREN: jedva vidljive tackice.
 const C_ROAD := Color(1, 1, 1, 0.2)
 const C_ROAD_EDGE := Color(0.6, 0.8, 0.92, 0.14)
+## PROHODAN: jasna bela brazda - moze se ploviti.
+const C_ROAD_OPEN := Color(1, 1, 1, 0.72)
+const C_ROAD_OPEN_EDGE := Color(0.55, 0.78, 0.92, 0.55)
+## PREDJEN: zlatna brazda.
 const C_ROAD_DONE := Color(1, 0.92, 0.5, 0.9)
 const C_ROAD_DONE_EDGE := Color(0.88, 0.68, 0.22, 0.7)
 ## Kopneni put (unutar ostrva) - zemljana staza.
 ## NEPRELAZAN: bleda, tanka, providna - vidi se da tu jos ne moze.
 const C_LAND := Color(0.72, 0.68, 0.6, 0.4)
 const C_LAND_EDGE := Color(0.55, 0.5, 0.45, 0.3)
-## PRELAZAN: puna zlatna staza sa jasnim obodom.
+## PROHODAN: jasna zemljana staza - moze se ici, ali cilj nije predjen.
+const C_LAND_OPEN := Color(0.88, 0.78, 0.56)
+const C_LAND_OPEN_EDGE := Color(0.68, 0.56, 0.38)
+## PREDJEN: puna zlatna staza sa jasnim obodom.
 const C_LAND_DONE := Color(0.98, 0.84, 0.34)
 const C_LAND_DONE_EDGE := Color(0.78, 0.6, 0.2)
 const LAND_W := 12.0
@@ -315,11 +322,18 @@ func _build_map() -> void:
 ## pomerenom u stranu, plus sitno "vijuganje" da linija ne bude
 ## matematicki glatka nego organska.
 func _add_curved_road(parent: Node2D, from_index: int) -> void:
+	# Ne crtaj put ka nivou koji jos NE POSTOJI - staza ka praznom mestu
+	# samo zbunjuje. Tacka "uskoro" stoji sama.
+	if not Game.level_exists(from_index + 1):
+		return
+
 	var a: Vector2 = Game.level_data(from_index)["pos"]
 	var b: Vector2 = Game.level_data(from_index + 1)["pos"]
 	var land := Game.same_island(from_index, from_index + 1)
-	# Put je PRELAZAN kad je nivo pre njega predjen - tada Eva moze dalje.
-	var done := Game.level_completed(from_index)
+	# Tri stanja: PREDJEN (oba predjena), PROHODAN (moze se ici ali
+	# ciljni nije predjen), ZATVOREN (nivo pre nije predjen).
+	var passable := Game.level_completed(from_index)
+	var done := passable and Game.level_completed(from_index + 1)
 
 	# Kopneni put krivuda manje (staza po ostrvu), morski vise (plovidba).
 	var span := a.distance_to(b)
@@ -336,11 +350,25 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 	var col: Color
 	var edge: Color
 	if land:
-		col = C_LAND_DONE if done else C_LAND
-		edge = C_LAND_DONE_EDGE if done else C_LAND_EDGE
+		if done:
+			col = C_LAND_DONE
+			edge = C_LAND_DONE_EDGE
+		elif passable:
+			col = C_LAND_OPEN
+			edge = C_LAND_OPEN_EDGE
+		else:
+			col = C_LAND
+			edge = C_LAND_EDGE
 	else:
-		col = C_ROAD_DONE if done else C_ROAD
-		edge = C_ROAD_DONE_EDGE if done else C_ROAD_EDGE
+		if done:
+			col = C_ROAD_DONE
+			edge = C_ROAD_DONE_EDGE
+		elif passable:
+			col = C_ROAD_OPEN
+			edge = C_ROAD_OPEN_EDGE
+		else:
+			col = C_ROAD
+			edge = C_ROAD_EDGE
 
 	# Uzorkuj krivu + dodaj organsko vijuganje.
 	var wob := RandomNumberGenerator.new()
@@ -365,13 +393,15 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 		if trimmed.size() < 2:
 			return
 
-		if done:
-			# PRELAZAN: puna zlatna staza sa kamencicima - Eva moze peske.
+		if passable:
+			# PROHODAN ili PREDJEN: puna staza sa kamencicima - Eva ide peske.
 			_ribbon(parent, trimmed, LAND_W + 5.0, edge)
 			_ribbon(parent, trimmed, LAND_W, col)
+			var stone_col := Color(0.8, 0.72, 0.5, 0.8) if done \
+				else Color(0.72, 0.64, 0.48, 0.7)
 			for i in range(2, trimmed.size() - 2, 4):
 				var pp: Vector2 = trimmed[i]
-				_poly(parent, Color(0.8, 0.72, 0.5, 0.8),
+				_poly(parent, stone_col,
 					_ring_pts(pp + Vector2(wob.randf_range(-3, 3), wob.randf_range(-3, 3)),
 						wob.randf_range(1.6, 2.6), 6))
 		else:
@@ -382,8 +412,8 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 		return
 
 	# Morski put: isprekidana brazda. Neprelazan ima redje i tanje crtice.
-	var dash_len := DASH_LEN if done else DASH_LEN * 0.4
-	var dash_gap := DASH_GAP if done else DASH_GAP * 1.8
+	var dash_len := DASH_LEN if passable else DASH_LEN * 0.4
+	var dash_gap := DASH_GAP if passable else DASH_GAP * 1.8
 	var inset := DOT_R + 7.0
 	var walked := 0.0
 	var dash_on := true
@@ -400,7 +430,7 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 				current.append(p1)
 			current.append(p2)
 			if walked >= dash_len:
-				_dash(parent, current, edge, col, ROAD_W if done else ROAD_W * 0.55)
+				_dash(parent, current, edge, col, ROAD_W if passable else ROAD_W * 0.55)
 				current = []
 				walked = 0.0
 				dash_on = false
@@ -409,7 +439,7 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 			dash_on = true
 
 	if current.size() >= 2:
-		_dash(parent, current, edge, col, ROAD_W if done else ROAD_W * 0.55)
+		_dash(parent, current, edge, col, ROAD_W if passable else ROAD_W * 0.55)
 
 
 ## Krug od tacaka - za kamencice.
