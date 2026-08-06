@@ -80,15 +80,18 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      # timeout: podrazumevani limit u deploy-pages je 10 minuta (600s).
-      # Mereno 2026-08-06: Pages je usporio i korak je isao 602-605s, pa
-      # su tri deploya pala na timeoutu iako je build bio ispravan
-      # (artifact 13.51 MB, prakticno isti kao uspesni od 13.49 MB).
-      # Za uporedjivanje: uspesni deploy pre toga je trajao 547s - bio je
-      # 53s od ruba. Dizanje na 30 min daje rezervu za dalja usporenja;
-      # posao ceka GitHub, ne trosi vreme ako Pages odgovori brzo.
+      # 600000ms (10 min) je HARD MAKSIMUM akcije, ne samo podrazumevana
+      # vrednost. Probao sam 1800000 i akcija je uzvratila:
+      #   "timeout value is greater than the allowed maximum
+      #    - timeout set to the maximum of 600000 milliseconds"
+      # pa je korak i dalje pao na 605s. Timeout se NE MOZE podici.
+      #
+      # Mereno 2026-08-06: uspesni deploy je trajao 547s (53s od ruba),
+      # a posle toga Pages stoji u "in_progress" duze od 10 min i akcija
+      # ga otkaze. Build, export i artifact prolaze svaki put (13.51 MB
+      # vs 13.49 MB kod uspesnog) - pada samo cekanje na Pages.
       - id: deployment
         uses: actions/deploy-pages@v4
         with:
-          timeout: 1800000
+          timeout: 600000
           error_count: 20
