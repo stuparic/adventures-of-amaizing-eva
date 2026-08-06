@@ -80,8 +80,10 @@ func _build_dots() -> void:
 		# Dugme za klik/dodir - velika zona, dete ne mora precizno.
 		var btn := Button.new()
 		btn.flat = true
-		btn.size = Vector2(DOT_R * 2.6, DOT_R * 2.6)
-		btn.position = Vector2(-DOT_R * 1.3, -DOT_R * 1.3)
+		# Klik zona je NAMERNO mnogo veca od zvezdice - detinji prst
+		# je neprecizan. 78px pokriva i promasaj od 2cm.
+		btn.size = Vector2(78, 78)
+		btn.position = Vector2(-39, -39)
 		btn.focus_mode = Control.FOCUS_NONE
 		var idx := i
 		btn.pressed.connect(func() -> void: _on_dot(idx))

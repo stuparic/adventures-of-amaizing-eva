@@ -39,12 +39,22 @@ func _place() -> void:
 		return
 
 	const SIZE := 156.0   # velicina teksture dugmeta
-	var margin := 34.0
+
+	# Na telefonu dete drzi uredjaj sa dva palca - dugmad idu BLIZE
+	# ivicama i donjem rubu, gde palac prirodno pada.
+	var win := DisplayServer.window_get_size()
+	var phone := mini(win.x, win.y) < 500
+	var margin := 16.0 if phone else 34.0
+	var gap := 14.0 if phone else 24.0
 	var y := vp.y - SIZE - margin
 
 	btn_left.position = Vector2(margin, y)
-	btn_right.position = Vector2(margin + SIZE + 24.0, y)
+	btn_right.position = Vector2(margin + SIZE + gap, y)
 	btn_jump.position = Vector2(vp.x - SIZE - margin, y)
+
+	# Skok je NAJVAZNIJE dugme - na telefonu je veci.
+	var jump_scale := 1.15 if phone else 1.0
+	btn_jump.scale = Vector2(jump_scale, jump_scale)
 
 
 ## Poveži dugme na akciju iz Input mape.

@@ -82,10 +82,10 @@ const LEVELS: Array[Dictionary] = [
 	 "friend": "veverica"},
 
 	# --- Sunčana plaža ---
-	{"id": "plaza_1", "name": "Oboji školjku", "scene": "",
+	{"id": "plaza_1", "name": "Oboji školjku", "scene": "res://scenes/levels/plaza_1.tscn",
 	 "island": "plaza", "pos": Vector2(990, 260), "kind": "color",
 	 "friend": "delfin"},
-	{"id": "plaza_2", "name": "Palmin gaj", "scene": "",
+	{"id": "plaza_2", "name": "Palmin gaj", "scene": "res://scenes/levels/plaza_2.tscn",
 	 "island": "plaza", "pos": Vector2(1340, 380), "kind": "platform",
 	 "friend": "ptica"},
 
