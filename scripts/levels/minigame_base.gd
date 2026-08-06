@@ -210,5 +210,7 @@ func _restart() -> void:
 
 
 func _go_to_map() -> void:
+	# Mapa treba da oznaci OVAJ nivo, ne sledeci.
+	Game.returning_from_level = true
 	Audio.stop_music()
 	get_tree().change_scene_to_file("res://scenes/world_map.tscn")

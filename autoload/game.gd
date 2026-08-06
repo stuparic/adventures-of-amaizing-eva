@@ -137,6 +137,10 @@ var current_level: int = 0
 ## Ime prijatelja spasenog u zadnjem nivou (za winning screen).
 var rescued_friend := "prijatelja"
 
+## Da li se vracamo iz nivoa na mapu. Mapa tada oznaci TAJ nivo,
+## a ne prvi neodigrani.
+var returning_from_level := false
+
 
 func level_count() -> int:
 	return LEVELS.size()

@@ -18,17 +18,20 @@ const DASH_GAP := 20.0         # praznina izmedju crtica
 const CURVE_STEPS := 30        # segmenata po krivini (vise = glatkije)
 
 ## Putevi su MORSKI - putujemo brodom od ostrva do ostrva.
-## Neotkljucan: bleda brazda. Zavrsen: zlatna, kao pozlacen trag.
-const C_ROAD := Color(1, 1, 1, 0.42)
-const C_ROAD_EDGE := Color(0.55, 0.78, 0.9, 0.5)
-const C_ROAD_DONE := Color(1, 0.9, 0.45, 0.85)
-const C_ROAD_DONE_EDGE := Color(0.9, 0.7, 0.25, 0.6)
+## NEPRELAZAN: jedva vidljive tackice. PRELAZAN: jasna zlatna brazda.
+const C_ROAD := Color(1, 1, 1, 0.2)
+const C_ROAD_EDGE := Color(0.6, 0.8, 0.92, 0.14)
+const C_ROAD_DONE := Color(1, 0.92, 0.5, 0.9)
+const C_ROAD_DONE_EDGE := Color(0.88, 0.68, 0.22, 0.7)
 ## Kopneni put (unutar ostrva) - zemljana staza.
-const C_LAND := Color(0.85, 0.75, 0.55)
-const C_LAND_EDGE := Color(0.68, 0.56, 0.4)
+## NEPRELAZAN: bleda, tanka, providna - vidi se da tu jos ne moze.
+const C_LAND := Color(0.72, 0.68, 0.6, 0.4)
+const C_LAND_EDGE := Color(0.55, 0.5, 0.45, 0.3)
+## PRELAZAN: puna zlatna staza sa jasnim obodom.
 const C_LAND_DONE := Color(0.98, 0.84, 0.34)
-const C_LAND_DONE_EDGE := Color(0.82, 0.64, 0.22)
-const LAND_W := 11.0
+const C_LAND_DONE_EDGE := Color(0.78, 0.6, 0.2)
+const LAND_W := 12.0
+const LAND_W_LOCKED := 5.0
 
 const C_LOCKED := Color(0.62, 0.62, 0.66)
 const C_TEXT := Color(0.22, 0.3, 0.42)
@@ -315,6 +318,7 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 	var a: Vector2 = Game.level_data(from_index)["pos"]
 	var b: Vector2 = Game.level_data(from_index + 1)["pos"]
 	var land := Game.same_island(from_index, from_index + 1)
+	# Put je PRELAZAN kad je nivo pre njega predjen - tada Eva moze dalje.
 	var done := Game.level_completed(from_index)
 
 	# Kopneni put krivuda manje (staza po ostrvu), morski vise (plovidba).
@@ -353,24 +357,33 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 		pts.append(base)
 
 	if land:
-		# Kopneni put je PUNA staza, ne isprekidan - Eva ide peske.
 		var inset := DOT_R + 6.0
 		var trimmed: Array = []
 		for pt in pts:
 			if pt.distance_to(a) > inset and pt.distance_to(b) > inset:
 				trimmed.append(pt)
-		if trimmed.size() >= 2:
+		if trimmed.size() < 2:
+			return
+
+		if done:
+			# PRELAZAN: puna zlatna staza sa kamencicima - Eva moze peske.
 			_ribbon(parent, trimmed, LAND_W + 5.0, edge)
 			_ribbon(parent, trimmed, LAND_W, col)
-			# Kamencici duz staze.
 			for i in range(2, trimmed.size() - 2, 4):
 				var pp: Vector2 = trimmed[i]
-				_poly(parent, Color(0.72, 0.66, 0.54, 0.7),
+				_poly(parent, Color(0.8, 0.72, 0.5, 0.8),
 					_ring_pts(pp + Vector2(wob.randf_range(-3, 3), wob.randf_range(-3, 3)),
-						wob.randf_range(1.4, 2.4), 6))
+						wob.randf_range(1.6, 2.6), 6))
+		else:
+			# NEPRELAZAN: samo tackice - staza jos "nije prokopana".
+			for i in range(1, trimmed.size() - 1, 3):
+				var pp: Vector2 = trimmed[i]
+				_poly(parent, col, _ring_pts(pp, LAND_W_LOCKED * 0.45, 7))
 		return
 
-	# Morski put: isprekidana brazda.
+	# Morski put: isprekidana brazda. Neprelazan ima redje i tanje crtice.
+	var dash_len := DASH_LEN if done else DASH_LEN * 0.4
+	var dash_gap := DASH_GAP if done else DASH_GAP * 1.8
 	var inset := DOT_R + 7.0
 	var walked := 0.0
 	var dash_on := true
@@ -386,17 +399,17 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 			if current.is_empty():
 				current.append(p1)
 			current.append(p2)
-			if walked >= DASH_LEN:
-				_dash(parent, current, edge, col)
+			if walked >= dash_len:
+				_dash(parent, current, edge, col, ROAD_W if done else ROAD_W * 0.55)
 				current = []
 				walked = 0.0
 				dash_on = false
-		elif walked >= DASH_GAP:
+		elif walked >= dash_gap:
 			walked = 0.0
 			dash_on = true
 
 	if current.size() >= 2:
-		_dash(parent, current, edge, col)
+		_dash(parent, current, edge, col, ROAD_W if done else ROAD_W * 0.55)
 
 
 ## Krug od tacaka - za kamencice.
@@ -410,11 +423,11 @@ func _ring_pts(center: Vector2, r: float, seg: int) -> PackedVector2Array:
 
 
 ## Jedna crtica: obod pa ispuna.
-func _dash(parent: Node2D, line: Array, edge: Color, fill: Color) -> void:
+func _dash(parent: Node2D, line: Array, edge: Color, fill: Color, w := ROAD_W) -> void:
 	if line.size() < 2:
 		return
-	_ribbon(parent, line, ROAD_W + 4.0, edge)
-	_ribbon(parent, line, ROAD_W, fill)
+	_ribbon(parent, line, w + 4.0, edge)
+	_ribbon(parent, line, w, fill)
 
 
 func _add_dot(index: int) -> void:
@@ -431,7 +444,6 @@ func _add_dot(index: int) -> void:
 	add_child(dot)
 	_dots.append(dot)
 
-	# Boja prstena prati bioma ostrva - tacka pripada svom predelu.
 	var isl := Game.island_of(index)
 	var biome_col: Color = BiomeArt.PALETTES.get(
 		String(isl.get("biome", "livada")), BiomeArt.PALETTES["livada"])["ground"]
@@ -442,29 +454,71 @@ func _add_dot(index: int) -> void:
 	shadow.scale = Vector2(1.15, 0.4)
 	dot.add_child(shadow)
 
-	# Spoljni prsten - bela ivica, pa boja biomа.
-	dot.add_child(_circle(DOT_R + 3.0, Color(1, 1, 1, 0.95)))
-	dot.add_child(_circle(DOT_R, biome_col.darkened(0.15) if not done else C_ROAD_DONE))
-	# Unutrasnji krug - svetliji, da broj lezi na cistoj podlozi.
-	dot.add_child(_circle(DOT_R - 6.0, Color(0.99, 0.98, 0.94)))
+	if done:
+		# --- ZAVRSEN: zlatan medaljon sa dvostrukim prstenom i sjajem ---
+		dot.add_child(_circle(DOT_R + 5.0, Color(1, 0.88, 0.4, 0.5)))
+		dot.add_child(_circle(DOT_R + 3.0, Color(1, 1, 1, 0.95)))
+		dot.add_child(_circle(DOT_R, C_ROAD_DONE))
+		dot.add_child(_circle(DOT_R - 5.0, Color(1, 0.95, 0.72)))
+		dot.add_child(_circle(DOT_R - 9.0, Color(1, 0.99, 0.88)))
+	elif exists and unlocked:
+		# --- DOSTUPAN: cist medaljon u boji biomа, pulsira ---
+		dot.add_child(_circle(DOT_R + 3.0, Color(1, 1, 1, 0.95)))
+		dot.add_child(_circle(DOT_R, biome_col.darkened(0.12)))
+		dot.add_child(_circle(DOT_R - 6.0, Color(0.99, 0.98, 0.94)))
+	elif exists:
+		# --- ZAKLJUCAN (postoji ali nije otvoren): siv sa katancem ---
+		dot.add_child(_circle(DOT_R + 3.0, Color(0.92, 0.92, 0.94, 0.9)))
+		dot.add_child(_circle(DOT_R, Color(0.62, 0.63, 0.68)))
+		dot.add_child(_circle(DOT_R - 6.0, Color(0.82, 0.83, 0.86)))
+	else:
+		# --- NE POSTOJI ("uskoro"): isprekidan obris, providno, bez ispune.
+		#     Vizualno jasno drugacije: nije zakljucan nego jos NE POSTOJI.
+		var seg := 16
+		for k in seg:
+			if k % 2 == 1:
+				continue
+			var a0 := TAU * float(k) / float(seg)
+			var a1 := TAU * float(k + 1) / float(seg)
+			var pts := PackedVector2Array()
+			for t in 5:
+				var aa: float = lerpf(a0, a1, float(t) / 4.0)
+				pts.append(Vector2(cos(aa), sin(aa)) * (DOT_R + 2.0))
+			for t in range(4, -1, -1):
+				var aa: float = lerpf(a0, a1, float(t) / 4.0)
+				pts.append(Vector2(cos(aa), sin(aa)) * (DOT_R - 3.0))
+			_poly_pts(dot, Color(1, 1, 1, 0.6), pts)
+		# Bleda ispuna - vidi se da je mesto rezervisano.
+		dot.add_child(_circle(DOT_R - 4.0, Color(1, 1, 1, 0.14)))
+		# Znak pitanja umesto broja.
+		var q := Label.new()
+		q.text = "?"
+		q.add_theme_font_size_override("font_size", 30)
+		q.add_theme_color_override("font_color", Color(1, 1, 1, 0.8))
+		q.add_theme_constant_override("outline_size", 6)
+		q.add_theme_color_override("font_outline_color", Color(0.35, 0.5, 0.65, 0.5))
+		q.size = Vector2(DOT_R * 2, DOT_R * 2)
+		q.position = Vector2(-DOT_R, -DOT_R + 3)
+		q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		q.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		q.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		dot.add_child(q)
 
-	# Sjaj gore levo - medaljon nije ravan.
-	var shine := _circle(DOT_R * 0.42, Color(1, 1, 1, 0.55))
-	shine.position = Vector2(-DOT_R * 0.28, -DOT_R * 0.32)
-	dot.add_child(shine)
-
-	# Zatvoreni su sivi i blago prozirni.
-	if not (exists and unlocked):
-		dot.modulate = Color(0.78, 0.79, 0.82, 0.92)
+	# Sjaj gore levo - medaljon nije ravan (osim "uskoro" tacaka).
+	if exists:
+		var shine := _circle(DOT_R * 0.4, Color(1, 1, 1, 0.5))
+		shine.position = Vector2(-DOT_R * 0.28, -DOT_R * 0.32)
+		dot.add_child(shine)
 
 
-	# Oznaka: katanac / zvezdica / broj. NE emoji - web font ih nema.
-	if not (exists and unlocked):
-		_add_lock(dot)
+	# Oznaka: kvacica (predjen) / broj (dostupan) / katanac (zakljucan).
+	# "Uskoro" tacke vec imaju "?" pa se preskacu.
+	if not exists:
+		pass
 	elif done:
-		var st := StarIcon.instantiate() as Node2D
-		st.scale = Vector2(1.2, 1.2)
-		dot.add_child(st)
+		_add_check(dot)
+	elif not unlocked:
+		_add_lock(dot)
 	else:
 		var mark := Label.new()
 		mark.text = str(index + 1)
@@ -517,6 +571,25 @@ func _add_dot(index: int) -> void:
 			Audio.play("checkpoint")
 	)
 	dot.add_child(btn)
+
+
+## Kvacica - oznaka da je nivo PREDJEN.
+func _add_check(parent: Node2D) -> void:
+	# Debela kvacica sa belim obodom - vidi se na zlatnoj podlozi.
+	var pts := PackedVector2Array([
+		Vector2(-10, 0), Vector2(-6.5, -3.5), Vector2(-2.5, 1),
+		Vector2(6.5, -8.5), Vector2(10.5, -5), Vector2(-2.5, 8.5),
+	])
+	var outline := Polygon2D.new()
+	outline.color = Color(1, 1, 1, 0.9)
+	outline.polygon = pts
+	outline.scale = Vector2(1.28, 1.28)
+	parent.add_child(outline)
+
+	var check := Polygon2D.new()
+	check.color = Color(0.24, 0.58, 0.3)
+	check.polygon = pts
+	parent.add_child(check)
 
 
 ## Katanac od poligona (emoji ne radi u Godotovom web fontu).
