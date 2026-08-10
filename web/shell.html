@@ -597,6 +597,70 @@
 		['pointerdown', 'touchstart'].forEach(function (ev) {
 			document.addEventListener(ev, () => canvas.focus(), { passive: true });
 		});
+
+		// --- OTKLJUCAVANJE ZVUKA NA TELEFONU ---
+		//
+		// Mobilni browseri (iOS Safari i Chrome na Androidu) prave
+		// AudioContext u stanju "suspended" i NE puste zvuk dok korisnik
+		// ne dotakne ekran. Godot svoj kontekst napravi pri pokretanju,
+		// pa bez ovoga igra na telefonu ostaje NEMA - i muzika i efekti.
+		//
+		// Godot ne izlaze svoj AudioContext u JS, pa ga tražimo kroz
+		// prototip: presrecemo svaki novi AudioContext i pamtimo ga.
+		// Na prvi dodir pozivamo resume() na svima.
+		(function () {
+			var contexts = [];
+			var AC = window.AudioContext || window.webkitAudioContext;
+			if (!AC) return;
+
+			// Zapamti svaki AudioContext koji se napravi (i Godotov).
+			var Orig = AC;
+			function Patched() {
+				var ctx = new Orig(arguments[0]);
+				contexts.push(ctx);
+				return ctx;
+			}
+			Patched.prototype = Orig.prototype;
+			window.AudioContext = Patched;
+			if (window.webkitAudioContext) window.webkitAudioContext = Patched;
+
+			// Slusaci se NIKAD ne skidaju.
+			//
+			// Prva verzija ih je skidala kad nema suspendovanih konteksta, ali
+			// to je greska: iOS suspenduje kontekst svaki put kad se stranica
+			// vrati iz pozadine ili se ekran zaključa. Ako smo skinuli slusace,
+			// zvuk posle toga ostaje nem zauvek.
+			//
+			// resume() na kontekstu koji vec radi je bezopasan i jeftin, pa
+			// nema razloga za optimizaciju koja moze da ostavi igru bez zvuka.
+			function unlock() {
+				contexts.forEach(function (c) {
+					if (c.state === 'suspended') {
+						c.resume().catch(function () {});
+					}
+				});
+			}
+
+			['pointerdown', 'touchstart', 'touchend', 'keydown'].forEach(function (ev) {
+				document.addEventListener(ev, unlock, { passive: true });
+			});
+
+			// Kad se igra vrati iz pozadine, kontekst moze opet da bude
+			// suspendovan (iOS to radi pri zaključavanju ekrana).
+			//
+			// Zove se BEZ provere document.hidden: iOS ponekad posalje
+			// visibilitychange dok je hidden jos true, pa bi provera
+			// preskocila budjenje i zvuk bi ostao nem do sledeceg dodira.
+			// resume() na kontekstu koji je vec running je bezopasan.
+			document.addEventListener('visibilitychange', function () {
+				unlock();
+				// I malo kasnije - iOS zna da odbije resume() dok je stranica
+				// jos u prelazu iz pozadine.
+				setTimeout(unlock, 350);
+			});
+			window.addEventListener('focus', unlock);
+			window.addEventListener('pageshow', unlock);
+		})();
 	})();
 	</script>
 </body>
