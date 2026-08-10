@@ -51,6 +51,16 @@ jobs:
           godot --headless --export-release "Web" build/web/index.html
           ls -la build/web/
 
+      # Godotov SW za navigaciju radi "cache first", pa PWA zauvek dobija
+      # staru stranicu (uninstall PWA ne brise Cache Storage). Zbog toga
+      # popravke u shell-u nisu stizale do instalirane PWA. Skript to menja
+      # na network-first, uz zadrzan offline fallback.
+      #
+      # Skript PADA ako Godot promeni sablon - bolje da build pukne nego da
+      # tiho preskoci i PWA ostane zaglavljena.
+      - name: Prepravi service worker (network-first za HTML)
+        run: python3 tools/patch_sw.py build/web/index.service.worker.js
+
       - name: Provera da build nije prazan
         run: |
           test -f build/web/index.html || { echo "NEMA index.html"; exit 1; }

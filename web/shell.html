@@ -391,34 +391,42 @@
 			// Drugi sloj zastite: uporedi verziju na mrezi sa onom koju je
 			// SW posluzio. Ako se razlikuju, kes je zaglavljen - obrisi ga
 			// i reloaduj. Ovo radi cak i kad SW nikad ne izadje iz "waiting".
-			window.addEventListener('load', function () {
-				setTimeout(function () {
-					fetch('version.txt?cb=' + Date.now(), { cache: 'no-store' })
-						.then(function (r) { return r.ok ? r.text() : null; })
-						.then(async function (live) {
-							if (!live) return;
-							live = live.trim();
-							var seen = localStorage.getItem('evaVersion');
-							if (seen === live) return;               // vec na najnovijoj
-							if (sessionStorage.getItem('evaPurge')) {  // vec probali
-								localStorage.setItem('evaVersion', live);
-								return;
-							}
-							sessionStorage.setItem('evaPurge', '1');
+			// Provera ide ODMAH, ne na 'load' + 1.2s kao pre.
+			//
+			// Zasto: Godotov SW za NAVIGACIJU servira index.html iz kesa
+			// ("Try to use cache first" u njegovom fetch handleru), pa PWA
+			// dobija STARU stranicu. Uninstall PWA ne brise Cache Storage,
+			// tako da reinstalacija ne pomaze.
+			//
+			// Ako provera ceka 'load', Godot u medjuvremenu vec startuje sa
+			// stare stranice - zbog toga popravka zvuka nije stizala do PWA.
+			// Sada se kes proveri pre nego sto igra krene.
+			(function checkVersion() {
+				fetch('version.txt?cb=' + Date.now(), { cache: 'no-store' })
+					.then(function (r) { return r.ok ? r.text() : null; })
+					.then(async function (live) {
+						if (!live) return;
+						live = live.trim();
+						var seen = localStorage.getItem('evaVersion');
+						if (seen === live) return;               // vec na najnovijoj
+						if (sessionStorage.getItem('evaPurge')) {  // vec probali
 							localStorage.setItem('evaVersion', live);
-							try {
-								if (window.caches) {
-									var keys = await caches.keys();
-									await Promise.all(keys.map(function (k) { return caches.delete(k); }));
-								}
-								var regs = await navigator.serviceWorker.getRegistrations();
-								await Promise.all(regs.map(function (r) { return r.unregister(); }));
-							} catch (e) { /* probaj reload i bez ovoga */ }
-							window.location.reload();
-						})
-						.catch(function () { /* offline - nista */ });
-				}, 1200);
-			});
+							return;
+						}
+						sessionStorage.setItem('evaPurge', '1');
+						localStorage.setItem('evaVersion', live);
+						try {
+							if (window.caches) {
+								var keys = await caches.keys();
+								await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+							}
+							var regs = await navigator.serviceWorker.getRegistrations();
+							await Promise.all(regs.map(function (r) { return r.unregister(); }));
+						} catch (e) { /* probaj reload i bez ovoga */ }
+						window.location.reload();
+					})
+					.catch(function () { /* offline - nista */ });
+			})();
 		}
 
 		// Ako se igra ne ucita na vreme, verovatno je zaglavljen stari kes.
