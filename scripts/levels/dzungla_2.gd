@@ -87,6 +87,39 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_fit_grid)
 
 
+## Klik/dodir se obradjuje OVDE, geometrijski - vidi komentar u _build_cards.
+func _input(event: InputEvent) -> void:
+	if _busy or _done:
+		return
+
+	var pos := Vector2.ZERO
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT:
+			return
+		pos = mb.position
+	elif event is InputEventScreenTouch:
+		var st := event as InputEventScreenTouch
+		if not st.pressed:
+			return
+		pos = st.position
+	else:
+		return
+
+	var world: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * pos
+	# Mreza je skalirana i pomerena, pa poredi u NJENOM prostoru.
+	var local: Vector2 = _grid.to_local(world)
+	var half := Vector2(CARD_W, CARD_H) * 0.5
+
+	for i in _cards.size():
+		var card: Node2D = _cards[i]["node"]
+		var d: Vector2 = local - card.position
+		if absf(d.x) <= half.x and absf(d.y) <= half.y:
+			_on_card(i)
+			get_viewport().set_input_as_handled()
+			return
+
+
 ## Uklopi mrezu u ekran.
 ##
 ## Karte su namerno velike (dodir prstom), pa je mreza 4x3 visa od
@@ -186,15 +219,13 @@ func _build_cards() -> void:
 		card.add_child(front)
 		_draw_front(front, deck[i])
 
-		# Klik zona pokriva CELU kartu, ne samo motiv.
-		var btn := Button.new()
-		btn.flat = true
-		btn.size = Vector2(CARD_W, CARD_H)
-		btn.position = Vector2(-CARD_W * 0.5, -CARD_H * 0.5)
-		btn.focus_mode = Control.FOCUS_NONE
-		var idx := i
-		btn.pressed.connect(func() -> void: _on_card(idx))
-		card.add_child(btn)
+		# Bez klik cvora: _input() nalazi kartu geometrijski.
+		#
+		# Ni Button ni Area2D ne rade ovde. Button je Control - pozicija
+		# mu je u EKRANSKOM prostoru i ne prolazi kroz canvas transform
+		# kamere, pa zavrsi van karte. Area2D zavisi od physics object
+		# picking-a, koji nije dostavljao input_event (mereno na bojenju:
+		# cvorovi ispravni, handler povezan, ali klik nikad ne dodje).
 
 		_cards.append({
 			"node": card, "back": back, "front": front,

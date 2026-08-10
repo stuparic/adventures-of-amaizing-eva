@@ -55,6 +55,53 @@ func _ready() -> void:
 	_highlight_swatch()
 
 
+## Klik/dodir se obradjuje OVDE, ne preko Area2D.input_event.
+##
+## Zasto: Area2D.input_event zavisi od Godotovog physics object picking-a,
+## koji ovde nije radio - polja i paleta nisu reagovala ni na desktopu.
+## Merenjem je potvrdjeno da su Area2D cvorovi ispravno postavljeni
+## (pickable=true, layer=1, handler povezan, tacne pozicije) i da bojenje
+## radi kad se handler pozove direktno - ali klik do njega nikad ne dodje.
+##
+## Geometrijska provera je pouzdanija: uzmi poziciju klika, prevedi je u
+## svetske koordinate i vidi u kom je poligonu. Ne zavisi od fizike,
+## slojeva kolizije ni pickinga, i radi isto na misu i na dodiru.
+func _input(event: InputEvent) -> void:
+	var pos := Vector2.ZERO
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT:
+			return
+		pos = mb.position
+	elif event is InputEventScreenTouch:
+		var st := event as InputEventScreenTouch
+		if not st.pressed:
+			return
+		pos = st.position
+	else:
+		return
+
+	# Ekranska -> svetska koordinata (uzima u obzir kameru i zoom).
+	var world: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * pos
+
+	# Paleta ima prioritet: kuglice su iznad slike i manje su meta.
+	for i in _swatches.size():
+		if world.distance_to(_swatches[i].position) <= 44.0:
+			_choose(i)
+			get_viewport().set_input_as_handled()
+			return
+
+	# Pa polja skoljke.
+	for i in FIELDS.size():
+		var pts := PackedVector2Array()
+		for v in FIELDS[i]:
+			pts.append(ORIGIN + (v as Vector2))
+		if Geometry2D.is_point_in_polygon(world, pts):
+			_paint(i)
+			get_viewport().set_input_as_handled()
+			return
+
+
 ## Skoljka: svako polje je klikabilno, pocinje belo sa isprekidanim obodom.
 func _build_shell() -> void:
 	# Senka ispod skoljke - lezi na pesku.
@@ -89,21 +136,8 @@ func _build_shell() -> void:
 		_draw_dashed_outline(outline, pts)
 		_outlines.append(outline)
 
-		# Klik zona - poligon je nepravilan, pa koristim Area2D.
-		var area := Area2D.new()
-		area.input_pickable = true
-		var col := CollisionPolygon2D.new()
-		col.polygon = pts
-		area.add_child(col)
-		var idx := i
-		area.input_event.connect(
-			func(_v: Viewport, ev: InputEvent, _s: int) -> void:
-				if ev is InputEventMouseButton and (ev as InputEventMouseButton).pressed:
-					_paint(idx)
-				elif ev is InputEventScreenTouch and (ev as InputEventScreenTouch).pressed:
-					_paint(idx)
-		)
-		add_child(area)
+		# Bez Area2D: klik se obradjuje u _input() geometrijski, jer
+		# physics object picking ovde nije dostavljao input_event.
 
 
 ## Paleta boja - kuglice dole, dovoljno velike za detinji prst.
@@ -127,14 +161,15 @@ func _build_palette() -> void:
 		_circle(sw, Vector2.ZERO, 25.0, PALETTE[i])
 		_circle(sw, Vector2(-8, -9), 8.0, Color(1, 1, 1, 0.45))
 
-		var btn := Button.new()
-		btn.flat = true
-		btn.size = Vector2(88, 88)
-		btn.position = Vector2(-44, -44)
-		btn.focus_mode = Control.FOCUS_NONE
-		var idx := i
-		btn.pressed.connect(func() -> void: _choose(idx))
-		sw.add_child(btn)
+		# Bez klik cvora: _input() proverava rastojanje do centra kuglice
+		# (44px = 88px meta, velika za detinji prst).
+		#
+		# Ranije je ovde bio Button, ali Button je Control - njegova
+		# pozicija je u EKRANSKOM prostoru i ne prolazi kroz canvas
+		# transform kamere. Kuglica je Node2D u svetu na (79, 210), a
+		# dugme je zavrsavalo na ekranskim (38, 169), van kuglice.
+		# Zamena Area2D-om nije pomogla jer physics picking nije
+		# dostavljao input_event.
 
 
 func _choose(index: int) -> void:

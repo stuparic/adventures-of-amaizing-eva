@@ -36,8 +36,35 @@ const PANEL_MARGIN := 0.92
 func _ready() -> void:
 	visible = false
 	layer = 10
+	# visible=false na CanvasLayer skriva GRAFIKU, ali njegovi Control
+	# cvorovi i dalje hvataju misa. Panel je zato jeo klikove u
+	# mini-igrama: karte memorija su bile tacno pod njim, pa nisu
+	# reagovale (bojenje je radilo jer je skoljka nize, van panela).
+	# Zato se obrada ulaza gasi eksplicitno dok ekran nije prikazan.
+	_set_input_enabled(false)
 
 	_build_icons()
+
+
+## Ukljuci/iskljuci hvatanje misa za CEO ekran, rekurzivno.
+##
+## Cuva originalni mouse_filter svakog cvora u meta podatku, pa vracanje
+## ne pretvori sve u STOP - Rows/Center su namerno IGNORE/PASS.
+func _set_input_enabled(on: bool) -> void:
+	_apply_filter(self, on)
+
+
+func _apply_filter(n: Node, on: bool) -> void:
+	for c in n.get_children():
+		if c is Control:
+			var ct := c as Control
+			if not ct.has_meta("orig_filter"):
+				ct.set_meta("orig_filter", int(ct.mouse_filter))
+			if on:
+				ct.mouse_filter = int(ct.get_meta("orig_filter")) as Control.MouseFilter
+			else:
+				ct.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_apply_filter(c, on)
 
 	btn_map.pressed.connect(func() -> void:
 		Audio.play("star")
@@ -49,7 +76,10 @@ func _ready() -> void:
 	)
 
 	_fit_panel()
-	get_viewport().size_changed.connect(_fit_panel)
+	# Vezi samo jednom: show_result se moze pozvati ponovo (restart nivoa),
+	# a dupla veza je ispisivala gresku u konzoli na svaki frejm.
+	if not get_viewport().size_changed.is_connected(_fit_panel):
+		get_viewport().size_changed.connect(_fit_panel)
 
 
 ## Uklopi panel u sirinu ekrana (telefon u portretu je uzak).
@@ -70,6 +100,7 @@ func show_result(stars: int, total: int, time_text: String) -> void:
 		return
 	_shown = true
 	visible = true
+	_set_input_enabled(true)
 
 	title.text = "BRAVO EVA!"
 	subtitle.text = "Spasila si %s" % Game.rescued_friend

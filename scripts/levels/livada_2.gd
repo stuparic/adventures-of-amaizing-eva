@@ -46,6 +46,41 @@ func _ready() -> void:
 	_highlight_next()
 
 
+## Klik/dodir se obradjuje OVDE, geometrijski - vidi komentar u _build_dots.
+##
+## Zona je NAMERNO mnogo veca od zvezdice (39px poluprecnika = 78px meta):
+## detinji prst je neprecizan, pa pokriva i promasaj od 2cm.
+func _input(event: InputEvent) -> void:
+	var pos := Vector2.ZERO
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if not mb.pressed or mb.button_index != MOUSE_BUTTON_LEFT:
+			return
+		pos = mb.position
+	elif event is InputEventScreenTouch:
+		var st := event as InputEventScreenTouch
+		if not st.pressed:
+			return
+		pos = st.position
+	else:
+		return
+
+	var world: Vector2 = get_viewport().get_canvas_transform().affine_inverse() * pos
+
+	# Uzmi NAJBLIZU zvezdicu u dometu, ne prvu na koju naletis - zone se
+	# preklapaju kod gustih tacaka, pa bi "prva" mogla biti pogresna.
+	var best := -1
+	var best_d := 40.0
+	for i in _dots.size():
+		var d := world.distance_to(_dots[i].position)
+		if d <= best_d:
+			best_d = d
+			best = i
+	if best >= 0:
+		_on_dot(best)
+		get_viewport().set_input_as_handled()
+
+
 ## Zvezdica sa brojem. Klik proverava da li je na redu.
 func _build_dots() -> void:
 	# Crtez je u centru ekrana, malo nize od prijatelja.
@@ -77,17 +112,12 @@ func _build_dots() -> void:
 		lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		dot.add_child(lbl)
 
-		# Dugme za klik/dodir - velika zona, dete ne mora precizno.
-		var btn := Button.new()
-		btn.flat = true
-		# Klik zona je NAMERNO mnogo veca od zvezdice - detinji prst
-		# je neprecizan. 78px pokriva i promasaj od 2cm.
-		btn.size = Vector2(78, 78)
-		btn.position = Vector2(-39, -39)
-		btn.focus_mode = Control.FOCUS_NONE
-		var idx := i
-		btn.pressed.connect(func() -> void: _on_dot(idx))
-		dot.add_child(btn)
+		# Bez klik cvora: _input() nalazi zvezdicu po rastojanju.
+		#
+		# Ni Button ni Area2D ne rade ovde. Button je Control - pozicija
+		# mu je u EKRANSKOM prostoru i ne prolazi kroz canvas transform
+		# kamere, pa zavrsi van zvezdice. Area2D zavisi od physics object
+		# picking-a, koji nije dostavljao input_event.
 
 
 func _on_dot(index: int) -> void:
