@@ -104,7 +104,7 @@ const LEVELS: Array[Dictionary] = [
 	{"id": "pustinja_1", "name": "Vruće dine", "scene": "res://scenes/levels/pustinja_1.tscn",
 	 "island": "pustinja", "pos": Vector2(2560, 260), "kind": "platform",
 	 "friend": "lisica"},
-	{"id": "pustinja_2", "name": "Obuci Budžumboru", "scene": "",
+	{"id": "pustinja_2", "name": "Obuci Budžumboru", "scene": "res://scenes/levels/pustinja_2.tscn",
 	 "island": "pustinja", "pos": Vector2(2950, 380), "kind": "dress",
 	 "friend": "sova"},
 
