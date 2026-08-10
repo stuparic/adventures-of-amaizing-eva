@@ -31,6 +31,54 @@ var _facing := 1
 
 var _base_gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity", 900.0)
 
+## --- PRISTUP AUTOLOAD-IMA ---
+##
+## Eva se NE sme oslanjati na `Game` i `Audio` kao globalne identifikatore.
+##
+## Zasto: scenes/world_map.tscn je GLAVNA scena i ugrađuje scenes/eva.tscn
+## kao ext_resource. Godot ucitava glavnu scenu PRE nego sto registruje
+## autoload-e, pa u tom trenutku `Game` i `Audio` ne postoje i eva.gd pada
+## sa "Identifier "Game" not declared in the current scope". Cela mapa je
+## ostajala prazna - bez ostrva, puteva i tacaka.
+##
+## Lokalno se to NIJE videlo jer je .godot kes vec imao kompajlirani
+## eva.gd; pucalo je samo u cistom CI buildu.
+##
+## Zato se autoload-i traze runtime, kroz /root. Konstante se citaju uz
+## fallback na iste vrednosti kao u game.gd, da Eva radi i ako je ucitana
+## pre autoload-a.
+
+const FALLBACK := {
+	"COYOTE_TIME": 0.18,
+	"JUMP_BUFFER_TIME": 0.20,
+	"INVULN_TIME": 2.0,
+	"PLAYER_SPEED": 150.0,
+	"PLAYER_JUMP_VELOCITY": -370.0,
+	"PLAYER_GRAVITY_SCALE": 0.72,
+}
+
+
+## Konstanta iz Game autoload-a, sa fallback vrednoscu.
+func _gc(key: String) -> float:
+	var g := get_node_or_null("/root/Game")
+	if g != null:
+		var v: Variant = g.get(key)
+		if v != null:
+			return float(v)
+	return float(FALLBACK[key])
+
+
+## Game autoload, ili null ako jos ne postoji.
+func _game() -> Node:
+	return get_node_or_null("/root/Game")
+
+
+## Zvuk kroz Audio autoload. Tiho preskoci ako autoload ne postoji.
+func _sfx(name: String, pitch_var := 0.06) -> void:
+	var a := get_node_or_null("/root/Audio")
+	if a != null and a.has_method("play"):
+		a.play(name, pitch_var)
+
 ## --- MOCI ---
 ## Postavlja nivo: "" (nista), "double_jump", "swim", "glide", "light".
 var power := ""
@@ -108,7 +156,7 @@ func _tick_timers(delta: float) -> void:
 			body_visual.visible = true
 
 	if is_on_floor():
-		_coyote_timer = Game.COYOTE_TIME
+		_coyote_timer = _gc("COYOTE_TIME")
 		_air_jumps = AIR_JUMPS_MAX      # dupli skok se puni na tlu
 	else:
 		_coyote_timer = maxf(_coyote_timer - delta, 0.0)
@@ -129,7 +177,7 @@ func _apply_gravity(delta: float) -> void:
 	if is_on_floor():
 		return
 
-	var g := _base_gravity * Game.PLAYER_GRAVITY_SCALE
+	var g := _base_gravity * _gc("PLAYER_GRAVITY_SCALE")
 
 	# LEBDENJE: dok drzi skok i pada, spusta se kao na padobranu.
 	if power == "glide" and velocity.y > 0.0 and Input.is_action_pressed("jump"):
@@ -150,36 +198,36 @@ func _handle_horizontal() -> void:
 	if absf(dir) > 0.01:
 		# Milost 2: nema inercije/klizanja. Pusti taster - odmah stane.
 		# Mario ima momentum; za dete je to izvor frustracije.
-		velocity.x = dir * Game.PLAYER_SPEED
+		velocity.x = dir * _gc("PLAYER_SPEED")
 		_facing = 1 if dir > 0.0 else -1
 		body_visual.scale.x = _facing
 	else:
-		velocity.x = move_toward(velocity.x, 0.0, Game.PLAYER_SPEED * 0.4)
+		velocity.x = move_toward(velocity.x, 0.0, _gc("PLAYER_SPEED") * 0.4)
 
 
 func _handle_jump() -> void:
 	if Input.is_action_just_pressed("jump"):
-		_jump_buffer_timer = Game.JUMP_BUFFER_TIME
+		_jump_buffer_timer = _gc("JUMP_BUFFER_TIME")
 
 	# U vodi skok = plivanje, obradjeno u _apply_gravity.
 	if _in_water:
 		return
 
 	if _jump_buffer_timer > 0.0 and _coyote_timer > 0.0:
-		velocity.y = Game.PLAYER_JUMP_VELOCITY
+		velocity.y = _gc("PLAYER_JUMP_VELOCITY")
 		_jump_buffer_timer = 0.0
 		_coyote_timer = 0.0
 		_squash(0.7, 1.3)
-		Audio.play("jump")
+		_sfx("jump")
 		return
 
 	# DUPLI SKOK: u vazduhu, ako je moc dostupna i jos ima skokova.
 	if power == "double_jump" and _jump_buffer_timer > 0.0 and _air_jumps > 0:
-		velocity.y = Game.PLAYER_JUMP_VELOCITY * 0.88
+		velocity.y = _gc("PLAYER_JUMP_VELOCITY") * 0.88
 		_jump_buffer_timer = 0.0
 		_air_jumps -= 1
 		_squash(0.75, 1.25)
-		Audio.play("jump", 0.14)
+		_sfx("jump", 0.14)
 		_spawn_jump_puff()
 
 
@@ -187,7 +235,7 @@ func _animate(delta: float) -> void:
 	# Blago "dihanje" dok stoji, squash pri sletanju.
 	if is_on_floor() and not _was_on_floor:
 		_squash(1.3, 0.7)
-		Audio.play("land")
+		_sfx("land")
 
 	body_visual.scale.x = move_toward(body_visual.scale.x, float(_facing), delta * 6.0)
 	body_visual.scale.y = move_toward(body_visual.scale.y, 1.0, delta * 6.0)
@@ -205,9 +253,9 @@ func _on_stomp(node: Node) -> void:
 		return
 	if node.has_method("get_stomped"):
 		node.get_stomped()
-		velocity.y = Game.PLAYER_JUMP_VELOCITY * 0.75  # odskok
+		velocity.y = _gc("PLAYER_JUMP_VELOCITY") * 0.75  # odskok
 		_squash(1.2, 0.8)
-		Audio.play("stomp")
+		_sfx("stomp")
 
 
 func _on_hurt(node: Node) -> void:
@@ -219,14 +267,16 @@ func hurt() -> void:
 	if _invuln_timer > 0.0 or _is_dead:
 		return
 
-	Game.take_damage()
-	_invuln_timer = Game.INVULN_TIME
-	Audio.play("hurt")
+	var g := _game()
+	if g != null:
+		g.take_damage()
+	_invuln_timer = _gc("INVULN_TIME")
+	_sfx("hurt")
 
 	# Odbacivanje unazad - jasan feedback bez gubitka pozicije.
 	velocity = Vector2(-_facing * 140.0, -220.0)
 
-	if Game.hearts <= 0:
+	if g != null and int(g.hearts) <= 0:
 		_die()
 
 
@@ -238,7 +288,7 @@ func enter_water(can_swim: bool) -> void:
 	_can_swim = can_swim
 	# Ulazak u vodu koci pad - bez ovoga "propadne" kroz plicak.
 	velocity.y = minf(velocity.y, 60.0)
-	Audio.play("land", 0.12)
+	_sfx("land", 0.12)
 
 	if not can_swim:
 		# Ne ume da pliva - voda je opasna, gubi srce i vraca se.
@@ -276,9 +326,11 @@ func _spawn_jump_puff() -> void:
 func fall_out() -> void:
 	if _is_dead:
 		return
-	Game.take_damage()
-	Audio.play("hurt")
-	if Game.hearts <= 0:
+	var g := _game()
+	if g != null:
+		g.take_damage()
+	_sfx("hurt")
+	if g != null and int(g.hearts) <= 0:
 		_die()
 	else:
 		_respawn_at_checkpoint()
@@ -286,9 +338,10 @@ func fall_out() -> void:
 
 func _respawn_at_checkpoint() -> void:
 	velocity = Vector2.ZERO
-	_invuln_timer = Game.INVULN_TIME
-	if Game.has_checkpoint:
-		global_position = Game.checkpoint_position
+	_invuln_timer = _gc("INVULN_TIME")
+	var g := _game()
+	if g != null and bool(g.has_checkpoint):
+		global_position = g.checkpoint_position
 	respawned.emit()
 
 
@@ -303,4 +356,4 @@ func revive_at(pos: Vector2) -> void:
 	velocity = Vector2.ZERO
 	global_position = pos
 	body_visual.visible = true
-	_invuln_timer = Game.INVULN_TIME
+	_invuln_timer = _gc("INVULN_TIME")
