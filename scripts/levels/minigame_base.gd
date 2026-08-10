@@ -176,10 +176,13 @@ func _build_task_label() -> void:
 	lbl.add_theme_color_override("font_outline_color", Color(1, 1, 1))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	lbl.offset_left = -400.0
-	lbl.offset_right = 400.0
-	lbl.offset_top = 16.0
-	lbl.offset_bottom = 60.0
+	# Naslov je UZI i pomeren levo: HUD ima tri dugmeta desno gore
+	# (OPET/ZVUK/MAPA, ukupno ~470px) i sa punom sirinom je tekst isao
+	# pod njih - video na snimku.
+	lbl.offset_left = -520.0
+	lbl.offset_right = 190.0
+	lbl.offset_top = 18.0
+	lbl.offset_bottom = 62.0
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var layer := CanvasLayer.new()
@@ -195,6 +198,9 @@ func _wire_ui() -> void:
 	# Dugme MAPA iz HUD-a - vidljivo tokom cele igre.
 	if _hud.has_signal("map_requested"):
 		_hud.map_requested.connect(_go_to_map)
+	# Dugme PONOVO - na telefonu nema tastera R.
+	if _hud.has_signal("restart_requested"):
+		_hud.restart_requested.connect(_restart)
 	_win_screen.replay_requested.connect(_restart)
 
 

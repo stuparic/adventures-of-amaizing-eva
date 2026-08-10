@@ -461,6 +461,9 @@ func _wire_ui() -> void:
 	# Dugme MAPA iz HUD-a - vidljivo tokom cele igre.
 	if _hud.has_signal("map_requested"):
 		_hud.map_requested.connect(_go_to_map)
+	# Dugme PONOVO - na telefonu nema tastera R.
+	if _hud.has_signal("restart_requested"):
+		_hud.restart_requested.connect(_restart)
 	_win_screen.replay_requested.connect(_restart)
 	Game.level_won.connect(_on_won)
 	Game.player_died.connect(_on_died)

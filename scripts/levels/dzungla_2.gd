@@ -174,11 +174,14 @@ func _fit_grid() -> void:
 
 ## Napravi 12 karata: svaki motiv dva puta, pa promesaj.
 func _build_cards() -> void:
-	# Fiksno seme - raspored je isti svaki put. Dete od 5 godina voli da
-	# ponovi nivo i da mu bude poznat; slucajan raspored svaki put
-	# frustrira jer ne moze da "nauci" igru.
+	# SLUCAJAN raspored pri svakom pokretanju.
+	#
+	# Prvo je bilo fiksno seme, sa idejom da detetu bude poznato. Ali
+	# memori sa istim rasporedom nije memori - dete zapamti gde je sta i
+	# drugi put samo ponavlja poteze. Randomizacija vraca igri svrhu, a
+	# dugme PONOVO daje novi raspored kad god zeli.
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 7412
+	rng.randomize()
 
 	var deck: Array[int] = []
 	for i in PAIRS:

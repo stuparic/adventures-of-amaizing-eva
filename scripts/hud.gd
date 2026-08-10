@@ -16,9 +16,13 @@ const StarScene := preload("res://scenes/hud_star.tscn")
 @onready var rows: VBoxContainer = $Margin/Rows
 @onready var map_button: Button = $MapButton
 @onready var mute_button: Button = $MuteButton
+@onready var again_button: Button = $AgainButton
 
 ## Signal koji nivo hvata - HUD ne zna kako se menja scena.
 signal map_requested
+## Restart nivoa. Taster R radi isto, ali na telefonu tastera nema -
+## zato je dugme obavezno.
+signal restart_requested
 
 ## HUD i banner se uvecavaju na malim ekranima - inace su srca i
 ## zvezdice sitni i dete ih ne vidi.
@@ -49,6 +53,10 @@ func _ready() -> void:
 	map_button.pressed.connect(func() -> void:
 		Audio.play("checkpoint")
 		map_requested.emit()
+	)
+	again_button.pressed.connect(func() -> void:
+		Audio.play("checkpoint")
+		restart_requested.emit()
 	)
 	mute_button.pressed.connect(_toggle_mute)
 	_refresh_mute()

@@ -2,7 +2,7 @@ extends MinigameBase
 ## NIVO 11 — "Prebroj pahulje" (Snežna dolina)
 ##
 ## Na ekranu je grupa pahulja. Dete ih prebroji i dodirne pravi broj.
-## Pet zadataka, svaki sa vise pahulja od prethodnog.
+## Pet zadataka sa SLUCAJNIM brojem pahulja - drugi prolaz nije isti.
 ##
 ## Prilagodjeno petogodisnjaku:
 ##  - brojevi idu do 5, ne dalje (koliko dete sigurno prepoznaje)
@@ -14,8 +14,18 @@ extends MinigameBase
 ##
 ## Eva spasava ježa Bodljka.
 
-## Koliko pahulja u kom zadatku. Raste, ali ne preko 5.
-const TASKS: Array[int] = [2, 3, 5, 4, 5]
+## Koliko zadataka u jednom prolazu.
+const TASK_COUNT := 5
+
+## Koliko pahulja moze da bude u zadatku. Ne preko 5 - toliko dete
+## sigurno prepoznaje.
+const MIN_FLAKES := 2
+const MAX_FLAKES := 5
+
+## Brojevi za ovaj prolaz, popunjava se u _ready(). NIJE fiksan niz:
+## sa fiksnim redosledom dete zapamti odgovore i drugi put samo ponavlja,
+## isto kao memori sa istim rasporedom.
+var _tasks: Array[int] = []
 
 ## Ponudjeni brojevi - uvek 1..5, pa dete uci da bira, ne da pogadja.
 ##
@@ -50,7 +60,7 @@ func _setup() -> void:
 	friend_kind = "jez"
 	biome = "sneg"
 	task_text = "Koliko je pahulja? Dodirni broj."
-	set_total_steps(TASKS.size())
+	set_total_steps(TASK_COUNT)
 
 
 func _ready() -> void:
@@ -60,6 +70,7 @@ func _ready() -> void:
 	_flake_holder = Node2D.new()
 	_stage.add_child(_flake_holder)
 
+	_build_tasks()
 	_build_buttons()
 	_show_task()
 	_fit_stage()
@@ -129,7 +140,7 @@ func _count_flake(index: int) -> void:
 
 
 func _answer(n: int) -> void:
-	var want: int = TASKS[_task]
+	var want: int = _tasks[_task]
 	var btn_i: int = CHOICES.find(n)
 
 	if n != want:
@@ -151,12 +162,41 @@ func _answer(n: int) -> void:
 	if not is_inside_tree():
 		return
 
-	if _task >= TASKS.size():
+	if _task >= _tasks.size():
 		win()
 		return
 
 	_show_task()
 	_busy = false
+
+
+## Slucajni brojevi za ovaj prolaz.
+##
+## Dva pravila da zadaci ne budu dosadni ni previse laki:
+##  - nikad dva ISTA broja jedan za drugim
+##  - u prolazu se pojavi najmanje tri razlicita broja
+func _build_tasks() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+
+	_tasks.clear()
+	var guard := 0
+	while _tasks.size() < TASK_COUNT and guard < 200:
+		guard += 1
+		var n := rng.randi_range(MIN_FLAKES, MAX_FLAKES)
+		# Ne ponavljaj isti broj dva puta zaredom.
+		if _tasks.size() > 0 and n == _tasks[_tasks.size() - 1]:
+			continue
+		_tasks.append(n)
+
+	# Ako je slucajno ispalo previse jednolicno, dopuni raznovrsnost.
+	var unique := {}
+	for t in _tasks:
+		unique[t] = true
+	if unique.size() < 3:
+		_tasks[1] = MIN_FLAKES
+		_tasks[2] = MAX_FLAKES
+		_tasks[3] = MIN_FLAKES + 1
 
 
 ## Nacrtaj pahulje za trenutni zadatak.
@@ -172,7 +212,7 @@ func _show_task() -> void:
 	_flakes.clear()
 	_counted.clear()
 
-	var n: int = TASKS[_task]
+	var n: int = _tasks[_task]
 	# Pahulje u JASNOM redu (do 3 u redu), ne razbacane - lakse za brojanje.
 	var per_row: int = mini(n, 3)
 	var rows: int = int(ceil(float(n) / float(per_row)))
