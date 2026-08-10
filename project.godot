@@ -20,6 +20,13 @@ run/main_scene="res://scenes/world_map.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[audio]
+
+driver/output_latency.web=60
+driver/mix_rate.web=44100
+#Webbuild:bezovogasemuzikareprodukovalaMNOGObrzeodrealnog#vremena-izmerenodapozicijaskoci14sza1sstvarnogvremena,pase#zvukmeljeinestizedozvucnikakakotreba.##44100jesampleratesvihnasihfajlova(viditools/gen_audio.pyi#CREDITS.md).BezeksplicitnevrednostiGodotuzmehardverskirate#(48000naovomlaptopu)iresamplingusingle-threadedwebbuildu#ispadapogresan.driver/mix_rate=44100
+#Vecibaferjestabilnijiubrowseru-single-threadedbuildnema#posebnuaudionit,pakratakbaferpucaprisvakomzastojufrejma.driver/output_latency=60
+
 [autoload]
 
 Game="*res://autoload/game.gd"
@@ -93,6 +100,5 @@ world_map={
 
 [rendering]
 
-textures/canvas_textures/default_texture_filter=1
 renderer/rendering_method="gl_compatibility"
 environment/defaults/default_clear_color=Color(0.53, 0.81, 0.98, 1)
