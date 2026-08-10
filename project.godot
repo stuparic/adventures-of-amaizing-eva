@@ -22,16 +22,22 @@ config/icon="res://icon.svg"
 
 [audio]
 
-driver/output_latency.web=60
-driver/mix_rate.web=44100
-#Webbuild:bezovogasemuzikareprodukovalaMNOGObrzeodrealnog#vremena-izmerenodapozicijaskoci14sza1sstvarnogvremena,pase#zvukmeljeinestizedozvucnikakakotreba.##44100jesampleratesvihnasihfajlova(viditools/gen_audio.pyi#CREDITS.md).BezeksplicitnevrednostiGodotuzmehardverskirate#(48000naovomlaptopu)iresamplingusingle-threadedwebbuildu#ispadapogresan.driver/mix_rate=44100
-#Vecibaferjestabilnijiubrowseru-single-threadedbuildnema#posebnuaudionit,pakratakbaferpucaprisvakomzastojufrejma.driver/output_latency=60
+# Stream umesto Sample na webu. Podrazumevani Sample playback u
+# single-threaded web buildu ne prolazi kroz audio buseve. Nasa muzika ide
+# preko Music busa pa se gubila. Mereno analizatorom na Godotovom izlazu.
+# Energija je bila nula kroz osam merenja dok je kontrolni ton kroz isti
+# put davao oko 1500. Stream ima vecu latenciju ali zvuk radi.
+general/default_playback_type.web=1
 
-[autoload]
+# Web koristi hardverski mix rate. Nula znaci hardverski. Forsiranje
+# 44100 na hardveru koji radi 48000 razbija worklet izlaz.
+driver/mix_rate=44100
+driver/mix_rate.web=0
 
-Game="*res://autoload/game.gd"
-Audio="*res://autoload/audio.gd"
-PauseMgr="*res://autoload/pause_manager.gd"
+# Veci bafer je stabilniji u browseru jer single-threaded build nema
+# posebnu audio nit pa kratak bafer puca pri zastoju frejma.
+driver/output_latency=15
+driver/output_latency.web=50
 
 [display]
 
