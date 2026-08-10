@@ -22,6 +22,12 @@ const CheckpointScene := preload("res://scenes/checkpoint.tscn")
 const FriendScene := preload("res://scenes/friend.tscn")
 const PuzScene := preload("res://scenes/puz.tscn")
 const KornjacaScene := preload("res://scenes/kornjaca.tscn")
+# Protivnici po biomu - svako ostrvo ima svoje, da se nivoi ne ponavljaju.
+const RakScene := preload("res://scenes/rak.tscn")
+const ZabaScene := preload("res://scenes/zaba.tscn")
+const SkarabejScene := preload("res://scenes/skarabej.tscn")
+const PingvinceScene := preload("res://scenes/pingvince.tscn")
+const LavaGusterScene := preload("res://scenes/lavaguster.tscn")
 
 ## --- Sta nivo postavlja u _setup() ---
 
@@ -433,6 +439,11 @@ func _spawn_animal(kind: String, pos: Vector2) -> void:
 	match kind:
 		"puz": scene = PuzScene
 		"kornjaca": scene = KornjacaScene
+		"rak": scene = RakScene
+		"zaba": scene = ZabaScene
+		"skarabej": scene = SkarabejScene
+		"pingvince": scene = PingvinceScene
+		"lavaguster": scene = LavaGusterScene
 		_: scene = PuzScene
 	var a := scene.instantiate()
 	a.position = pos
@@ -502,6 +513,13 @@ func _on_won() -> void:
 	Game.save_progress()
 
 	await get_tree().create_timer(1.2).timeout
+
+	# Cela igra predjena? Ide zavrsni video umesto obicnog win ekrana.
+	if Game.all_completed():
+		Audio.stop_music()
+		get_tree().change_scene_to_file("res://scenes/finale.tscn")
+		return
+
 	_win_screen.show_result(Game.stars_collected, Game.total_stars, Game.elapsed_string())
 
 

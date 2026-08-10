@@ -146,6 +146,28 @@ func level_count() -> int:
 	return LEVELS.size()
 
 
+## Da li je CELA igra predjena - svi nivoi koji postoje.
+##
+## Broji samo nivoe sa scenom: ako se kasnije doda nov, igra prestaje da
+## bude "zavrsena" dok se i on ne predje, sto je tacno.
+func all_completed() -> bool:
+	for i in LEVELS.size():
+		if not level_exists(i):
+			continue
+		if not level_completed(i):
+			return false
+	return true
+
+
+## Svi prijatelji koje je Eva spasila, po redu nivoa.
+func rescued_friends() -> Array[String]:
+	var out: Array[String] = []
+	for i in LEVELS.size():
+		if level_exists(i) and level_completed(i):
+			out.append(String(LEVELS[i]["friend"]))
+	return out
+
+
 func island_count() -> int:
 	return ISLANDS.size()
 

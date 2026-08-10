@@ -1,0 +1,139 @@
+[gd_scene load_steps=3 format=3]
+
+; ZABA - protivnik u DZUNGLI.
+;
+; Kratka patrola i mala brzina - zaba stoji pa poskoci. Za dete je lako
+; predvidljiva. Velike izbuljene oci i osmeh, nista strasno.
+
+[ext_resource type="Script" path="res://scripts/animal.gd" id="1_animal"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_zaba"]
+size = Vector2(16, 12)
+
+[node name="Zaba" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_animal")
+speed = 24.0
+patrol_half_width = 38.0
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, 1)
+shape = SubResource("RectangleShape2D_zaba")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Shade" type="Polygon2D" parent="Visual"]
+position = Vector2(0, 6)
+color = Color(0.3, 0.4, 0.3, 0.3)
+polygon = PackedVector2Array(-8, -1.2, 8, -1.2, 7, 1.4, -7, 1.4)
+
+[node name="LegBL" type="Polygon2D" parent="Visual"]
+color = Color(0.24, 0.56, 0.3, 1)
+polygon = PackedVector2Array(-6, 1, -11, 2.6, -11.6, 5.4, -8, 5.4, -5.4, 3.4)
+
+[node name="LegBR" type="Polygon2D" parent="Visual"]
+color = Color(0.24, 0.56, 0.3, 1)
+polygon = PackedVector2Array(6, 1, 11, 2.6, 11.6, 5.4, 8, 5.4, 5.4, 3.4)
+
+[node name="FootBL" type="Polygon2D" parent="Visual"]
+position = Vector2(-10.4, 5.4)
+color = Color(0.34, 0.68, 0.38, 1)
+polygon = PackedVector2Array(-3.4, -1, 2.6, -1, 2.6, 1.2, -3.4, 1.2)
+
+[node name="FootBR" type="Polygon2D" parent="Visual"]
+position = Vector2(10.4, 5.4)
+color = Color(0.34, 0.68, 0.38, 1)
+polygon = PackedVector2Array(3.4, -1, -2.6, -1, -2.6, 1.2, 3.4, 1.2)
+
+[node name="ArmL" type="Polygon2D" parent="Visual"]
+color = Color(0.28, 0.6, 0.32, 1)
+polygon = PackedVector2Array(-5.4, -0.6, -8.6, 1.4, -8.6, 4.6, -6.4, 4.6, -4.6, 1.6)
+
+[node name="ArmR" type="Polygon2D" parent="Visual"]
+color = Color(0.28, 0.6, 0.32, 1)
+polygon = PackedVector2Array(5.4, -0.6, 8.6, 1.4, 8.6, 4.6, 6.4, 4.6, 4.6, 1.6)
+
+[node name="BodyDark" type="Polygon2D" parent="Visual"]
+position = Vector2(0, 0.6)
+color = Color(0.2, 0.5, 0.26, 1)
+polygon = PackedVector2Array(-7, -0.6, -5.4, -4.4, 5.4, -4.4, 7, -0.6, 5.6, 4.4, -5.6, 4.4)
+
+[node name="Body" type="Polygon2D" parent="Visual"]
+color = Color(0.32, 0.66, 0.36, 1)
+polygon = PackedVector2Array(-6.6, -1, -5, -4.6, 5, -4.6, 6.6, -1, 5.2, 3.8, -5.2, 3.8)
+
+[node name="Belly" type="Polygon2D" parent="Visual"]
+position = Vector2(0, 2)
+color = Color(0.92, 0.94, 0.72, 0.9)
+polygon = PackedVector2Array(-4, -0.6, 4, -0.6, 3.2, 2.2, -3.2, 2.2)
+
+[node name="Spot1" type="Polygon2D" parent="Visual"]
+position = Vector2(-3.4, -2)
+color = Color(0.18, 0.42, 0.22, 0.7)
+polygon = PackedVector2Array(-1.4, -0.9, 1.2, -1.2, 1.4, 0.9, -1.2, 1.1)
+
+[node name="Spot2" type="Polygon2D" parent="Visual"]
+position = Vector2(2.6, -2.6)
+color = Color(0.18, 0.42, 0.22, 0.7)
+polygon = PackedVector2Array(-1.2, -0.8, 1.4, -1, 1.2, 1, -1.4, 0.8)
+
+[node name="Spot3" type="Polygon2D" parent="Visual"]
+position = Vector2(0, -0.4)
+color = Color(0.18, 0.42, 0.22, 0.55)
+polygon = PackedVector2Array(-1, -0.7, 1.1, -0.9, 1, 0.8, -1.1, 0.7)
+
+[node name="EyeBumpL" type="Polygon2D" parent="Visual"]
+position = Vector2(-3.4, -6)
+color = Color(0.32, 0.66, 0.36, 1)
+polygon = PackedVector2Array(-2.6, 1.4, -2, -1.4, 0, -2.4, 2, -1.4, 2.6, 1.4)
+
+[node name="EyeBumpR" type="Polygon2D" parent="Visual"]
+position = Vector2(3.4, -6)
+color = Color(0.32, 0.66, 0.36, 1)
+polygon = PackedVector2Array(-2.6, 1.4, -2, -1.4, 0, -2.4, 2, -1.4, 2.6, 1.4)
+
+[node name="EyeWhiteL" type="Polygon2D" parent="Visual"]
+position = Vector2(-3.4, -6.6)
+color = Color(1, 1, 1, 1)
+polygon = PackedVector2Array(-2, -0.6, -1.4, -2, 0, -2.6, 1.4, -2, 2, -0.6, 1.4, 1, -1.4, 1)
+
+[node name="EyeWhiteR" type="Polygon2D" parent="Visual"]
+position = Vector2(3.4, -6.6)
+color = Color(1, 1, 1, 1)
+polygon = PackedVector2Array(-2, -0.6, -1.4, -2, 0, -2.6, 1.4, -2, 2, -0.6, 1.4, 1, -1.4, 1)
+
+[node name="PupilL" type="Polygon2D" parent="Visual"]
+position = Vector2(-3.2, -6.8)
+color = Color(0.12, 0.12, 0.14, 1)
+polygon = PackedVector2Array(-1, -1.2, 1, -1.2, 1, 1.2, -1, 1.2)
+
+[node name="PupilR" type="Polygon2D" parent="Visual"]
+position = Vector2(3.6, -6.8)
+color = Color(0.12, 0.12, 0.14, 1)
+polygon = PackedVector2Array(-1, -1.2, 1, -1.2, 1, 1.2, -1, 1.2)
+
+[node name="GlintL" type="Polygon2D" parent="Visual"]
+position = Vector2(-3.8, -7.6)
+color = Color(1, 1, 1, 0.9)
+polygon = PackedVector2Array(-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5)
+
+[node name="GlintR" type="Polygon2D" parent="Visual"]
+position = Vector2(3, -7.6)
+color = Color(1, 1, 1, 0.9)
+polygon = PackedVector2Array(-0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, 0.5)
+
+[node name="Smile" type="Polygon2D" parent="Visual"]
+position = Vector2(0, -1.6)
+color = Color(0.16, 0.36, 0.2, 1)
+polygon = PackedVector2Array(-3.4, -0.4, -2.4, 1.2, 2.4, 1.2, 3.4, -0.4, 2.4, 0.4, -2.4, 0.4)
+
+[node name="CheekL" type="Polygon2D" parent="Visual"]
+position = Vector2(-4.4, -0.6)
+color = Color(1, 0.6, 0.6, 0.4)
+polygon = PackedVector2Array(-1, -0.7, 1, -0.7, 1, 0.7, -1, 0.7)
+
+[node name="CheekR" type="Polygon2D" parent="Visual"]
+position = Vector2(4.4, -0.6)
+color = Color(1, 0.6, 0.6, 0.4)
+polygon = PackedVector2Array(-1, -0.7, 1, -0.7, 1, 0.7, -1, 0.7)

@@ -112,12 +112,12 @@ func _build_stars() -> void:
 
 
 func _build_animals() -> void:
-	add_animal("puz", Vector2(530, -32))
-	add_animal("kornjaca", Vector2(1000, -32))
-	add_animal("puz", Vector2(1520, -32))
-	add_animal("kornjaca", Vector2(1780, -288))
-	add_animal("puz", Vector2(2340, -32))
-	add_animal("kornjaca", Vector2(2760, -32))
+	add_animal("lavaguster", Vector2(530, -32))
+	add_animal("skarabej", Vector2(1000, -32))
+	add_animal("lavaguster", Vector2(1520, -32))
+	add_animal("skarabej", Vector2(1780, -288))
+	add_animal("lavaguster", Vector2(2340, -32))
+	add_animal("skarabej", Vector2(2760, -32))
 
 
 func _build_checkpoints() -> void:

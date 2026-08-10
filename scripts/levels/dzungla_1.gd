@@ -135,11 +135,11 @@ func _build_stars() -> void:
 
 
 func _build_animals() -> void:
-	add_animal("puz", Vector2(470, -32))
+	add_animal("zaba", Vector2(470, -32))
 	add_animal("kornjaca", Vector2(1060, -272))
-	add_animal("puz", Vector2(1510, -92))
+	add_animal("zaba", Vector2(1510, -92))
 	add_animal("kornjaca", Vector2(1950, -32))
-	add_animal("puz", Vector2(2590, -32))
+	add_animal("zaba", Vector2(2590, -32))
 	add_animal("kornjaca", Vector2(2850, -32))
 
 

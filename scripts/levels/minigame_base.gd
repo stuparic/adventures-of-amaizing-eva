@@ -68,6 +68,13 @@ func win() -> void:
 
 	_hud.show_banner("BRAVO!", Color(0.95, 0.4, 0.6), 1.6)
 	await _celebrate_friend()
+
+	# Cela igra predjena? Ide zavrsni video umesto obicnog win ekrana.
+	if Game.all_completed():
+		Audio.stop_music()
+		get_tree().change_scene_to_file("res://scenes/finale.tscn")
+		return
+
 	_win_screen.show_result(_steps_done, _steps_total, Game.elapsed_string())
 
 

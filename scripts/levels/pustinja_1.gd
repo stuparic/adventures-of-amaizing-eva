@@ -109,12 +109,12 @@ func _build_stars() -> void:
 func _build_animals() -> void:
 	# Skorpioni bi bili strasni - ostajem na puzu i kornjaci koje dete
 	# vec poznaje. Razlika je u pustinjskoj boji tla, ne u pretnji.
-	add_animal("puz", Vector2(520, -32))
-	add_animal("kornjaca", Vector2(990, -32))
-	add_animal("puz", Vector2(1500, -32))
-	add_animal("kornjaca", Vector2(2120, -32))
-	add_animal("puz", Vector2(2600, -32))
-	add_animal("kornjaca", Vector2(2830, -32))
+	add_animal("skarabej", Vector2(520, -32))
+	add_animal("puz", Vector2(990, -32))
+	add_animal("skarabej", Vector2(1500, -32))
+	add_animal("puz", Vector2(2120, -32))
+	add_animal("skarabej", Vector2(2600, -32))
+	add_animal("puz", Vector2(2830, -32))
 
 
 func _build_checkpoints() -> void:
