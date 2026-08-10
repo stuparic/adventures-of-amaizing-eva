@@ -120,6 +120,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="MapButton" type="Button" parent="."]
+focus_mode = 0
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
@@ -138,6 +139,7 @@ theme_override_styles/focus = SubResource("SB_map")
 text = "MAPA"
 
 [node name="MuteButton" type="Button" parent="."]
+focus_mode = 0
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0

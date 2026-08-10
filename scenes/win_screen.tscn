@@ -172,6 +172,7 @@ theme_override_constants/separation = 16
 alignment = 1
 
 [node name="Map" type="Button" parent="Center/Panel/Rows/Buttons"]
+focus_mode = 0
 custom_minimum_size = Vector2(190, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 21
@@ -184,6 +185,7 @@ theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
 text = "MAPA"
 
 [node name="Again" type="Button" parent="Center/Panel/Rows/Buttons"]
+focus_mode = 0
 custom_minimum_size = Vector2(190, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 21
