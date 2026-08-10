@@ -74,6 +74,7 @@ var _grid: Node2D
 
 func _setup() -> void:
 	friend_kind = "koala"
+	biome = "dzungla"
 	task_text = "Nađi dva ista! Dodirni kartu."
 	set_total_steps(PAIRS)
 

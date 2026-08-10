@@ -33,6 +33,7 @@ var _lines: Node2D
 
 func _setup() -> void:
 	friend_kind = "zeka"
+	biome = "livada"
 	task_text = "Dodirni zvezdice po redu: 1, 2, 3..."
 	set_total_steps(SHAPE.size())
 

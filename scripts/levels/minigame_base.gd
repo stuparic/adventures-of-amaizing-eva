@@ -11,6 +11,8 @@ const FriendScene := preload("res://scenes/friend.tscn")
 
 ## Ko se spasava.
 var friend_kind := "maca"
+## Bioma ostrva - odredjuje koja muzicka tema ide (vidi Audio.BIOME_MUSIC).
+var biome := "livada"
 ## Naslov zadatka - sta dete treba da uradi.
 var task_text := "Reši zagonetku!"
 
@@ -32,7 +34,7 @@ func _ready() -> void:
 	_wire_ui()
 	_build_task_label()
 
-	Audio.play_music()
+	Audio.play_biome_music(biome)
 
 
 ## Nivo prepisuje ovo.

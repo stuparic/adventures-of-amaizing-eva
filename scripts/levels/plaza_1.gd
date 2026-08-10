@@ -44,6 +44,7 @@ var _swatches: Array[Node2D] = []
 
 func _setup() -> void:
 	friend_kind = "delfin"
+	biome = "plaza"
 	task_text = "Izaberi boju pa oboji školjku!"
 	set_total_steps(FIELDS.size())
 

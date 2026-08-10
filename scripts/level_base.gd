@@ -62,7 +62,7 @@ func _ready() -> void:
 	_wire_ui()
 
 	_hud.show_banner(intro_text(), Color(0.2, 0.35, 0.6), 2.5)
-	Audio.play_music()
+	Audio.play_biome_music(biome)
 
 
 ## Nivo prepisuje ovo i puni svoj sadrzaj.

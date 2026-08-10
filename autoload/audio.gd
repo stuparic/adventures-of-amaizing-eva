@@ -74,6 +74,24 @@ var _sfx_muted := false
 const BUS_MUSIC := "Music"
 const BUS_SFX := "Sfx"
 
+## --- MUZIKA PO BIOMU ---
+##
+## Svako ostrvo ima svoju temu, pa dete cuje da je promenilo mesto.
+## Sve su CC0 (bez obaveze pripisivanja) - autori u CREDITS.md.
+##
+## Kljuc je isti kao `biome` u LevelBase i BiomeArt.PALETTES.
+const BIOME_MUSIC := {
+	"livada": "res://audio/music_livada.ogg",
+	"plaza": "res://audio/music_plaza.ogg",
+	"dzungla": "res://audio/music_dzungla.ogg",
+	"pustinja": "res://audio/music_pustinja.ogg",
+	"sneg": "res://audio/music_sneg.ogg",
+	"vulkan": "res://audio/music_vulkan.ogg",
+}
+
+## Koja tema trenutno stoji u _music - da se ne ucitava ponovo bez potrebe.
+var _current_biome := ""
+
 
 ## Napravi Music i Sfx busove ako ih nema.
 func _setup_buses() -> void:
@@ -104,21 +122,12 @@ func _ready() -> void:
 		add_child(p)
 		_voices.append(p)
 
-	# Pozadinska muzika - loopuje se.
+	# Pozadinska muzika - loopuje se. Tema zavisi od bioma (vidi BIOME_MUSIC).
 	_music = AudioStreamPlayer.new()
 	_music.bus = BUS_MUSIC
 	_music.volume_db = MUSIC_DB
-	var loop_stream := load("res://audio/music_loop.wav") as AudioStreamWAV
-	if loop_stream != null:
-		# Loop se MORA postaviti runtime - Godot ne prenosi edit/loop_mode
-		# iz .import fajla na ucitani AudioStreamWAV.
-		# Granice racunaj iz trajanja, ne iz data.size(): velicina bajta po
-		# frejmu zavisi od formata (PCM16 stereo = 4, ADPCM = drugacije).
-		loop_stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-		loop_stream.loop_begin = 0
-		loop_stream.loop_end = int(loop_stream.get_length() * loop_stream.mix_rate)
-		_music.stream = loop_stream
 	add_child(_music)
+	_load_biome_music()
 
 	# Pobednicka tema - ne loopuje.
 	_music_win = AudioStreamPlayer.new()
@@ -178,6 +187,50 @@ func play(name: String, pitch_var := 0.06) -> void:
 	p.volume_db = SFX_DB.get(name, -8.0)
 	p.pitch_scale = 1.0 + randf_range(-pitch_var, pitch_var)
 	p.play()
+
+
+## Ucitaj temu za dati biom u _music.
+##
+## OGG se loopuje preko `loop` svojstva, NE preko loop_begin/loop_end kao
+## WAV - AudioStreamOggVorbis nema te granice. Ako fajl ne postoji, pada
+## na livadu, pa igra nikad ne ostane bez muzike.
+func _load_biome_music(biome := "livada") -> void:
+	if biome == _current_biome and _music.stream != null:
+		return
+
+	var path: String = String(BIOME_MUSIC.get(biome, BIOME_MUSIC["livada"]))
+	if not ResourceLoader.exists(path):
+		push_warning("Audio: nema teme %s" % path)
+		return
+
+	var stream: AudioStream = load(path)
+	if stream == null:
+		return
+	if stream is AudioStreamOggVorbis:
+		(stream as AudioStreamOggVorbis).loop = true
+	elif stream is AudioStreamWAV:
+		var w := stream as AudioStreamWAV
+		w.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		w.loop_begin = 0
+		w.loop_end = int(w.get_length() * w.mix_rate)
+
+	_music.stream = stream
+	_current_biome = biome
+
+
+## Pusti temu za biom. Nivo zove ovo umesto play_music().
+##
+## Ako se biom promenio, tema se menja; ako je isti, muzika nastavlja bez
+## prekida - dete koje ide iz nivoa u nivo istog ostrva ne slusa restart.
+func play_biome_music(biome: String) -> void:
+	if _muted:
+		return
+	var changed := biome != _current_biome
+	_load_biome_music(biome)
+	if changed:
+		_music.stop()
+	if not _music.playing:
+		_music.play()
 
 
 func play_music() -> void:

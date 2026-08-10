@@ -103,7 +103,15 @@ func _ready() -> void:
 		_expose_web_api()
 
 
-	Audio.play_music()
+	# Mapa pusta temu ostrva na kom je izabrani nivo - dete cuje gde je
+	# jos pre nego sto udje u nivo.
+	Audio.play_biome_music(_selected_biome())
+
+
+## Bioma ostrva na kom je trenutno izabrani nivo.
+func _selected_biome() -> String:
+	var isl := Game.island_of(_selected)
+	return String(isl.get("biome", "livada"))
 
 
 func _first_playable() -> int:
@@ -941,6 +949,10 @@ func _move_selection(step: int) -> void:
 func _update_selection() -> void:
 	var data := Game.level_data(_selected)
 	var isl := Game.island_of(_selected)
+
+	# Tema prati ostrvo: kad dete predje na drugo ostrvo, muzika se menja.
+	# U okviru istog ostrva play_biome_music ne prekida ono sto vec ide.
+	Audio.play_biome_music(String(isl.get("biome", "livada")))
 	# Naslov: ime nivoa, pa ostrvo manjim tekstom u info liniji.
 	title.text = String(data.get("name", ""))
 

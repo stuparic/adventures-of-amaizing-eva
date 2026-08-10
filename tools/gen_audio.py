@@ -431,6 +431,8 @@ if __name__ == "__main__":
     write("sfx_win.wav", sfx_win())
     write("sfx_gameover.wav", sfx_gameover())
     print("MUSIC:")
-    write("music_loop.wav", music_loop(), stereo=True)
+    # music_loop.wav se ne koristi vise - muzika po biomu su CC0 OGG
+    # fajlovi (audio/music_<biom>.ogg, vidi CREDITS.md). Funkcija
+    # music_loop() je zadrzana kao referenca za sintezu.
     write("music_win.wav", music_win(), stereo=True)
     print("done")
