@@ -96,7 +96,7 @@ const LEVELS: Array[Dictionary] = [
 	{"id": "dzungla_2", "name": "Nađi parove", "scene": "res://scenes/levels/dzungla_2.tscn",
 	 "island": "dzungla", "pos": Vector2(1930, 990), "kind": "match",
 	 "friend": "koala"},
-	{"id": "dzungla_3", "name": "Skrivena reka", "scene": "",
+	{"id": "dzungla_3", "name": "Skrivena reka", "scene": "res://scenes/levels/dzungla_3.tscn",
 	 "island": "dzungla", "pos": Vector2(2180, 790), "kind": "platform",
 	 "friend": "kornjaca"},
 
@@ -109,18 +109,18 @@ const LEVELS: Array[Dictionary] = [
 	 "friend": "sova"},
 
 	# --- Ledeni vrhovi ---
-	{"id": "sneg_1", "name": "Snežna staza", "scene": "",
+	{"id": "sneg_1", "name": "Snežna staza", "scene": "res://scenes/levels/sneg_1.tscn",
 	 "island": "sneg", "pos": Vector2(3360, 830), "kind": "platform",
 	 "friend": "pingvin"},
-	{"id": "sneg_2", "name": "Prebroj pahulje", "scene": "",
+	{"id": "sneg_2", "name": "Prebroj pahulje", "scene": "res://scenes/levels/sneg_2.tscn",
 	 "island": "sneg", "pos": Vector2(3750, 950), "kind": "count",
 	 "friend": "jez"},
 
 	# --- Vatrena gora ---
-	{"id": "vulkan_1", "name": "Crna staza", "scene": "",
+	{"id": "vulkan_1", "name": "Crna staza", "scene": "res://scenes/levels/vulkan_1.tscn",
 	 "island": "vulkan", "pos": Vector2(4210, 300), "kind": "platform",
 	 "friend": "macak"},
-	{"id": "vulkan_2", "name": "Vrh vulkana", "scene": "",
+	{"id": "vulkan_2", "name": "Vrh vulkana", "scene": "res://scenes/levels/vulkan_2.tscn",
 	 "island": "vulkan", "pos": Vector2(4580, 420), "kind": "platform",
 	 "friend": "kuca"},
 ]

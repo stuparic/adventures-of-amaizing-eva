@@ -37,6 +37,7 @@ var power := ""
 var _platforms: Array = []      # [Rect2, tip] - tip: "ground"/"stone"/"ice"/"sand"/"wood"
 var _waters: Array[Rect2] = []
 var _hazards: Array = []        # [Rect2, tip] - "hot_sand"/"lava"/"trnje"
+var _fragiles: Array = []       # [Rect2, tip, delay, respawn] - krhke platforme
 var _stars: Array[Vector2] = []
 var _checkpoints: Array[Vector2] = []
 var _animals: Array = []        # [tip, pozicija]
@@ -100,6 +101,17 @@ func add_hazard(r: Rect2, kind := "hot_sand") -> void:
 	_hazards.append([r, kind])
 
 
+## Krhka platforma: pukne kratko posle sto Eva stane na nju.
+##
+## Za dete od 5 godina je vazno da ima UPOZORENJE - platforma se prvo
+## zatrese i promeni boju, pa tek onda padne. `delay` je koliko traje to
+## upozorenje (podrazumevano 0.9s, dovoljno da dete odskoci bez trke).
+##
+## Vraca se posle `respawn` sekundi, pa nivo nikad ne postane neprohodan.
+func add_fragile(r: Rect2, kind := "ice", delay := 0.9, respawn := 2.6) -> void:
+	_fragiles.append([r, kind, delay, respawn])
+
+
 func add_star(p: Vector2) -> void:
 	_stars.append(p)
 
@@ -150,6 +162,9 @@ func _build_world() -> void:
 
 	for entry in _hazards:
 		_add_hazard_body(entry[0], String(entry[1]))
+
+	for entry in _fragiles:
+		_add_fragile(entry[0], String(entry[1]), float(entry[2]), float(entry[3]))
 
 	Game.total_stars = _stars.size()
 	for p in _stars:
@@ -301,6 +316,116 @@ func _hz_poly(parent: Node2D, col: Color, pts: Array) -> void:
 	p.color = col
 	p.polygon = PackedVector2Array(pts)
 	parent.add_child(p)
+
+
+## Krhka platforma: puca kratko posle sto Eva stane, pa se vrati.
+##
+## Kljucno za dete: ima UPOZORENJE. Platforma se zatrese i pobeli pre nego
+## sto padne, tako da dete vidi sta se desava i ima vremena da odskoci.
+## Bez upozorenja bi ovo bila zamka, ne izazov.
+##
+## Vraca se posle `respawn` sekundi - nivo nikad ne postane neprohodan
+## ako dete pogresi.
+func _add_fragile(r: Rect2, kind: String, delay: float, respawn: float) -> void:
+	# Svoj StaticBody2D, ne _world - da moze da se sakrije nezavisno.
+	var body := StaticBody2D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
+	add_child(body)
+	# Ime se postavlja POSLE add_child: pre toga Godot ionako dodeli
+	# auto-ime pri dodavanju, pa je samo prvi cvor dobijao "Fragile" a
+	# ostali "@StaticBody2D@...". Sa pozicijom u imenu se u debugu odmah
+	# vidi o kojoj je ploci rec.
+	body.name = "Fragile_%d" % int(r.position.x)
+
+	LevelArt.draw_platform(body, r, kind)
+
+	# Detektor: Area2D malo iznad platforme, hvata Evu kad stane.
+	var probe := Area2D.new()
+	probe.collision_layer = 0
+	probe.collision_mask = 2
+	probe.position = r.position + Vector2(r.size.x * 0.5, -6.0)
+	var pshape := CollisionShape2D.new()
+	var pbox := RectangleShape2D.new()
+	pbox.size = Vector2(r.size.x, 14.0)
+	pshape.shape = pbox
+	probe.add_child(pshape)
+	add_child(probe)
+
+	var triggered := [false]
+	probe.body_entered.connect(func(who: Node) -> void:
+		if triggered[0] or not who.is_in_group("player"):
+			return
+		triggered[0] = true
+		_break_fragile(body, probe, r, kind, delay, respawn, triggered)
+	)
+
+
+func _break_fragile(body: StaticBody2D, probe: Area2D, r: Rect2, kind: String,
+		delay: float, respawn: float, triggered: Array) -> void:
+	# 1) UPOZORENJE: trese se i beli.
+	var shake := create_tween().set_loops(int(delay / 0.1))
+	shake.tween_property(body, "position:x", 3.0, 0.05)
+	shake.tween_property(body, "position:x", -3.0, 0.05)
+	var warn := create_tween()
+	warn.tween_property(body, "modulate", Color(1.5, 1.5, 1.7), delay * 0.7)
+
+	Audio.play("land", 0.2)
+	await get_tree().create_timer(delay).timeout
+	if not is_inside_tree():
+		return
+
+	# 2) PADA: kolizija se gasi, krhotine padaju.
+	body.position.x = 0.0
+	body.collision_layer = 0
+	_fragile_shards(r, kind)
+
+	var fall := create_tween()
+	fall.tween_property(body, "modulate:a", 0.0, 0.25)
+	Audio.play("stomp", 0.15)
+
+	# 3) VRACA SE - nivo ostaje prohodan i posle greske.
+	await get_tree().create_timer(respawn).timeout
+	if not is_inside_tree():
+		return
+	body.modulate = Color(1, 1, 1, 0)
+	body.collision_layer = 1
+	var back := create_tween()
+	back.tween_property(body, "modulate", Color(1, 1, 1, 1), 0.4)
+	Audio.play("checkpoint", 0.15)
+	triggered[0] = false
+
+
+## Krhotine kad platforma pukne - dete vidi da je nesto palo.
+func _fragile_shards(r: Rect2, kind: String) -> void:
+	var col := Color(0.85, 0.94, 0.99)
+	if kind == "lava_rock":
+		col = Color(0.35, 0.3, 0.32)
+	elif kind == "stone":
+		col = Color(0.62, 0.6, 0.58)
+
+	for i in 7:
+		var sh := Polygon2D.new()
+		var sz := randf_range(6.0, 13.0)
+		sh.color = col
+		sh.polygon = PackedVector2Array([
+			Vector2(-sz, 0), Vector2(0, -sz * 0.8),
+			Vector2(sz, 0), Vector2(0, sz * 0.7)])
+		sh.position = Vector2(
+			r.position.x + r.size.x * (float(i) + 0.5) / 7.0,
+			r.position.y + 6.0)
+		sh.z_index = 3
+		add_child(sh)
+
+		# Krhotine padaju JEDNOM i nestanu - bez set_loops.
+		var tw := create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(sh, "position",
+			sh.position + Vector2(randf_range(-30, 30), 120.0), 0.8) \
+			.set_ease(Tween.EASE_IN)
+		tw.tween_property(sh, "rotation", randf_range(-4.0, 4.0), 0.8)
+		tw.tween_property(sh, "modulate:a", 0.0, 0.8).set_delay(0.2)
+		tw.chain().tween_callback(sh.queue_free)
 
 
 func _spawn_animal(kind: String, pos: Vector2) -> void:
