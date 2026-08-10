@@ -125,10 +125,17 @@ func pause_game() -> void:
 		return
 	_paused_by_us = true
 
-	# Zapamti glasnost SAMO ako fade ne traje - inace bismo zapamtili
-	# vec umanjenu vrednost i zvuk se nikad ne bi vratio.
-	if _fade_tween == null or not _fade_tween.is_valid():
-		_saved_volume_db = AudioServer.get_bus_volume_db(_master_bus)
+	# NE pamti glasnost ovde.
+	#
+	# Prethodna verzija je citala trenutnu vrednost ako `_fade_tween` nije
+	# valid. Ali is_valid() ostaje true i za DOVRSEN tween, a i kad tween
+	# ne postoji fade je mogao da bude u toku iz drugog izvora. Posledica:
+	# ako se fokus vrati pre kraja fade-outa, zapamti se VEC UMANJENA
+	# vrednost i zvuk se "vrati" na nju.
+	#
+	# Mereno na webu: Master je zavrsavao na -27.8 dB dok su muzika i
+	# busevi bili ispravni - igra je svirala u prazno. Zato je baseline
+	# fiksiran u _ready() i ovde se ne dira.
 
 	var tree := get_tree()
 	if tree == null:
@@ -153,6 +160,16 @@ func resume_game() -> void:
 	# Ne vracaj zvuk ako je korisnik rucno iskljucio (taster N).
 	if not Audio.is_muted():
 		_fade_audio(_saved_volume_db, FADE_IN)
+
+
+## Postavi novu "normalnu" glasnost Master busa.
+##
+## Zove se ako neko namerno menja glasnost (npr. iz podesavanja), da
+## resume_game() posle pauze vrati pravu vrednost a ne staru iz _ready().
+func set_baseline_volume(db: float) -> void:
+	_saved_volume_db = db
+	if not _paused_by_us:
+		AudioServer.set_bus_volume_db(_master_bus, db)
 
 
 ## Meko utisavanje - naglo gasenje "klikne" u zvucnicima.

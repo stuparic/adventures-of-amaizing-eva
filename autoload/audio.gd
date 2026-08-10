@@ -225,12 +225,38 @@ func _load_biome_music(biome := "livada") -> void:
 func play_biome_music(biome: String) -> void:
 	if _muted:
 		return
+	_ensure_master_audible()
 	var changed := biome != _current_biome
 	_load_biome_music(biome)
 	if changed:
 		_music.stop()
 	if not _music.playing:
 		_music.play()
+
+
+## Sigurnosna mreza: vrati Master bus na 0 dB ako je zaostao utisan.
+##
+## PauseMgr fejduje Master na -80 dB pri gubitku fokusa i vraca ga na
+## zapamcenu vrednost. Ako se to dvoje preklopi u nepovoljnom trenutku,
+## Master ostane na medjuvrednosti i cela igra svira nemo iako su i
+## muzika i busevi ispravni.
+##
+## Mereno: Master je na webu zavrsavao na -27.8 dB dok je _music.playing
+## bio true. Zato se pri svakom pustanju muzike proveri i ispravi.
+## Prag -0.5 dB: sve ispod toga je nenamerno (mute ide kroz bus mute,
+## ne kroz volumen).
+func _ensure_master_audible() -> void:
+	# NE diraj dok je igra pauzirana - tada je utisavanje namerno i ovo
+	# bi se borilo sa PauseMgr-ovim fade-om.
+	var pm := get_node_or_null("/root/PauseMgr")
+	if pm != null and pm.has_method("is_paused_by_us") and pm.is_paused_by_us():
+		return
+
+	var m := AudioServer.get_bus_index("Master")
+	if m < 0:
+		return
+	if AudioServer.get_bus_volume_db(m) < -0.5:
+		AudioServer.set_bus_volume_db(m, 0.0)
 
 
 func play_music() -> void:
