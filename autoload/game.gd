@@ -101,7 +101,7 @@ const LEVELS: Array[Dictionary] = [
 	 "friend": "kornjaca"},
 
 	# --- Zlatna pustinja ---
-	{"id": "pustinja_1", "name": "Vruće dine", "scene": "",
+	{"id": "pustinja_1", "name": "Vruće dine", "scene": "res://scenes/levels/pustinja_1.tscn",
 	 "island": "pustinja", "pos": Vector2(2560, 260), "kind": "platform",
 	 "friend": "lisica"},
 	{"id": "pustinja_2", "name": "Obuci Budžumboru", "scene": "",

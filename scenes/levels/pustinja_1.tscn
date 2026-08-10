@@ -1,0 +1,67 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/pustinja_1.gd" id="1_lvl"]
+[ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" path="res://scenes/win_screen.tscn" id="3_win"]
+[ext_resource type="PackedScene" path="res://scenes/touch_controls.tscn" id="4_touch"]
+
+[node name="Level" type="Node2D"]
+script = ExtResource("1_lvl")
+
+[node name="Sky" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="Bg" type="ColorRect" parent="Sky"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.99, 0.83, 0.55, 1)
+
+[node name="Parallax" type="ParallaxBackground" parent="."]
+
+[node name="FarDunes" type="ParallaxLayer" parent="Parallax"]
+motion_scale = Vector2(0.18, 0.06)
+motion_mirroring = Vector2(640, 0)
+
+[node name="D1" type="Polygon2D" parent="Parallax/FarDunes"]
+position = Vector2(80, 40)
+color = Color(0.93, 0.83, 0.6, 1)
+polygon = PackedVector2Array(-110, 0, -40, -58, 40, 0)
+
+[node name="D2" type="Polygon2D" parent="Parallax/FarDunes"]
+position = Vector2(300, 40)
+color = Color(0.89, 0.78, 0.55, 1)
+polygon = PackedVector2Array(-130, 0, -50, -78, 50, 0)
+
+[node name="D3" type="Polygon2D" parent="Parallax/FarDunes"]
+position = Vector2(520, 40)
+color = Color(0.93, 0.83, 0.6, 1)
+polygon = PackedVector2Array(-100, 0, -30, -50, 50, 0)
+
+[node name="Haze" type="ParallaxLayer" parent="Parallax"]
+motion_scale = Vector2(0.4, 0.12)
+motion_mirroring = Vector2(460, 0)
+
+[node name="H1" type="Polygon2D" parent="Parallax/Haze"]
+position = Vector2(90, -150)
+color = Color(1, 0.95, 0.78, 0.28)
+polygon = PackedVector2Array(-44, 7, -26, -7, 6, -10, 30, -4, 46, 7)
+
+[node name="H2" type="Polygon2D" parent="Parallax/Haze"]
+position = Vector2(300, -196)
+color = Color(1, 0.96, 0.82, 0.24)
+polygon = PackedVector2Array(-50, 8, -30, -9, 6, -12, 32, -5, 50, 8)
+
+[node name="H3" type="Polygon2D" parent="Parallax/Haze"]
+position = Vector2(420, -120)
+color = Color(1, 0.95, 0.78, 0.28)
+polygon = PackedVector2Array(-34, 6, -20, -7, 6, -9, 24, -3, 36, 6)
+
+[node name="HUD" parent="." instance=ExtResource("2_hud")]
+
+[node name="WinScreen" parent="." instance=ExtResource("3_win")]
+
+[node name="TouchControls" parent="." instance=ExtResource("4_touch")]
