@@ -41,9 +41,21 @@ jobs:
           mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
 
       - name: Uvezi projekat
-        # Prvi prolaz generise .godot/ (uvoz assetа). Godot vrati non-zero
-        # kod pri --import cak i kad uspe, pa `|| true`.
+        # Godot vrati non-zero kod pri --import cak i kad uspe, pa `|| true`.
         run: godot --headless --import || true
+
+      # Ako autoload-i (Game/Audio/PauseMgr) nisu uvezeni, export napravi
+      # paket u kome ne postoje i CELA igra pada sa
+      #   Parse Error: Identifier "Game" not declared in the current scope
+      # Deployovana igra je jednom bila tako mrtva - bolje da build pukne.
+      - name: Provera da su autoload-i uvezeni
+        run: |
+          godot --headless --quit-after 120 2>&1 | tee /tmp/boot.log || true
+          if grep -qE 'Identifier "(Game|Audio|PauseMgr)" not declared' /tmp/boot.log; then
+            echo "GRESKA: autoload-i nisu uvezeni - igra bi bila mrtva."
+            exit 1
+          fi
+          echo "Autoload-i OK."
 
       - name: Build web verzije
         run: |

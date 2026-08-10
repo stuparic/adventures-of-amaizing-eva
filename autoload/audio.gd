@@ -104,6 +104,29 @@ func _setup_buses() -> void:
 		AudioServer.set_bus_send(idx, "Master")
 
 
+## Playback tip za web.
+##
+## Podrazumevani "Sample" playback u single-threaded web buildu NE prolazi
+## kroz audio buseve - a nasa muzika ide preko Music busa, pa se gubi.
+## "Stream" prolazi kroz buseve; ima vecu latenciju, sto je za platformer
+## nevidljivo.
+##
+## Postavlja se PO PLEJERU, ne kroz project.godot. Mereno: podesavanje
+## audio/general/default_playback_type.web se cita iz project.godot
+## (has_setting = true, vrednost 1) ali ga Godot NE pakuje u
+## project.binary - u exportovanom .pck ga nema ni jednom. Znaci kroz
+## podesavanje nikad ne stigne do web builda.
+##
+## Koristi se ENUM, ne broj: izmereno da je STREAM = 1 a SAMPLE = 2, pa
+## bi pogodjena "2" postavila upravo ono sto ne radi.
+
+
+## Primeni Stream playback na plejer, samo na webu.
+func _apply_web_playback(p: AudioStreamPlayer) -> void:
+	if OS.has_feature("web"):
+		p.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
+
+
 func _ready() -> void:
 	_setup_buses()
 	# Ucitaj SFX-ove.
@@ -119,6 +142,7 @@ func _ready() -> void:
 	for i in VOICES:
 		var p := AudioStreamPlayer.new()
 		p.bus = BUS_SFX
+		_apply_web_playback(p)
 		add_child(p)
 		_voices.append(p)
 
@@ -126,6 +150,7 @@ func _ready() -> void:
 	_music = AudioStreamPlayer.new()
 	_music.bus = BUS_MUSIC
 	_music.volume_db = MUSIC_DB
+	_apply_web_playback(_music)
 	add_child(_music)
 	_load_biome_music()
 
@@ -134,6 +159,7 @@ func _ready() -> void:
 	_music_win.bus = BUS_MUSIC
 	_music_win.volume_db = MUSIC_DB + 4.0
 	_music_win.stream = load("res://audio/music_win.wav")
+	_apply_web_playback(_music_win)
 	add_child(_music_win)
 
 	_load_voice_win()
@@ -147,6 +173,7 @@ func _load_voice_win() -> void:
 	_voice_win = AudioStreamPlayer.new()
 	_voice_win.bus = BUS_SFX
 	_voice_win.volume_db = VOICE_DB
+	_apply_web_playback(_voice_win)
 	add_child(_voice_win)
 
 	for path in VOICE_WIN_PATHS:
