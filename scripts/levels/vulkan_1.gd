@@ -142,26 +142,26 @@ func _draw_volcano(_lvl: Node) -> void:
 	add_child(bg)
 
 	# Zar na nebu - topao narandzasti sloj.
-	_poly(bg, Color(1, 0.55, 0.25, 0.3), [
+	Draw2D.poly(bg, Color(1, 0.55, 0.25, 0.3), [
 		Vector2(-100, -300), Vector2(3200, -300),
 		Vector2(3200, 60), Vector2(-100, 60)])
 
 	# --- Veliki krater u pozadini ---
 	var cx := 1500.0
-	_poly(bg, Color(0.24, 0.2, 0.22, 0.85), [
+	Draw2D.poly(bg, Color(0.24, 0.2, 0.22, 0.85), [
 		Vector2(cx - 620, 60), Vector2(cx - 260, -300),
 		Vector2(cx - 110, -370), Vector2(cx + 110, -370),
 		Vector2(cx + 260, -300), Vector2(cx + 620, 60)])
 	# Svetlija strana.
-	_poly(bg, Color(0.32, 0.27, 0.29, 0.85), [
+	Draw2D.poly(bg, Color(0.32, 0.27, 0.29, 0.85), [
 		Vector2(cx - 620, 60), Vector2(cx - 260, -300),
 		Vector2(cx - 110, -370), Vector2(cx - 60, -350),
 		Vector2(cx - 300, -60), Vector2(cx - 420, 60)])
 	# Zar u krateru.
-	_poly(bg, Color(1, 0.5, 0.15, 0.75), [
+	Draw2D.poly(bg, Color(1, 0.5, 0.15, 0.75), [
 		Vector2(cx - 110, -370), Vector2(cx + 110, -370),
 		Vector2(cx + 70, -342), Vector2(cx - 70, -342)])
-	_poly(bg, Color(1, 0.82, 0.3, 0.6), [
+	Draw2D.poly(bg, Color(1, 0.82, 0.3, 0.6), [
 		Vector2(cx - 74, -366), Vector2(cx + 74, -366),
 		Vector2(cx + 46, -348), Vector2(cx - 46, -348)])
 
@@ -193,12 +193,12 @@ func _draw_volcano(_lvl: Node) -> void:
 		var w := rng.randf_range(20.0, 54.0)
 		var h := rng.randf_range(16.0, 40.0)
 		var a := rng.randf_range(0.55, 0.85)
-		_poly(bg, Color(0.19, 0.16, 0.18, a), [
+		Draw2D.poly(bg, Color(0.19, 0.16, 0.18, a), [
 			p + Vector2(-w, h), p + Vector2(-w * 0.7, -h * 0.6),
 			p + Vector2(-w * 0.1, -h), p + Vector2(w * 0.6, -h * 0.5),
 			p + Vector2(w, h)])
 		# Zareno dno - kao da tinja.
-		_poly(bg, Color(0.9, 0.35, 0.12, a * 0.5), [
+		Draw2D.poly(bg, Color(0.9, 0.35, 0.12, a * 0.5), [
 			p + Vector2(-w * 0.8, h), p + Vector2(w * 0.8, h),
 			p + Vector2(w * 0.7, h - 4), p + Vector2(-w * 0.7, h - 4)])
 
@@ -207,12 +207,12 @@ func _draw_volcano(_lvl: Node) -> void:
 		var x := rng.randf_range(0.0, 3100.0)
 		var h := rng.randf_range(50.0, 100.0)
 		var col := Color(0.16, 0.13, 0.14, 0.7)
-		_poly(bg, col, [
+		Draw2D.poly(bg, col, [
 			Vector2(x - 5, 44), Vector2(x + 5, 44),
 			Vector2(x + 3, -h), Vector2(x - 3, -h)])
 		for side in [-1.0, 1.0]:
 			var by := -h * rng.randf_range(0.4, 0.8)
-			_poly(bg, col, [
+			Draw2D.poly(bg, col, [
 				Vector2(x, by), Vector2(x + side * 26, by - 16),
 				Vector2(x + side * 22, by - 8)])
 
@@ -245,10 +245,3 @@ func _draw_volcano(_lvl: Node) -> void:
 			rng.randf_range(1.4, 2.6)).set_trans(Tween.TRANS_SINE)
 		sway.tween_property(em, "position:x", sx2,
 			rng.randf_range(1.4, 2.6)).set_trans(Tween.TRANS_SINE)
-
-
-func _poly(parent: Node, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
-	parent.add_child(p)

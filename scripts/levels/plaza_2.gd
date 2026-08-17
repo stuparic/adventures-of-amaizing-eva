@@ -108,16 +108,16 @@ func _draw_beach(_lvl: Node) -> void:
 	add_child(bg)
 
 	# More na horizontu - visoko iza, uzak pojas da ne pokrije nebo.
-	_poly(bg, Color(0.5, 0.75, 0.9, 0.45), [
+	Draw2D.poly(bg, Color(0.5, 0.75, 0.9, 0.45), [
 		Vector2(-100, -300), Vector2(2800, -300),
 		Vector2(2800, -250), Vector2(-100, -250)])
-	_poly(bg, Color(0.78, 0.92, 0.99, 0.45), [
+	Draw2D.poly(bg, Color(0.78, 0.92, 0.99, 0.45), [
 		Vector2(-100, -302), Vector2(2800, -302),
 		Vector2(2800, -295), Vector2(-100, -295)])
 
 	# Sunce - visoko na nebu.
-	_circle(bg, Vector2(360, -400), 42.0, Color(1, 0.92, 0.55, 0.45))
-	_circle(bg, Vector2(360, -400), 30.0, Color(1, 0.96, 0.7, 0.75))
+	Draw2D.circle(bg, Vector2(360, -400), 42.0, Color(1, 0.92, 0.55, 0.45))
+	Draw2D.circle(bg, Vector2(360, -400), 30.0, Color(1, 0.96, 0.7, 0.75))
 
 	# Palme u dva sloja.
 	for i in 26:
@@ -129,42 +129,24 @@ func _draw_beach(_lvl: Node) -> void:
 
 		var lean := rng.randf_range(-8.0, 8.0)
 		# Stablo.
-		_poly(bg, Color(0.62, 0.46, 0.28, maxf(alpha, 0.7)), [
+		Draw2D.poly(bg, Color(0.62, 0.46, 0.28, maxf(alpha, 0.7)), [
 			Vector2(x - 5 * s, 20), Vector2(x + 5 * s, 20),
 			Vector2(x + lean + 3 * s, -h), Vector2(x + lean - 3 * s, -h)])
 		# Krosnja: prvo puna masa (da se vidi izdaleka), pa listovi preko.
 		var top := Vector2(x + lean, -h)
 		var leaf := Color(0.26, 0.58, 0.32, maxf(alpha, 0.8))
 		var leaf2 := Color(0.34, 0.68, 0.38, maxf(alpha, 0.8))
-		_circle(bg, top + Vector2(0, -6 * s), 26.0 * s, leaf)
+		Draw2D.circle(bg, top + Vector2(0, -6 * s), 26.0 * s, leaf)
 
 		for k in 7:
 			var a := TAU * float(k) / 7.0 + rng.randf_range(-0.15, 0.15)
 			var tip := top + Vector2(cos(a) * 46 * s, sin(a) * 26 * s - 10 * s)
 			var mid := top + Vector2(cos(a) * 24 * s, sin(a) * 13 * s - 14 * s)
 			# Sirok list - vidi se i na malom ekranu.
-			_poly(bg, leaf if k % 2 == 0 else leaf2, [
+			Draw2D.poly(bg, leaf if k % 2 == 0 else leaf2, [
 				top + Vector2(-7 * s, 0), mid + Vector2(0, -6 * s), tip,
 				mid + Vector2(0, 12 * s), top + Vector2(7 * s, 3 * s)])
 		# Kokosi.
 		for k in 2:
-			_circle(bg, top + Vector2(rng.randf_range(-9, 9) * s, 6 * s),
+			Draw2D.circle(bg, top + Vector2(rng.randf_range(-9, 9) * s, 6 * s),
 				5.0 * s, Color(0.45, 0.32, 0.2, alpha))
-
-
-func _circle(parent: Node2D, c: Vector2, r: float, col: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 14:
-		var a := TAU * float(i) / 14.0
-		pts.append(c + Vector2(cos(a), sin(a)) * r)
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = pts
-	parent.add_child(p)
-
-
-func _poly(parent: Node, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
-	parent.add_child(p)

@@ -269,24 +269,24 @@ func _draw_flake(p: Node2D) -> void:
 	for k in 6:
 		var a := TAU * float(k) / 6.0
 		var d := Vector2(cos(a), sin(a))
-		_poly(p, edge, [
+		Draw2D.poly(p, edge, [
 			d.rotated(0.14) * 8.0, d * (FLAKE_R + 2.0), d.rotated(-0.14) * 8.0])
 		# Grane na kraku.
 		for side in [-1.0, 1.0]:
 			var base: Vector2 = d * (FLAKE_R * 0.55)
 			var tip: Vector2 = base + d.rotated(side * 0.7) * (FLAKE_R * 0.34)
-			_poly(p, edge, [base, tip, base + d * 5.0])
+			Draw2D.poly(p, edge, [base, tip, base + d * 5.0])
 
 	# Ispuna.
 	for k in 6:
 		var a := TAU * float(k) / 6.0
 		var d := Vector2(cos(a), sin(a))
-		_poly(p, col, [
+		Draw2D.poly(p, col, [
 			d.rotated(0.1) * 6.0, d * (FLAKE_R - 3.0), d.rotated(-0.1) * 6.0])
 		for side in [-1.0, 1.0]:
 			var base: Vector2 = d * (FLAKE_R * 0.55)
 			var tip: Vector2 = base + d.rotated(side * 0.7) * (FLAKE_R * 0.28)
-			_poly(p, col, [base, tip, base + d * 4.0])
+			Draw2D.poly(p, col, [base, tip, base + d * 4.0])
 
 	_circle(p, Vector2.ZERO, 9.0, col)
 	_circle(p, Vector2(-2, -3), 4.0, Color(1, 1, 1, 0.9))
@@ -347,7 +347,7 @@ func _mark_correct(b: Node2D) -> void:
 	chk.z_index = 4
 	b.add_child(chk)
 	_circle(chk, Vector2.ZERO, 17.0, Color(0.3, 0.75, 0.4))
-	_poly(chk, Color(1, 1, 1), [
+	Draw2D.poly(chk, Color(1, 1, 1), [
 		Vector2(-8, 0), Vector2(-3, 6), Vector2(9, -7),
 		Vector2(9, -3), Vector2(-3, 10), Vector2(-8, 4)])
 
@@ -427,20 +427,8 @@ func _rounded(parent: Node2D, hw: float, hh: float, col: Color) -> void:
 	p.polygon = pts
 	parent.add_child(p)
 
-
-func _circle(parent: Node2D, c: Vector2, r: float, col: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 16:
-		var a := TAU * float(i) / 16.0
-		pts.append(c + Vector2(cos(a), sin(a)) * r)
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = pts
-	parent.add_child(p)
-
-
-func _poly(parent: Node2D, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
-	parent.add_child(p)
+## Krug sa 16 segmenata - ovaj fajl crta glatkije oblike
+## od podrazumevanih 14 u Draw2D.
+func _circle(parent: Node, center: Vector2, r: float,
+		col: Color) -> Polygon2D:
+	return Draw2D.circle(parent, center, r, col, 16)

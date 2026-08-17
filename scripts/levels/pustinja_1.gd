@@ -136,14 +136,14 @@ func _draw_desert(_lvl: Node) -> void:
 	add_child(bg)
 
 	# Vrelo nebo - zutkasti sloj nad horizontom.
-	_poly(bg, Color(1, 0.88, 0.6, 0.35), [
+	Draw2D.poly(bg, Color(1, 0.88, 0.6, 0.35), [
 		Vector2(-100, -240), Vector2(3200, -240),
 		Vector2(3200, 60), Vector2(-100, 60)])
 
 	# Sunce - veliko i nisko, bez zraka da ne bode oci.
-	_circle(bg, Vector2(700, -380), 58.0, Color(1, 0.88, 0.45, 0.35))
-	_circle(bg, Vector2(700, -380), 42.0, Color(1, 0.94, 0.62, 0.7))
-	_circle(bg, Vector2(700, -380), 30.0, Color(1, 0.98, 0.8, 0.9))
+	Draw2D.circle(bg, Vector2(700, -380), 58.0, Color(1, 0.88, 0.45, 0.35))
+	Draw2D.circle(bg, Vector2(700, -380), 42.0, Color(1, 0.94, 0.62, 0.7))
+	Draw2D.circle(bg, Vector2(700, -380), 30.0, Color(1, 0.98, 0.8, 0.9))
 
 	# --- Dine u tri sloja: daleke svetlije i nize ---
 	const D_ALPHA: Array[float] = [0.9, 0.6, 0.38]
@@ -164,11 +164,11 @@ func _draw_desert(_lvl: Node) -> void:
 			var h: float = rng.randf_range(50.0, 110.0) * s
 			# Dina je asimetricna - jedna strana blaza, druga strmija.
 			var peak: float = x + w * rng.randf_range(0.35, 0.62)
-			_poly(bg, col if i % 2 == 0 else col2, [
+			Draw2D.poly(bg, col if i % 2 == 0 else col2, [
 				Vector2(x, y0 + 60), Vector2(peak, y0 + 60 - h),
 				Vector2(x + w, y0 + 60)])
 			# Osencena strana - daje zapreminu.
-			_poly(bg, Color(0.78, 0.66, 0.44, alpha * 0.5), [
+			Draw2D.poly(bg, Color(0.78, 0.66, 0.44, alpha * 0.5), [
 				Vector2(peak, y0 + 60 - h), Vector2(x + w, y0 + 60),
 				Vector2(peak + w * 0.18, y0 + 60)])
 			x += w * rng.randf_range(0.55, 0.8)
@@ -185,35 +185,35 @@ func _draw_desert(_lvl: Node) -> void:
 		var bw := 9.0 * s
 
 		# Stablo.
-		_poly(bg, body, [
+		Draw2D.poly(bg, body, [
 			Vector2(x - bw, 34), Vector2(x + bw, 34),
 			Vector2(x + bw, -h), Vector2(x - bw, -h)])
-		_circle(bg, Vector2(x, -h), bw, body)
+		Draw2D.circle(bg, Vector2(x, -h), bw, body)
 		# Dve ruke, na razlicitim visinama.
 		for side in [-1.0, 1.0]:
 			if rng.randf() > 0.45:
 				continue
 			var ay := -h * rng.randf_range(0.35, 0.7)
 			var alen := rng.randf_range(16.0, 28.0) * s
-			_poly(bg, body, [
+			Draw2D.poly(bg, body, [
 				Vector2(x + side * bw, ay + 6 * s),
 				Vector2(x + side * (bw + alen), ay + 6 * s),
 				Vector2(x + side * (bw + alen), ay - 4 * s),
 				Vector2(x + side * bw, ay - 4 * s)])
-			_poly(bg, body, [
+			Draw2D.poly(bg, body, [
 				Vector2(x + side * (bw + alen - 9 * s), ay - 4 * s),
 				Vector2(x + side * (bw + alen), ay - 4 * s),
 				Vector2(x + side * (bw + alen), ay - alen * 0.9),
 				Vector2(x + side * (bw + alen - 9 * s), ay - alen * 0.9)])
-			_circle(bg, Vector2(x + side * (bw + alen - 4.5 * s), ay - alen * 0.9),
+			Draw2D.circle(bg, Vector2(x + side * (bw + alen - 4.5 * s), ay - alen * 0.9),
 				4.5 * s, body)
 		# Bodlje - kratke crtice.
 		for k in int(h / 12.0):
 			var sy := 30.0 - k * 12.0
-			_poly(bg, Color(0.9, 0.88, 0.7, a * 0.8), [
+			Draw2D.poly(bg, Color(0.9, 0.88, 0.7, a * 0.8), [
 				Vector2(x - bw - 3 * s, sy), Vector2(x - bw, sy - 1.5),
 				Vector2(x - bw, sy + 1.5)])
-			_poly(bg, Color(0.9, 0.88, 0.7, a * 0.8), [
+			Draw2D.poly(bg, Color(0.9, 0.88, 0.7, a * 0.8), [
 				Vector2(x + bw + 3 * s, sy), Vector2(x + bw, sy - 1.5),
 				Vector2(x + bw, sy + 1.5)])
 
@@ -223,12 +223,12 @@ func _draw_desert(_lvl: Node) -> void:
 		var w := rng.randf_range(18.0, 46.0)
 		var h := rng.randf_range(12.0, 30.0)
 		var a := rng.randf_range(0.45, 0.75)
-		_poly(bg, Color(0.66, 0.56, 0.44, a), [
+		Draw2D.poly(bg, Color(0.66, 0.56, 0.44, a), [
 			p + Vector2(-w, h), p + Vector2(-w * 0.6, -h * 0.7),
 			p + Vector2(w * 0.3, -h), p + Vector2(w, h * 0.4),
 			p + Vector2(w * 0.5, h)])
 		# Svetlija gornja ivica.
-		_poly(bg, Color(0.78, 0.68, 0.54, a), [
+		Draw2D.poly(bg, Color(0.78, 0.68, 0.54, a), [
 			p + Vector2(-w * 0.6, -h * 0.7), p + Vector2(w * 0.3, -h),
 			p + Vector2(w * 0.34, -h * 0.78), p + Vector2(-w * 0.5, -h * 0.5)])
 
@@ -254,26 +254,8 @@ func _draw_desert(_lvl: Node) -> void:
 	for i in 5:
 		var p := Vector2(rng.randf_range(200.0, 3000.0), rng.randf_range(20.0, 38.0))
 		var col := Color(0.94, 0.92, 0.84, 0.6)
-		_poly(bg, col, [
+		Draw2D.poly(bg, col, [
 			p + Vector2(-14, 0), p + Vector2(14, 0),
 			p + Vector2(14, 3), p + Vector2(-14, 3)])
-		_circle(bg, p + Vector2(-15, 1.5), 3.5, col)
-		_circle(bg, p + Vector2(15, 1.5), 3.5, col)
-
-
-func _circle(parent: Node2D, c: Vector2, r: float, col: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 14:
-		var a := TAU * float(i) / 14.0
-		pts.append(c + Vector2(cos(a), sin(a)) * r)
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = pts
-	parent.add_child(p)
-
-
-func _poly(parent: Node, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
-	parent.add_child(p)
+		Draw2D.circle(bg, p + Vector2(-15, 1.5), 3.5, col)
+		Draw2D.circle(bg, p + Vector2(15, 1.5), 3.5, col)

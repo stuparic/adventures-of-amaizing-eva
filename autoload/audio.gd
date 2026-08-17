@@ -60,15 +60,6 @@ var _has_voice_win := false
 var _muted := false
 var _duck_tween: Tween = null
 
-## Muzika i efekti se guse ODVOJENO.
-##
-## Ranije je postojao samo Master bus, pa je mute gasio sve. Sada su
-## Music i Sfx zasebni busevi, a dugme u HUD-u kruzi kroz tri stanja:
-##   SVE -> BEZ MUZIKE (efekti rade) -> TIHO (sve iskljuceno) -> SVE
-## Dete tako moze da cuje "zvezdica!" i "bravo!" bez pozadinske muzike.
-var _music_muted := false
-var _sfx_muted := false
-
 ## Busevi se prave u kodu, ne preko default_bus_layout.tres - tako ne
 ## zavisi od uvoza resursa i radi isto na webu i na desktopu.
 const BUS_MUSIC := "Music"
@@ -351,8 +342,6 @@ const MODE_PATH := "user://audio.json"
 ## Odvojeni busevi resavaju to: mute i fade vise ne diraju isti kanal.
 func set_muted(value: bool) -> void:
 	_muted = value
-	_music_muted = value
-	_sfx_muted = value
 	AudioServer.set_bus_mute(AudioServer.get_bus_index(BUS_MUSIC), value)
 	AudioServer.set_bus_mute(AudioServer.get_bus_index(BUS_SFX), value)
 
@@ -399,7 +388,5 @@ func _load_mode() -> void:
 	if parsed is Dictionary and (parsed as Dictionary).has("muted"):
 		# Primeni tiho, bez play_music() i bez ponovnog upisa.
 		_muted = bool((parsed as Dictionary)["muted"])
-		_music_muted = _muted
-		_sfx_muted = _muted
 		AudioServer.set_bus_mute(AudioServer.get_bus_index(BUS_MUSIC), _muted)
 		AudioServer.set_bus_mute(AudioServer.get_bus_index(BUS_SFX), _muted)

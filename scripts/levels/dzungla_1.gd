@@ -166,7 +166,7 @@ func _draw_jungle(_lvl: Node) -> void:
 	add_child(bg)
 
 	# Zeleni sumrak - u dzungli je tamnije jer krosnje zaklanjaju nebo.
-	_poly(bg, Color(0.16, 0.4, 0.24, 0.28), [
+	Draw2D.poly(bg, Color(0.16, 0.4, 0.24, 0.28), [
 		Vector2(-100, -620), Vector2(3000, -620),
 		Vector2(3000, 80), Vector2(-100, 80)])
 
@@ -175,14 +175,14 @@ func _draw_jungle(_lvl: Node) -> void:
 		var x := rng.randf_range(-60.0, 2980.0)
 		var y := rng.randf_range(-600.0, -430.0)
 		var r := rng.randf_range(40.0, 78.0)
-		_circle(bg, Vector2(x, y), r,
+		Draw2D.circle(bg, Vector2(x, y), r,
 			Color(0.14, 0.36, 0.2, rng.randf_range(0.3, 0.5)))
 
 	# Zracci sunca kroz lisce - probijaju se ukoso.
 	for i in 7:
 		var x := rng.randf_range(0.0, 2900.0)
 		var w := rng.randf_range(26.0, 54.0)
-		_poly(bg, Color(1, 0.97, 0.72, 0.09), [
+		Draw2D.poly(bg, Color(1, 0.97, 0.72, 0.09), [
 			Vector2(x, -520), Vector2(x + w, -520),
 			Vector2(x + w + 130, 80), Vector2(x + 130, 80)])
 
@@ -208,7 +208,7 @@ func _draw_jungle(_lvl: Node) -> void:
 			# Debelo stablo koje se suzava ka vrhu.
 			var bw: float = rng.randf_range(13.0, 22.0) * s
 			var lean := rng.randf_range(-14.0, 14.0)
-			_poly(bg, trunk_col, [
+			Draw2D.poly(bg, trunk_col, [
 				Vector2(x - bw, 60), Vector2(x + bw, 60),
 				Vector2(x + lean + bw * 0.55, -h),
 				Vector2(x + lean - bw * 0.55, -h)])
@@ -216,7 +216,7 @@ func _draw_jungle(_lvl: Node) -> void:
 			# Korenje - siri se u dnu, daje tezinu.
 			for k in 3:
 				var kx: float = x + ROOT_OFF[k] * bw * 1.5
-				_poly(bg, trunk_col, [
+				Draw2D.poly(bg, trunk_col, [
 					Vector2(x, 20), Vector2(kx, 62),
 					Vector2(kx + 9 * s, 62)])
 
@@ -227,7 +227,7 @@ func _draw_jungle(_lvl: Node) -> void:
 			for k in 5:
 				var off := Vector2(rng.randf_range(-46, 46) * s,
 					rng.randf_range(-30, 16) * s)
-				_circle(bg, top + off, rng.randf_range(34.0, 56.0) * s,
+				Draw2D.circle(bg, top + off, rng.randf_range(34.0, 56.0) * s,
 					leaf_a if k % 2 == 0 else leaf_b)
 
 			# Siroki listovi na obodu - oblik dzungle, ne obicnog drveta.
@@ -236,7 +236,7 @@ func _draw_jungle(_lvl: Node) -> void:
 				var d := Vector2(cos(a), sin(a) * 0.6)
 				var tip: Vector2 = top + d * rng.randf_range(58.0, 84.0) * s
 				var mid: Vector2 = top + d * 34.0 * s
-				_poly(bg, leaf_b if k % 2 == 0 else leaf_a, [
+				Draw2D.poly(bg, leaf_b if k % 2 == 0 else leaf_a, [
 					top, mid + Vector2(-11 * s, -9 * s), tip,
 					mid + Vector2(11 * s, 9 * s)])
 
@@ -257,13 +257,13 @@ func _draw_jungle(_lvl: Node) -> void:
 			var x1 := x + sin(t1 * PI) * sway
 			var y0 := top_y + len_v * t0
 			var y1 := top_y + len_v * t1
-			_poly(bg, col, [
+			Draw2D.poly(bg, col, [
 				Vector2(x0 - 3, y0), Vector2(x0 + 3, y0),
 				Vector2(x1 + 3, y1), Vector2(x1 - 3, y1)])
 
 		# Listic na kraju lijane.
 		var end := Vector2(x + sin(PI) * sway, top_y + len_v)
-		_poly(bg, Color(0.26, 0.56, 0.3, 0.6), [
+		Draw2D.poly(bg, Color(0.26, 0.56, 0.3, 0.6), [
 			end, end + Vector2(-9, 12), end + Vector2(0, 22),
 			end + Vector2(9, 12)])
 
@@ -276,7 +276,7 @@ func _draw_jungle(_lvl: Node) -> void:
 			var a := PI + PI * (float(k) + 0.5) / 6.0
 			var d := Vector2(cos(a), sin(a))
 			var tip: Vector2 = base + d * rng.randf_range(22.0, 40.0)
-			_poly(bg, col, [
+			Draw2D.poly(bg, col, [
 				base + Vector2(-3, 0), base + d * 14.0 + Vector2(-5, 0),
 				tip, base + d * 14.0 + Vector2(5, 0), base + Vector2(3, 0)])
 
@@ -287,26 +287,26 @@ func _draw_jungle(_lvl: Node) -> void:
 	var bank := Color(0.3, 0.24, 0.16, 0.9)
 	var bank_dark := Color(0.22, 0.17, 0.11, 0.9)
 	# Leva obala: od tla na x=2090 ukoso nadole u vodu.
-	_poly(bg, bank, [
+	Draw2D.poly(bg, bank, [
 		Vector2(2010, 0), Vector2(2090, 0),
 		Vector2(2090, 260), Vector2(2010, 260)])
-	_poly(bg, bank_dark, [
+	Draw2D.poly(bg, bank_dark, [
 		Vector2(2090, 0), Vector2(2140, 60),
 		Vector2(2140, 260), Vector2(2090, 260)])
 	# Desna obala.
-	_poly(bg, bank, [
+	Draw2D.poly(bg, bank, [
 		Vector2(2510, 0), Vector2(2590, 0),
 		Vector2(2590, 260), Vector2(2510, 260)])
-	_poly(bg, bank_dark, [
+	Draw2D.poly(bg, bank_dark, [
 		Vector2(2460, 60), Vector2(2510, 0),
 		Vector2(2510, 260), Vector2(2460, 260)])
 	# Dno korita - mulj.
-	_poly(bg, Color(0.26, 0.22, 0.15, 0.85), [
+	Draw2D.poly(bg, Color(0.26, 0.22, 0.15, 0.85), [
 		Vector2(2090, 230), Vector2(2510, 230),
 		Vector2(2510, 260), Vector2(2090, 260)])
 	# Mokro kamenje na dnu.
 	for i in 12:
-		_circle(bg, Vector2(rng.randf_range(2110.0, 2490.0),
+		Draw2D.circle(bg, Vector2(rng.randf_range(2110.0, 2490.0),
 			rng.randf_range(200.0, 244.0)),
 			rng.randf_range(9.0, 20.0), Color(0.36, 0.33, 0.28, 0.7))
 
@@ -319,23 +319,5 @@ func _draw_jungle(_lvl: Node) -> void:
 		var col: Color = FLOWER_COLS[i % 3]
 		for k in 5:
 			var a := TAU * float(k) / 5.0
-			_circle(bg, c + Vector2(cos(a), sin(a)) * 6.0, 5.0, col)
-		_circle(bg, c, 3.5, Color(1, 0.95, 0.6, 0.9))
-
-
-func _circle(parent: Node2D, c: Vector2, r: float, col: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 14:
-		var a := TAU * float(i) / 14.0
-		pts.append(c + Vector2(cos(a), sin(a)) * r)
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = pts
-	parent.add_child(p)
-
-
-func _poly(parent: Node, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
-	parent.add_child(p)
+			Draw2D.circle(bg, c + Vector2(cos(a), sin(a)) * 6.0, 5.0, col)
+		Draw2D.circle(bg, c, 3.5, Color(1, 0.95, 0.6, 0.9))

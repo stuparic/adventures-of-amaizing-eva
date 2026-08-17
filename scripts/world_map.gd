@@ -2,6 +2,12 @@ extends Node2D
 ## Mapa sveta - level picker. Tacke po klimatskim predelima, spojene
 ## krivudavim putevima, sa drvecem, jezerima i rekom.
 ##
+## VAZNO: ovo je glavna scena, pa se parsira PRE nego sto Godot napuni
+## registar `class_name` globala. Zato se BiomeArt i Draw2D moraju uzeti
+## preko preload() - kao globali (`BiomeArt.foo()`) daju
+## "Identifier not declared" na cistom .godot kesu, tj. na svakom
+## clean buildu u CI-ju. Isti problem je ranije ubio eva.gd.
+##
 ## Nivoi se citaju iz Game.LEVELS. Nivo koji jos nema scenu prikazuje se kao
 ## zatvorena tacka sa oznakom "uskoro" - kad mu upises scenu, sam se otvori.
 ##
@@ -10,6 +16,9 @@ extends Node2D
 ##   SPACE / Enter   - udji u nivo
 ##   + / -           - zumiraj (radi i skrol misa, i pinch na telefonu)
 ##   klik / dodir    - izaberi, pa ponovo za ulaz
+
+const BiomeArt := preload("res://scripts/biome_art.gd")
+const Draw2D := preload("res://scripts/draw2d.gd")
 
 const DOT_R := 34.0            # poluprecnik tacke nivoa
 const ROAD_W := 7.0            # sirina puta
@@ -174,24 +183,24 @@ func _build_boat() -> void:
 	eva_marker.move_child(_boat, 0)   # ispod Eve i Budzumbore
 
 	# Trup.
-	_poly(_boat, Color(0.62, 0.42, 0.26), [
+	Draw2D.poly(_boat, Color(0.62, 0.42, 0.26), [
 		Vector2(-26, 8), Vector2(26, 8), Vector2(20, 20), Vector2(-20, 20),
 	])
-	_poly(_boat, Color(0.74, 0.53, 0.34), [
+	Draw2D.poly(_boat, Color(0.74, 0.53, 0.34), [
 		Vector2(-26, 8), Vector2(26, 8), Vector2(24, 12), Vector2(-24, 12),
 	])
 	# Jarbol i jedro.
-	_poly(_boat, Color(0.5, 0.36, 0.22), [
+	Draw2D.poly(_boat, Color(0.5, 0.36, 0.22), [
 		Vector2(-1.6, -26), Vector2(1.6, -26), Vector2(1.6, 8), Vector2(-1.6, 8),
 	])
-	_poly(_boat, Color(1, 0.98, 0.94), [
+	Draw2D.poly(_boat, Color(1, 0.98, 0.94), [
 		Vector2(2.6, -24), Vector2(20, -4), Vector2(2.6, 4),
 	])
-	_poly(_boat, Color(0.95, 0.4, 0.55), [
+	Draw2D.poly(_boat, Color(0.95, 0.4, 0.55), [
 		Vector2(2.6, -24), Vector2(12, -13), Vector2(2.6, -9),
 	])
 	# Zastavica.
-	_poly(_boat, Color(0.98, 0.75, 0.25), [
+	Draw2D.poly(_boat, Color(0.98, 0.75, 0.25), [
 		Vector2(1.6, -26), Vector2(11, -23.5), Vector2(1.6, -21),
 	])
 
@@ -226,7 +235,7 @@ func _add_ocean_waves(rng: RandomNumberGenerator) -> void:
 		for f in rng.randi_range(4, 8):
 			var fp := Vector2(cx + rng.randf_range(-22.0, 22.0),
 				cy + rng.randf_range(-12.0, 12.0))
-			_poly(scenery, Color(0.24, 0.42, 0.55, 0.35), [
+			Draw2D.poly(scenery, Color(0.24, 0.42, 0.55, 0.35), [
 				fp + Vector2(-3.4, 0), fp + Vector2(0, -1.7),
 				fp + Vector2(3.4, 0), fp + Vector2(0, 1.7),
 			])
@@ -234,80 +243,21 @@ func _add_ocean_waves(rng: RandomNumberGenerator) -> void:
 	# Nekoliko dalekih jedrilica - svet je naseljen.
 	for i in 3:
 		var p := Vector2(rng.randf_range(0.0, 3700.0), rng.randf_range(180.0, 1080.0))
-		_poly(scenery, Color(1, 1, 1, 0.5), [
+		Draw2D.poly(scenery, Color(1, 1, 1, 0.5), [
 			p + Vector2(-5, 3), p + Vector2(5, 3), p + Vector2(4, 5), p + Vector2(-4, 5)])
-		_poly(scenery, Color(1, 1, 1, 0.55), [
+		Draw2D.poly(scenery, Color(1, 1, 1, 0.55), [
 			p + Vector2(0.5, -7), p + Vector2(5, 2), p + Vector2(0.5, 2)])
 
 	for i in 90:
 		var p := Vector2(rng.randf_range(-400.0, 3600.0), rng.randf_range(20.0, 1320.0))
 		var w := rng.randf_range(9.0, 20.0)
 		var a := Color(1, 1, 1, rng.randf_range(0.1, 0.24))
-		_poly(scenery, a, [
+		Draw2D.poly(scenery, a, [
 			p + Vector2(-w, 0), p + Vector2(-w * 0.35, -2.2),
 			p + Vector2(w * 0.35, 0), p + Vector2(w, -1.6),
 			p + Vector2(w * 0.35, 1.4), p + Vector2(-w * 0.35, -0.6),
 		])
 
-
-
-## Jezero: nepravilan poligon + svetliji obod (plicak) + odsjaj.
-func _add_lake(center: Vector2, r: float, rng: RandomNumberGenerator) -> void:
-	var seg := 20
-	var wob: Array[float] = []
-	for i in seg:
-		wob.append(rng.randf_range(0.82, 1.18))
-
-	var outer := PackedVector2Array()
-	var inner := PackedVector2Array()
-	for i in seg:
-		var a := TAU * float(i) / float(seg)
-		# sin * 0.6 -> spljosteno, kao jezero u perspektivi
-		var d := Vector2(cos(a), sin(a) * 0.6)
-		outer.append(center + d * (r * wob[i]))
-		inner.append(center + d * (r * wob[i] * 0.85))
-
-	_poly_pts(scenery, Color(0.74, 0.87, 0.72), outer)
-	_poly_pts(scenery, Color(0.42, 0.7, 0.88), inner)
-	_poly(scenery, Color(1, 1, 1, 0.28), [
-		center + Vector2(-r * 0.42, -r * 0.2),
-		center + Vector2(-r * 0.04, -r * 0.28),
-		center + Vector2(r * 0.12, -r * 0.12),
-		center + Vector2(-r * 0.3, -r * 0.04),
-	])
-
-
-## Reka: glatka Catmull-Rom kriva kroz sve tacke, sa obalom i odsjajem.
-func _add_river(pts: Array) -> void:
-	var smooth := _catmull(pts, 16)
-	_ribbon(scenery, smooth, 34.0, Color(0.74, 0.87, 0.72))       # obala
-	_ribbon(scenery, smooth, 24.0, Color(0.45, 0.72, 0.9))        # voda
-	_ribbon(scenery, smooth, 8.0, Color(0.7, 0.87, 0.97, 0.45))   # odsjaj
-
-
-## Drvo: senka, stablo, krosnja od tri "blob"-a u dva tona.
-func _add_tree(pos: Vector2, big: bool, rng: RandomNumberGenerator) -> void:
-	var s := (1.25 if big else 0.9) * rng.randf_range(0.88, 1.12)
-
-	_poly(scenery, Color(0.35, 0.4, 0.32, 0.2), [
-		pos + Vector2(-13 * s, 2 * s), pos + Vector2(13 * s, 2 * s),
-		pos + Vector2(11 * s, 8 * s), pos + Vector2(-11 * s, 8 * s),
-	])
-	_poly(scenery, Color(0.5, 0.36, 0.24), [
-		pos + Vector2(-3.5 * s, -6 * s), pos + Vector2(3.5 * s, -6 * s),
-		pos + Vector2(2.8 * s, 5 * s), pos + Vector2(-2.8 * s, 5 * s),
-	])
-
-	var dark := Color(0.24, 0.5, 0.28)
-	var light := Color(0.37, 0.67, 0.37)
-	_blob(scenery, pos + Vector2(-8 * s, -16 * s), 11 * s, dark)
-	_blob(scenery, pos + Vector2(8 * s, -15 * s), 10 * s, dark)
-	_blob(scenery, pos + Vector2(0, -24 * s), 13 * s, dark)
-	_blob(scenery, pos + Vector2(-3 * s, -20 * s), 9 * s, light)
-	_blob(scenery, pos + Vector2(5 * s, -22 * s), 7 * s, light)
-
-
-## --- MAPA: krivudavi putevi i tacke ---
 
 func _build_map() -> void:
 	var roads := Node2D.new()
@@ -409,14 +359,14 @@ func _add_curved_road(parent: Node2D, from_index: int) -> void:
 				else Color(0.72, 0.64, 0.48, 0.7)
 			for i in range(2, trimmed.size() - 2, 4):
 				var pp: Vector2 = trimmed[i]
-				_poly(parent, stone_col,
+				Draw2D.poly(parent, stone_col,
 					_ring_pts(pp + Vector2(wob.randf_range(-3, 3), wob.randf_range(-3, 3)),
 						wob.randf_range(1.6, 2.6), 6))
 		else:
 			# NEPRELAZAN: samo tackice - staza jos "nije prokopana".
 			for i in range(1, trimmed.size() - 1, 3):
 				var pp: Vector2 = trimmed[i]
-				_poly(parent, col, _ring_pts(pp, LAND_W_LOCKED * 0.45, 7))
+				Draw2D.poly(parent, col, _ring_pts(pp, LAND_W_LOCKED * 0.45, 7))
 		return
 
 	# Morski put: isprekidana brazda. Neprelazan ima redje i tanje crtice.
@@ -459,7 +409,6 @@ func _ring_pts(center: Vector2, r: float, seg: int) -> PackedVector2Array:
 	return pts
 
 
-
 ## Jedna crtica: obod pa ispuna.
 func _dash(parent: Node2D, line: Array, edge: Color, fill: Color, w := ROAD_W) -> void:
 	if line.size() < 2:
@@ -487,28 +436,28 @@ func _add_dot(index: int) -> void:
 		String(isl.get("biome", "livada")), BiomeArt.PALETTES["livada"])["ground"]
 
 	# Senka na tlu.
-	var shadow := _circle(DOT_R * 1.05, Color(0.15, 0.2, 0.28, 0.22))
+	var shadow := _dot_circle(DOT_R * 1.05, Color(0.15, 0.2, 0.28, 0.22))
 	shadow.position = Vector2(2, DOT_R * 0.5)
 	shadow.scale = Vector2(1.15, 0.4)
 	dot.add_child(shadow)
 
 	if done:
 		# --- ZAVRSEN: zlatan medaljon sa dvostrukim prstenom i sjajem ---
-		dot.add_child(_circle(DOT_R + 5.0, Color(1, 0.88, 0.4, 0.5)))
-		dot.add_child(_circle(DOT_R + 3.0, Color(1, 1, 1, 0.95)))
-		dot.add_child(_circle(DOT_R, C_ROAD_DONE))
-		dot.add_child(_circle(DOT_R - 5.0, Color(1, 0.95, 0.72)))
-		dot.add_child(_circle(DOT_R - 9.0, Color(1, 0.99, 0.88)))
+		dot.add_child(_dot_circle(DOT_R + 5.0, Color(1, 0.88, 0.4, 0.5)))
+		dot.add_child(_dot_circle(DOT_R + 3.0, Color(1, 1, 1, 0.95)))
+		dot.add_child(_dot_circle(DOT_R, C_ROAD_DONE))
+		dot.add_child(_dot_circle(DOT_R - 5.0, Color(1, 0.95, 0.72)))
+		dot.add_child(_dot_circle(DOT_R - 9.0, Color(1, 0.99, 0.88)))
 	elif exists and unlocked:
 		# --- DOSTUPAN: cist medaljon u boji biomа, pulsira ---
-		dot.add_child(_circle(DOT_R + 3.0, Color(1, 1, 1, 0.95)))
-		dot.add_child(_circle(DOT_R, biome_col.darkened(0.12)))
-		dot.add_child(_circle(DOT_R - 6.0, Color(0.99, 0.98, 0.94)))
+		dot.add_child(_dot_circle(DOT_R + 3.0, Color(1, 1, 1, 0.95)))
+		dot.add_child(_dot_circle(DOT_R, biome_col.darkened(0.12)))
+		dot.add_child(_dot_circle(DOT_R - 6.0, Color(0.99, 0.98, 0.94)))
 	elif exists:
 		# --- ZAKLJUCAN (postoji ali nije otvoren): siv sa katancem ---
-		dot.add_child(_circle(DOT_R + 3.0, Color(0.92, 0.92, 0.94, 0.9)))
-		dot.add_child(_circle(DOT_R, Color(0.62, 0.63, 0.68)))
-		dot.add_child(_circle(DOT_R - 6.0, Color(0.82, 0.83, 0.86)))
+		dot.add_child(_dot_circle(DOT_R + 3.0, Color(0.92, 0.92, 0.94, 0.9)))
+		dot.add_child(_dot_circle(DOT_R, Color(0.62, 0.63, 0.68)))
+		dot.add_child(_dot_circle(DOT_R - 6.0, Color(0.82, 0.83, 0.86)))
 	else:
 		# --- NE POSTOJI ("uskoro"): isprekidan obris, providno, bez ispune.
 		#     Vizualno jasno drugacije: nije zakljucan nego jos NE POSTOJI.
@@ -527,7 +476,7 @@ func _add_dot(index: int) -> void:
 				pts.append(Vector2(cos(aa), sin(aa)) * (DOT_R - 3.0))
 			_poly_pts(dot, Color(1, 1, 1, 0.6), pts)
 		# Bleda ispuna - vidi se da je mesto rezervisano.
-		dot.add_child(_circle(DOT_R - 4.0, Color(1, 1, 1, 0.14)))
+		dot.add_child(_dot_circle(DOT_R - 4.0, Color(1, 1, 1, 0.14)))
 		# Znak pitanja umesto broja.
 		var q := Label.new()
 		q.text = "?"
@@ -544,7 +493,7 @@ func _add_dot(index: int) -> void:
 
 	# Sjaj gore levo - medaljon nije ravan (osim "uskoro" tacaka).
 	if exists:
-		var shine := _circle(DOT_R * 0.4, Color(1, 1, 1, 0.5))
+		var shine := _dot_circle(DOT_R * 0.4, Color(1, 1, 1, 0.5))
 		shine.position = Vector2(-DOT_R * 0.28, -DOT_R * 0.32)
 		dot.add_child(shine)
 
@@ -724,22 +673,6 @@ func _blob(parent: Node2D, center: Vector2, r: float, col: Color) -> void:
 		var a := TAU * float(i) / float(seg)
 		pts.append(center + Vector2(cos(a), sin(a) * 0.92) * r)
 	_poly_pts(parent, col, pts)
-
-
-func _circle(r: float, col: Color, segments := 28) -> Polygon2D:
-	var pts := PackedVector2Array()
-	for i in segments:
-		var a := TAU * float(i) / float(segments)
-		pts.append(Vector2(cos(a), sin(a)) * r)
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = pts
-	return p
-
-
-func _poly(parent: Node, col: Color, points: Array) -> void:
-	_poly_pts(parent, col, PackedVector2Array(points))
-
 
 func _poly_pts(parent: Node, col: Color, points: PackedVector2Array) -> void:
 	var p := Polygon2D.new()
@@ -1002,3 +935,19 @@ func _shake(node: Node2D) -> void:
 		tw.tween_property(node, "position", base + Vector2(8, 0), 0.05)
 		tw.tween_property(node, "position", base - Vector2(8, 0), 0.05)
 	tw.tween_property(node, "position", base, 0.05)
+
+## Krug BEZ roditelja, vraca se za add_child().
+##
+## Ne koristi Draw2D.circle: taj odmah dodaje dete roditelju, a tacke na
+## mapi se slazu u odredjenom redosledu preko add_child() na `dot`.
+## 28 segmenata - tacke su najveci krugovi u igri i grubi mnogougao bi se
+## video.
+func _dot_circle(r: float, col: Color, segments := 28) -> Polygon2D:
+	var pts := PackedVector2Array()
+	for i in segments:
+		var a := TAU * float(i) / float(segments)
+		pts.append(Vector2(cos(a), sin(a)) * r)
+	var p := Polygon2D.new()
+	p.color = col
+	p.polygon = pts
+	return p

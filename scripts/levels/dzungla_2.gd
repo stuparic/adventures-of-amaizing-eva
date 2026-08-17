@@ -354,10 +354,10 @@ func _draw_back(parent: Node2D) -> void:
 
 	for i in 3:
 		var y := -30.0 + i * 30.0
-		_poly(holder, Color(0.28, 0.58, 0.33, 0.95), [
+		Draw2D.poly(holder, Color(0.28, 0.58, 0.33, 0.95), [
 			Vector2(-30, y), Vector2(0, y - 15),
 			Vector2(30, y), Vector2(0, y + 15)])
-		_poly(holder, Color(0.17, 0.4, 0.23, 0.95), [
+		Draw2D.poly(holder, Color(0.17, 0.4, 0.23, 0.95), [
 			Vector2(-28, y), Vector2(28, y),
 			Vector2(28, y + 2), Vector2(-28, y + 2)])
 
@@ -417,13 +417,13 @@ func _draw_motif(p: Node2D, id: String, col: Color) -> void:
 
 		"ananas":
 			# Siljat: telo sa krunom listova gore.
-			_poly(p, col, [
+			Draw2D.poly(p, col, [
 				Vector2(-24, 6), Vector2(-18, -20), Vector2(18, -20),
 				Vector2(24, 6), Vector2(18, 34), Vector2(-18, 34)])
 			# Kockasta sara.
 			for r in 4:
 				for c in 3:
-					_poly(p, Color(0.78, 0.52, 0.12, 0.7), [
+					Draw2D.poly(p, Color(0.78, 0.52, 0.12, 0.7), [
 						Vector2(-14 + c * 12, -14 + r * 12),
 						Vector2(-8 + c * 12, -14 + r * 12),
 						Vector2(-8 + c * 12, -8 + r * 12),
@@ -431,7 +431,7 @@ func _draw_motif(p: Node2D, id: String, col: Color) -> void:
 			# Kruna.
 			for i in 5:
 				var x := -16.0 + i * 8.0
-				_poly(p, Color(0.24, 0.56, 0.28), [
+				Draw2D.poly(p, Color(0.24, 0.56, 0.28), [
 					Vector2(x, -20), Vector2(x + 3, -46), Vector2(x + 6, -20)])
 
 		"cvet":
@@ -444,17 +444,17 @@ func _draw_motif(p: Node2D, id: String, col: Color) -> void:
 
 		"list":
 			# Siljat list sa nervima - jedini sa "vrhom" gore i dole.
-			_poly(p, col, [
+			Draw2D.poly(p, col, [
 				Vector2(0, -42), Vector2(24, -6), Vector2(14, 30),
 				Vector2(0, 40), Vector2(-14, 30), Vector2(-24, -6)])
-			_poly(p, Color(0.18, 0.46, 0.24), [
+			Draw2D.poly(p, Color(0.18, 0.46, 0.24), [
 				Vector2(-2, -38), Vector2(2, -38), Vector2(2, 38), Vector2(-2, 38)])
 			for i in 4:
 				var y := -24.0 + i * 16.0
-				_poly(p, Color(0.2, 0.5, 0.26, 0.8), [
+				Draw2D.poly(p, Color(0.2, 0.5, 0.26, 0.8), [
 					Vector2(0, y), Vector2(17, y + 9),
 					Vector2(17, y + 12), Vector2(0, y + 4)])
-				_poly(p, Color(0.2, 0.5, 0.26, 0.8), [
+				Draw2D.poly(p, Color(0.2, 0.5, 0.26, 0.8), [
 					Vector2(0, y), Vector2(-17, y + 9),
 					Vector2(-17, y + 12), Vector2(0, y + 4)])
 
@@ -466,7 +466,7 @@ func _draw_motif(p: Node2D, id: String, col: Color) -> void:
 			for i in 14:
 				var a := TAU * float(i) / 14.0
 				var d := Vector2(cos(a), sin(a))
-				_poly(p, Color(0.44, 0.3, 0.18, 0.6), [
+				Draw2D.poly(p, Color(0.44, 0.3, 0.18, 0.6), [
 					Vector2(0, 4) + d * 14.0, Vector2(0, 4) + d * 27.0,
 					Vector2(0, 4) + d.rotated(0.18) * 25.0])
 			for i in 3:
@@ -478,22 +478,22 @@ func _draw_motif(p: Node2D, id: String, col: Color) -> void:
 			# Ptica: telo, krilo, kljun, repno perje - najsloženiji oblik.
 			_circle(p, Vector2(-2, 6), 24.0, col)
 			# Rep - dugo perje ukoso.
-			_poly(p, Color(0.9, 0.35, 0.35), [
+			Draw2D.poly(p, Color(0.9, 0.35, 0.35), [
 				Vector2(14, 14), Vector2(44, 36), Vector2(30, 40), Vector2(10, 24)])
-			_poly(p, Color(0.98, 0.75, 0.25), [
+			Draw2D.poly(p, Color(0.98, 0.75, 0.25), [
 				Vector2(12, 20), Vector2(38, 42), Vector2(24, 44), Vector2(8, 28)])
 			# Krilo.
-			_poly(p, Color(0.22, 0.48, 0.8), [
+			Draw2D.poly(p, Color(0.22, 0.48, 0.8), [
 				Vector2(-8, -2), Vector2(14, 6), Vector2(6, 22), Vector2(-10, 14)])
 			# Glava i kljun.
 			_circle(p, Vector2(-10, -18), 15.0, col)
-			_poly(p, Color(0.98, 0.72, 0.2), [
+			Draw2D.poly(p, Color(0.98, 0.72, 0.2), [
 				Vector2(-22, -18), Vector2(-36, -12), Vector2(-22, -6)])
 			# Oko.
 			_circle(p, Vector2(-8, -22), 5.0, Color(1, 1, 1))
 			_circle(p, Vector2(-9, -22), 3.0, Color(0.1, 0.1, 0.12))
 			# Cuperak.
-			_poly(p, Color(0.98, 0.75, 0.25), [
+			Draw2D.poly(p, Color(0.98, 0.75, 0.25), [
 				Vector2(-12, -32), Vector2(-6, -46), Vector2(-2, -30)])
 
 
@@ -518,20 +518,8 @@ func _rounded(parent: Node2D, hw: float, hh: float, col: Color) -> void:
 	p.polygon = pts
 	parent.add_child(p)
 
-
-func _circle(parent: Node2D, c: Vector2, r: float, col: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 16:
-		var a := TAU * float(i) / 16.0
-		pts.append(c + Vector2(cos(a), sin(a)) * r)
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = pts
-	parent.add_child(p)
-
-
-func _poly(parent: Node2D, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
-	parent.add_child(p)
+## Krug sa 16 segmenata - ovaj fajl crta glatkije oblike
+## od podrazumevanih 14 u Draw2D.
+func _circle(parent: Node, center: Vector2, r: float,
+		col: Color) -> Polygon2D:
+	return Draw2D.circle(parent, center, r, col, 16)

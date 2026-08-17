@@ -162,16 +162,6 @@ func resume_game() -> void:
 		_fade_audio(_saved_volume_db, FADE_IN)
 
 
-## Postavi novu "normalnu" glasnost Master busa.
-##
-## Zove se ako neko namerno menja glasnost (npr. iz podesavanja), da
-## resume_game() posle pauze vrati pravu vrednost a ne staru iz _ready().
-func set_baseline_volume(db: float) -> void:
-	_saved_volume_db = db
-	if not _paused_by_us:
-		AudioServer.set_bus_volume_db(_master_bus, db)
-
-
 ## Meko utisavanje - naglo gasenje "klikne" u zvucnicima.
 ##
 ## Cuva referencu i ubija prethodni tween: bez toga se fade-out i fade-in

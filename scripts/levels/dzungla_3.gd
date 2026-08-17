@@ -137,7 +137,7 @@ func _draw_cave(_lvl: Node) -> void:
 	# Na snimku je gornja polovina ekrana bila skoro crna: svod je pocinjao
 	# na y=-300 (tacno u vidnom polju) i imao alfu 0.75. Sada je gore na
 	# y=-460 i prozirniji, pa se vidi da je pecina prostorija a ne mrak.
-	_poly(bg, Color(0.2, 0.17, 0.24, 0.5), [
+	Draw2D.poly(bg, Color(0.2, 0.17, 0.24, 0.5), [
 		Vector2(-100, -700), Vector2(3100, -700),
 		Vector2(3100, -460), Vector2(-100, -460)])
 	# Neravan donji rub svoda.
@@ -145,13 +145,13 @@ func _draw_cave(_lvl: Node) -> void:
 	while x < 3100.0:
 		var w := rng.randf_range(80.0, 190.0)
 		var d := rng.randf_range(20.0, 70.0)
-		_poly(bg, Color(0.2, 0.17, 0.24, 0.5), [
+		Draw2D.poly(bg, Color(0.2, 0.17, 0.24, 0.5), [
 			Vector2(x, -460), Vector2(x + w * 0.5, -460 + d),
 			Vector2(x + w, -460)])
 		x += w * 0.85
 
 	# Zadnja stena - svetlija podloga, da se platforme jasno izdvajaju.
-	_poly(bg, Color(0.3, 0.26, 0.33, 0.45), [
+	Draw2D.poly(bg, Color(0.3, 0.26, 0.33, 0.45), [
 		Vector2(-100, -460), Vector2(3100, -460),
 		Vector2(3100, 80), Vector2(-100, 80)])
 
@@ -162,10 +162,10 @@ func _draw_cave(_lvl: Node) -> void:
 		var h := rng.randf_range(70.0, 210.0)
 		var w := rng.randf_range(11.0, 26.0)
 		var a := rng.randf_range(0.55, 0.85)
-		_poly(bg, Color(0.28, 0.24, 0.3, a), [
+		Draw2D.poly(bg, Color(0.28, 0.24, 0.3, a), [
 			Vector2(sx - w, y0), Vector2(sx + w, y0), Vector2(sx, y0 + h)])
 		# Svetliji rub - daje zapreminu.
-		_poly(bg, Color(0.4, 0.35, 0.42, a * 0.8), [
+		Draw2D.poly(bg, Color(0.4, 0.35, 0.42, a * 0.8), [
 			Vector2(sx - w * 0.4, y0), Vector2(sx + w * 0.15, y0),
 			Vector2(sx, y0 + h * 0.75)])
 
@@ -175,7 +175,7 @@ func _draw_cave(_lvl: Node) -> void:
 		var h := rng.randf_range(30.0, 90.0)
 		var w := rng.randf_range(12.0, 26.0)
 		var a := rng.randf_range(0.5, 0.8)
-		_poly(bg, Color(0.26, 0.22, 0.28, a), [
+		Draw2D.poly(bg, Color(0.26, 0.22, 0.28, a), [
 			Vector2(sx - w, 60), Vector2(sx + w, 60), Vector2(sx, 60 - h)])
 
 	# --- Gljive koje svetle: osvetljavaju stazu ---
@@ -191,8 +191,8 @@ func _draw_cave(_lvl: Node) -> void:
 		var halo := Node2D.new()
 		halo.position = Vector2(gx, gy - 8)
 		bg.add_child(halo)
-		_circle(halo, Vector2.ZERO, 26.0, Color(col.r, col.g, col.b, 0.1))
-		_circle(halo, Vector2.ZERO, 15.0, Color(col.r, col.g, col.b, 0.16))
+		Draw2D.circle(halo, Vector2.ZERO, 26.0, Color(col.r, col.g, col.b, 0.1))
+		Draw2D.circle(halo, Vector2.ZERO, 15.0, Color(col.r, col.g, col.b, 0.16))
 
 		var t := rng.randf_range(1.6, 3.0)
 		var pulse := create_tween().set_loops()
@@ -202,15 +202,15 @@ func _draw_cave(_lvl: Node) -> void:
 		pulse.tween_property(halo, "scale", Vector2.ONE, t) \
 			.set_trans(Tween.TRANS_SINE)
 		# Stablo i klobuk.
-		_poly(bg, Color(0.85, 0.9, 0.88, 0.8), [
+		Draw2D.poly(bg, Color(0.85, 0.9, 0.88, 0.8), [
 			Vector2(gx - 3, gy), Vector2(gx + 3, gy),
 			Vector2(gx + 2, gy - 14), Vector2(gx - 2, gy - 14)])
-		_poly(bg, col, [
+		Draw2D.poly(bg, col, [
 			Vector2(gx - 13, gy - 13), Vector2(gx, gy - 24),
 			Vector2(gx + 13, gy - 13)])
 		# Tackice na klobuku.
-		_circle(bg, Vector2(gx - 4, gy - 16), 2.0, Color(1, 1, 1, 0.8))
-		_circle(bg, Vector2(gx + 5, gy - 17), 1.8, Color(1, 1, 1, 0.8))
+		Draw2D.circle(bg, Vector2(gx - 4, gy - 16), 2.0, Color(1, 1, 1, 0.8))
+		Draw2D.circle(bg, Vector2(gx + 5, gy - 17), 1.8, Color(1, 1, 1, 0.8))
 
 	# --- Kapljice koje padaju sa stalaktita ---
 	for i in 16:
@@ -232,27 +232,9 @@ func _draw_cave(_lvl: Node) -> void:
 
 	# --- Zraci svetla na ulazu i izlazu (dete vidi gde je pocetak/kraj) ---
 	for sx2 in [120.0, 2820.0]:
-		_poly(bg, Color(1, 0.97, 0.8, 0.13), [
+		Draw2D.poly(bg, Color(1, 0.97, 0.8, 0.13), [
 			Vector2(sx2 - 40, -460), Vector2(sx2 + 40, -460),
 			Vector2(sx2 + 90, 70), Vector2(sx2 + 10, 70)])
-		_poly(bg, Color(1, 0.97, 0.8, 0.09), [
+		Draw2D.poly(bg, Color(1, 0.97, 0.8, 0.09), [
 			Vector2(sx2 - 10, -460), Vector2(sx2 + 70, -460),
 			Vector2(sx2 + 120, 70), Vector2(sx2 + 40, 70)])
-
-
-func _circle(parent: Node2D, c: Vector2, r: float, col: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 14:
-		var a := TAU * float(i) / 14.0
-		pts.append(c + Vector2(cos(a), sin(a)) * r)
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = pts
-	parent.add_child(p)
-
-
-func _poly(parent: Node, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
-	parent.add_child(p)

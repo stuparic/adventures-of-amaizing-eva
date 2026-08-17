@@ -269,21 +269,12 @@ func _draw_dashed_outline(parent: Node2D, pts: PackedVector2Array) -> void:
 				break
 			var p1 := a + dir * d
 			var p2 := a + dir * (d + l)
-			_poly(parent, Color(0.55, 0.5, 0.45, 0.8),
+			Draw2D.poly(parent, Color(0.55, 0.5, 0.45, 0.8),
 				[p1 + nrm, p2 + nrm, p2 - nrm, p1 - nrm])
 			d += 16.0
 
-
-func _circle(parent: Node2D, c: Vector2, r: float, col: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 16:
-		var a := TAU * float(i) / 16.0
-		pts.append(c + Vector2(cos(a), sin(a)) * r)
-	_poly(parent, col, pts)
-
-
-func _poly(parent: Node, col: Color, pts: Variant) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = pts if pts is PackedVector2Array else PackedVector2Array(pts)
-	parent.add_child(p)
+## Krug sa 16 segmenata - ovaj fajl crta glatkije oblike
+## od podrazumevanih 14 u Draw2D.
+func _circle(parent: Node, center: Vector2, r: float,
+		col: Color) -> Polygon2D:
+	return Draw2D.circle(parent, center, r, col, 16)

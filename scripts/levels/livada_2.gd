@@ -176,8 +176,8 @@ func _draw_line(a: Vector2, b: Vector2) -> void:
 	var dir := (b - a).normalized()
 	var n := Vector2(-dir.y, dir.x) * 4.0
 	# Obod pa ispuna - linija se vidi na svakoj podlozi.
-	_poly(_lines, Color(1, 1, 1, 0.9), [a + n * 1.7, b + n * 1.7, b - n * 1.7, a - n * 1.7])
-	_poly(_lines, Color(0.95, 0.45, 0.6), [a + n, b + n, b - n, a - n])
+	Draw2D.poly(_lines, Color(1, 1, 1, 0.9), [a + n * 1.7, b + n * 1.7, b - n * 1.7, a - n * 1.7])
+	Draw2D.poly(_lines, Color(0.95, 0.45, 0.6), [a + n, b + n, b - n, a - n])
 
 
 ## Kad je oblik zatvoren, oboji ga - dete vidi sta je nacrtalo.
@@ -229,11 +229,4 @@ func _star_poly(parent: Node2D, r: float, col: Color) -> void:
 	var p := Polygon2D.new()
 	p.color = col
 	p.polygon = pts
-	parent.add_child(p)
-
-
-func _poly(parent: Node, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
 	parent.add_child(p)

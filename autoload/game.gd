@@ -25,7 +25,7 @@ const MAX_HEARTS := 5                # broj zivota (Mario ima 1-2, mi dajemo 5)
 ## NE na pocetak nivoa. Ovo je najvaznija stvar za dete.
 const RESPAWN_DELAY := 0.6
 
-## Ukupan broj zvezdica u nivou - postavlja main.gd pri gradnji,
+## Ukupan broj zvezdica u nivou - postavlja LevelBase pri gradnji,
 ## da winning screen moze da prikaze "12 / 29".
 var total_stars: int = 0
 

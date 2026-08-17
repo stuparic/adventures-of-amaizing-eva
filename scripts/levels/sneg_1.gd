@@ -140,7 +140,7 @@ func _draw_snow(_lvl: Node) -> void:
 	add_child(bg)
 
 	# Hladno nebo - plavicasti sloj.
-	_poly(bg, Color(0.72, 0.85, 0.95, 0.4), [
+	Draw2D.poly(bg, Color(0.72, 0.85, 0.95, 0.4), [
 		Vector2(-100, -620), Vector2(3200, -620),
 		Vector2(3200, 60), Vector2(-100, 60)])
 
@@ -152,7 +152,7 @@ func _draw_snow(_lvl: Node) -> void:
 		var x := rng.randf_range(-100.0, 3100.0)
 		var w := rng.randf_range(120.0, 260.0)
 		var col: Color = AURORA_COLS[i % 3]
-		_poly(bg, col, [
+		Draw2D.poly(bg, col, [
 			Vector2(x, -600), Vector2(x + w, -600),
 			Vector2(x + w * 0.7, -340), Vector2(x + w * 0.2, -340)])
 
@@ -173,7 +173,7 @@ func _draw_snow(_lvl: Node) -> void:
 			var x := rng.randf_range(-60.0, 3160.0)
 			var h: float = rng.randf_range(150.0, 280.0) * s
 			# Stablo.
-			_poly(bg, Color(0.4, 0.28, 0.2, alpha), [
+			Draw2D.poly(bg, Color(0.4, 0.28, 0.2, alpha), [
 				Vector2(x - 7 * s, 50), Vector2(x + 7 * s, 50),
 				Vector2(x + 5 * s, -h * 0.2), Vector2(x - 5 * s, -h * 0.2)])
 			# Tri sloja grana, odozdo nagore sve uze.
@@ -182,17 +182,17 @@ func _draw_snow(_lvl: Node) -> void:
 				var wy: float = -h * (0.2 + t * 0.62)
 				var ww: float = (46.0 - t * 22.0) * s
 				var hh: float = (58.0 - t * 12.0) * s
-				_poly(bg, needle if k % 2 == 0 else needle2, [
+				Draw2D.poly(bg, needle if k % 2 == 0 else needle2, [
 					Vector2(x - ww, wy), Vector2(x, wy - hh), Vector2(x + ww, wy)])
 				# Sneg na granama - beli rub.
-				_poly(bg, snow_col, [
+				Draw2D.poly(bg, snow_col, [
 					Vector2(x - ww, wy), Vector2(x - ww * 0.5, wy - hh * 0.4),
 					Vector2(x - ww * 0.3, wy - hh * 0.25), Vector2(x - ww * 0.6, wy)])
-				_poly(bg, snow_col, [
+				Draw2D.poly(bg, snow_col, [
 					Vector2(x + ww, wy), Vector2(x + ww * 0.5, wy - hh * 0.4),
 					Vector2(x + ww * 0.3, wy - hh * 0.25), Vector2(x + ww * 0.6, wy)])
 			# Vrh.
-			_poly(bg, needle2, [
+			Draw2D.poly(bg, needle2, [
 				Vector2(x - 12 * s, -h * 0.82), Vector2(x, -h),
 				Vector2(x + 12 * s, -h * 0.82)])
 
@@ -201,7 +201,7 @@ func _draw_snow(_lvl: Node) -> void:
 		var x := rng.randf_range(-60.0, 3160.0)
 		var w := rng.randf_range(50.0, 130.0)
 		var h := rng.randf_range(10.0, 26.0)
-		_poly(bg, Color(0.97, 0.99, 1.0, rng.randf_range(0.5, 0.8)), [
+		Draw2D.poly(bg, Color(0.97, 0.99, 1.0, rng.randf_range(0.5, 0.8)), [
 			Vector2(x - w, 50), Vector2(x - w * 0.5, 50 - h),
 			Vector2(x + w * 0.4, 50 - h * 0.8), Vector2(x + w, 50)])
 
@@ -235,24 +235,17 @@ func _draw_snow(_lvl: Node) -> void:
 
 	# --- Iglu na kraju (flavor kod pingvina) ---
 	var ig := Vector2(2960, 40)
-	_poly(bg, Color(0.92, 0.96, 1.0, 0.9), [
+	Draw2D.poly(bg, Color(0.92, 0.96, 1.0, 0.9), [
 		ig + Vector2(-58, 0), ig + Vector2(-52, -36), ig + Vector2(-28, -58),
 		ig + Vector2(28, -58), ig + Vector2(52, -36), ig + Vector2(58, 0)])
 	# Blokovi.
 	for k in 4:
 		var by := -12.0 - k * 12.0
 		var bw := 54.0 - k * 9.0
-		_poly(bg, Color(0.82, 0.9, 0.97, 0.55), [
+		Draw2D.poly(bg, Color(0.82, 0.9, 0.97, 0.55), [
 			ig + Vector2(-bw, by), ig + Vector2(bw, by),
 			ig + Vector2(bw, by + 1.5), ig + Vector2(-bw, by + 1.5)])
 	# Ulaz.
-	_poly(bg, Color(0.5, 0.66, 0.8, 0.9), [
+	Draw2D.poly(bg, Color(0.5, 0.66, 0.8, 0.9), [
 		ig + Vector2(-16, 0), ig + Vector2(-14, -22),
 		ig + Vector2(14, -22), ig + Vector2(16, 0)])
-
-
-func _poly(parent: Node, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
-	parent.add_child(p)

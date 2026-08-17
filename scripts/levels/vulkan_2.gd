@@ -169,19 +169,19 @@ func _draw_summit(_lvl: Node) -> void:
 		var t := float(i) / float(bands - 1)
 		var y0 := 80.0 - t * 1000.0
 		var col := Color(1, 0.5, 0.22, 0.16).lerp(Color(0.62, 0.8, 0.98, 0.1), t)
-		_poly(bg, col, [
+		Draw2D.poly(bg, col, [
 			Vector2(-100, y0), Vector2(3100, y0),
 			Vector2(3100, y0 - 100.0), Vector2(-100, y0 - 100.0)])
 
 	# --- Krater dole levo, gleda se odozgo ---
 	var cx := 900.0
-	_poly(bg, Color(0.22, 0.18, 0.2, 0.8), [
+	Draw2D.poly(bg, Color(0.22, 0.18, 0.2, 0.8), [
 		Vector2(cx - 520, 60), Vector2(cx - 220, -180),
 		Vector2(cx + 220, -180), Vector2(cx + 520, 60)])
-	_poly(bg, Color(1, 0.45, 0.15, 0.6), [
+	Draw2D.poly(bg, Color(1, 0.45, 0.15, 0.6), [
 		Vector2(cx - 200, -170), Vector2(cx + 200, -170),
 		Vector2(cx + 150, -130), Vector2(cx - 150, -130)])
-	_poly(bg, Color(1, 0.8, 0.3, 0.45), [
+	Draw2D.poly(bg, Color(1, 0.8, 0.3, 0.45), [
 		Vector2(cx - 140, -166), Vector2(cx + 140, -166),
 		Vector2(cx + 100, -142), Vector2(cx - 100, -142)])
 
@@ -231,7 +231,7 @@ func _draw_summit(_lvl: Node) -> void:
 		var y := rng.randf_range(-880.0, -420.0)
 		var w := rng.randf_range(70.0, 170.0)
 		var a := rng.randf_range(0.3, 0.6)
-		_poly(bg, Color(1, 0.97, 0.95, a), [
+		Draw2D.poly(bg, Color(1, 0.97, 0.95, a), [
 			Vector2(x - w, y + 10), Vector2(x - w * 0.6, y - 12),
 			Vector2(x, y - 18), Vector2(x + w * 0.6, y - 10),
 			Vector2(x + w, y + 10)])
@@ -242,7 +242,7 @@ func _draw_summit(_lvl: Node) -> void:
 		var w := rng.randf_range(16.0, 44.0)
 		var h := rng.randf_range(14.0, 34.0)
 		var a := rng.randf_range(0.4, 0.7)
-		_poly(bg, Color(0.19, 0.16, 0.18, a), [
+		Draw2D.poly(bg, Color(0.19, 0.16, 0.18, a), [
 			p + Vector2(-w, h), p + Vector2(-w * 0.7, -h * 0.6),
 			p + Vector2(-w * 0.1, -h), p + Vector2(w * 0.6, -h * 0.5),
 			p + Vector2(w, h)])
@@ -274,31 +274,13 @@ func _draw_summit(_lvl: Node) -> void:
 
 	# --- Zastavica na vrhu: cilj je VIDLJIV izdaleka ---
 	var top := Vector2(2670, -836)
-	_poly(bg, Color(0.45, 0.35, 0.28), [
+	Draw2D.poly(bg, Color(0.45, 0.35, 0.28), [
 		top + Vector2(-3, 0), top + Vector2(3, 0),
 		top + Vector2(3, -90), top + Vector2(-3, -90)])
-	_poly(bg, Color(0.98, 0.35, 0.5), [
+	Draw2D.poly(bg, Color(0.98, 0.35, 0.5), [
 		top + Vector2(3, -90), top + Vector2(58, -74),
 		top + Vector2(3, -58)])
-	_poly(bg, Color(1, 0.6, 0.72), [
+	Draw2D.poly(bg, Color(1, 0.6, 0.72), [
 		top + Vector2(3, -86), top + Vector2(44, -75),
 		top + Vector2(3, -64)])
-	_circle(bg, top + Vector2(0, -92), 5.0, Color(1, 0.85, 0.3))
-
-
-func _circle(parent: Node2D, c: Vector2, r: float, col: Color) -> void:
-	var pts := PackedVector2Array()
-	for i in 14:
-		var a := TAU * float(i) / 14.0
-		pts.append(c + Vector2(cos(a), sin(a)) * r)
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = pts
-	parent.add_child(p)
-
-
-func _poly(parent: Node, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
-	parent.add_child(p)
+	Draw2D.circle(bg, top + Vector2(0, -92), 5.0, Color(1, 0.85, 0.3))

@@ -113,7 +113,7 @@ func _draw_forest(_lvl: Node) -> void:
 		var h := rng.randf_range(110.0, 190.0)
 		var w := rng.randf_range(13.0, 22.0)
 		# Deblo.
-		_poly(bg, Color(0.42, 0.31, 0.2), [
+		Draw2D.poly(bg, Color(0.42, 0.31, 0.2), [
 			Vector2(x, -h), Vector2(x + w, -h),
 			Vector2(x + w * 0.82, 14), Vector2(x + w * 0.18, 14)])
 		# Krosnja PREKO vrha debla, u dva tona.
@@ -132,11 +132,4 @@ func _blob(parent: Node2D, c: Vector2, r: float, col: Color) -> void:
 	var p := Polygon2D.new()
 	p.color = col
 	p.polygon = pts
-	parent.add_child(p)
-
-
-func _poly(parent: Node, col: Color, pts: Array) -> void:
-	var p := Polygon2D.new()
-	p.color = col
-	p.polygon = PackedVector2Array(pts)
 	parent.add_child(p)
