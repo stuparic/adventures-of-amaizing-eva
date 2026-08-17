@@ -54,7 +54,20 @@ const LAND_W_LOCKED := 5.0
 const C_LOCKED := Color(0.62, 0.62, 0.66)
 const C_TEXT := Color(0.22, 0.3, 0.42)
 
+## Slojevi mape (z_index). Cvor "Ocean" iz world_map.tscn ima z_index 0,
+## pa SVE na moru mora biti veci od nule da bi se videlo.
+## EvaMarker u sceni ima z_index 3 - zato likovi idu iznad puteva.
+const Z_WATER_ZONES := 1     # dubinske zone
+const Z_WAVES := 2           # talasi
+const Z_FISH := 3            # jata riba
+const Z_SAILBOATS := 4       # jedrilice
+const Z_LAND := 6            # ostrva
+const Z_ROADS := 7           # putevi izmedju nivoa
+const Z_DOTS := 8            # tacke nivoa
+const Z_MARKER := 9          # Eva i Budzumbora sa brodicem
+
 const StarIcon := preload("res://scenes/hud_star.tscn")
+const ScoreMenu := preload("res://scripts/score_menu.gd")
 
 ## Granice zuma. MANJI broj = vidi se VISE mape.
 const ZOOM_MIN := 0.16
@@ -81,6 +94,7 @@ var _pinch_start_zoom := 1.0
 var _zoom_initialized := false
 var _boat: Node2D
 var _is_web := OS.has_feature("web")
+var _menu: CanvasLayer
 
 
 ## Pomeranje mape prevlacenjem (drag). Kad korisnik pomeri mapu, kamera
@@ -114,9 +128,57 @@ func _ready() -> void:
 		_expose_web_api()
 
 
+	_build_menu()
+
 	# Mapa pusta temu ostrva na kom je izabrani nivo - dete cuje gde je
 	# jos pre nego sto udje u nivo.
 	Audio.play_biome_music(_selected_biome())
+
+
+## Meni sa rezultatima + dugme koje ga otvara.
+##
+## Pravi se iz koda, ne u .tscn - world_map.tscn je glavna scena i svaka
+## rucna izmena tog fajla je u ovom projektu vec jednom oborila igru.
+func _build_menu() -> void:
+	_menu = ScoreMenu.new()
+	add_child(_menu)
+	_menu.level_chosen.connect(_on_menu_level)
+	_menu.closed.connect(func() -> void: pass)
+
+	# Dugme "REZULTATI" gore-desno, u UI sloju (ne u svetu).
+	var ui := get_node_or_null("UI")
+	if ui == null:
+		return
+	var b := Button.new()
+	b.text = "REZULTATI"
+	# focus_mode NONE: fokusirano dugme bi reagovalo na SPACE, a SPACE
+	# na mapi ulazi u nivo.
+	b.focus_mode = Control.FOCUS_NONE
+	b.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	b.offset_left = -196.0
+	b.offset_top = 14.0
+	b.offset_right = -16.0
+	b.offset_bottom = 66.0
+	b.add_theme_font_size_override("font_size", 20)
+	b.add_theme_color_override("font_color", Color(1, 1, 1))
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.45, 0.68, 0.42)
+	sb.set_corner_radius_all(14)
+	b.add_theme_stylebox_override("normal", sb)
+	var hv := sb.duplicate() as StyleBoxFlat
+	hv.bg_color = Color(0.52, 0.76, 0.48)
+	b.add_theme_stylebox_override("hover", hv)
+	ui.add_child(b)
+	b.pressed.connect(func() -> void:
+		Audio.play("checkpoint")
+		_menu.show_menu()
+	)
+
+
+## Meni je izabrao nivo - udji u njega.
+func _on_menu_level(index: int) -> void:
+	_selected = index
+	_enter_level()
 
 
 ## Bioma ostrva na kom je trenutno izabrani nivo.
@@ -165,16 +227,24 @@ func _build_scenery() -> void:
 	# Talasi po okeanu - daju osecaj vode, ne praznog plavog polja.
 	_add_ocean_waves(rng)
 
-	# Ostrva iz ISLANDS - na jednom moze da bude vise nivoa.
+	# Ostrva idu u SVOJ sloj iznad mora.
+	#
+	# draw_island ne postavlja z_index (ostaje 0), a dodaci na moru moraju
+	# imati z_index > 0 da bi bili iznad cvora "Ocean" (koji je brat
+	# Scenery-ja sa z_index 0). Bez ovog omotaca bi talasi prelazili preko
+	# ostrva.
+	var land := Node2D.new()
+	land.z_index = Z_LAND
+	scenery.add_child(land)
 	for i in Game.island_count():
 		var isl := Game.island_data(i)
-		BiomeArt.draw_island(scenery, String(isl["biome"]),
+		BiomeArt.draw_island(land, String(isl["biome"]),
 			isl["pos"], isl["size"], 1000 + i * 137)
 
 
 	# Mnogo bezimenih ostrvaca - okean treba da bude PUN, ne prazan.
 	# Bioma svakog prati najblize veliko ostrvo, pa se svet oseca povezano.
-	_scatter_islets(rng)
+	_scatter_islets(rng, land)
 
 
 ## Brodic pod Evom - na mapi putuje morem od ostrva do ostrva.
@@ -209,7 +279,7 @@ func _build_boat() -> void:
 
 ## Nekoliko malih ostrvaca radi flavora - NE gomila. Glavna ostrva su
 ## velika i dominiraju kadrom; ovi su samo detalj u prolazu.
-func _scatter_islets(rng: RandomNumberGenerator) -> void:
+func _scatter_islets(rng: RandomNumberGenerator, land: Node2D) -> void:
 	# Rucno izabrane pozicije u prazninama izmedju velikih ostrva.
 	var spots := [
 		[Vector2(760, 1010), "livada", 150.0],
@@ -226,45 +296,143 @@ func _scatter_islets(rng: RandomNumberGenerator) -> void:
 		var biome: String = spots[i][1]
 		var w: float = spots[i][2]
 		var sz := Vector2(w, w * rng.randf_range(0.6, 0.72))
-		BiomeArt.draw_island(scenery, biome, pos, sz, 5000 + i * 131)
+		BiomeArt.draw_island(land, biome, pos, sz, 5000 + i * 131)
 
 ## Talasi: kratke bele crtice po okeanu, gusce blizu ostrva.
 func _add_ocean_waves(rng: RandomNumberGenerator) -> void:
-	# Jata riba - male tamne tackice u grupama.
-	for school in 8:
-		var cx := rng.randf_range(-300.0, 3450.0)
-		var cy := rng.randf_range(60.0, 1280.0)
-		for f in rng.randi_range(4, 8):
-			var fp := Vector2(cx + rng.randf_range(-22.0, 22.0),
-				cy + rng.randf_range(-12.0, 12.0))
-			Draw2D.poly(scenery, Color(0.24, 0.42, 0.55, 0.35), [
-				fp + Vector2(-3.4, 0), fp + Vector2(0, -1.7),
-				fp + Vector2(3.4, 0), fp + Vector2(0, 1.7),
-			])
+	# --- Dubinske zone: more nije jedna ravna boja ---
+	#
+	# Tri siroka pojasa razlicite nijanse plavog daju osecaj dubine. Idu
+	# najdublje na sredini mape, plicak ka ivicama - kao pravi arhipelag.
+	# z_index je nizak da sve ostalo ostane iznad.
+	var zones := Node2D.new()
+	# z_index MORA da bude > 0: cvor "Ocean" iz world_map.tscn je brat
+	# Scenery-ja sa z_index 0, pa je negativna vrednost gurala more ispod
+	# njega i dodaci se nisu videli uopste (video na snimku arhipelaga).
+	# Ostrva se crtaju posle, u istom Scenery, pa ostaju iznad.
+	zones.z_index = Z_WATER_ZONES
+	scenery.add_child(zones)
+	for i in 30:
+		var cx := rng.randf_range(-500.0, 5200.0)
+		var cy := rng.randf_range(-200.0, 1500.0)
+		var rw := rng.randf_range(600.0, 1400.0)
+		var rh := rng.randf_range(380.0, 860.0)
+		var pts := PackedVector2Array()
+		for k in 16:
+			var a := TAU * float(k) / 16.0
+			var wob := rng.randf_range(0.82, 1.18)
+			pts.append(Vector2(cx + cos(a) * rw * wob, cy + sin(a) * rh * wob))
+		var pol := Polygon2D.new()
+		pol.color = Color(0.28, 0.53, 0.76, rng.randf_range(0.16, 0.3))
+		pol.polygon = pts
+		zones.add_child(pol)
 
-	# Nekoliko dalekih jedrilica - svet je naseljen.
-	for i in 3:
-		var p := Vector2(rng.randf_range(0.0, 3700.0), rng.randf_range(180.0, 1080.0))
-		Draw2D.poly(scenery, Color(1, 1, 1, 0.5), [
-			p + Vector2(-5, 3), p + Vector2(5, 3), p + Vector2(4, 5), p + Vector2(-4, 5)])
-		Draw2D.poly(scenery, Color(1, 1, 1, 0.55), [
-			p + Vector2(0.5, -7), p + Vector2(5, 2), p + Vector2(0.5, 2)])
+	# --- Talasi: ziva voda, ne bele crtice ---
+	#
+	# Ranije je bilo 90 statickih poligona. Sada svaki talas ima tri linije
+	# (greben + dve senke) i NJISE se - more se krece i kad dete stoji.
+	# Animacija je tween per talas: 150 talasa x 1 tween je jeftino jer se
+	# menja samo position, bez ponovnog crtanja poligona.
+	for i in 260:
+		var p := Vector2(rng.randf_range(-500.0, 5200.0),
+			rng.randf_range(-200.0, 1500.0))
+		# Sirina 30-70px, ne 11-26: mapa se najcesce gleda odzumirano
+		# (ceo arhipelag), a tamo je talas od 16px sirok 5px na ekranu -
+		# prakticno nevidljiv. Video na snimku celog arhipelaga.
+		var w := rng.randf_range(30.0, 70.0)
+		var holder := Node2D.new()
+		holder.position = p
+		holder.z_index = Z_WAVES
+		scenery.add_child(holder)
 
-	for i in 90:
-		var p := Vector2(rng.randf_range(-400.0, 3600.0), rng.randf_range(20.0, 1320.0))
-		var w := rng.randf_range(9.0, 20.0)
-		var a := Color(1, 1, 1, rng.randf_range(0.1, 0.24))
-		Draw2D.poly(scenery, a, [
-			p + Vector2(-w, 0), p + Vector2(-w * 0.35, -2.2),
-			p + Vector2(w * 0.35, 0), p + Vector2(w, -1.6),
-			p + Vector2(w * 0.35, 1.4), p + Vector2(-w * 0.35, -0.6),
+		# Greben talasa - dvostruki luk, kao "~".
+		var a1 := rng.randf_range(0.2, 0.36)
+		var th := w * 0.14      # debljina prati sirinu
+		Draw2D.poly(holder, Color(1, 1, 1, a1), [
+			Vector2(-w, 0), Vector2(-w * 0.4, -th * 1.5), Vector2(w * 0.1, -th * 0.2),
+			Vector2(w * 0.55, -th * 1.4), Vector2(w, th * 0.1),
+			Vector2(w * 0.55, -th * 0.5), Vector2(w * 0.1, th * 0.7),
+			Vector2(-w * 0.4, -th * 0.5),
+		])
+		# Senka pod grebenom - daje reljef.
+		Draw2D.poly(holder, Color(0.24, 0.48, 0.7, a1 * 0.55), [
+			Vector2(-w * 0.8, th * 1.3), Vector2(-w * 0.2, th * 0.1),
+			Vector2(w * 0.4, th * 1.2), Vector2(w * 0.8, th * 0.35),
+			Vector2(w * 0.4, th * 1.9), Vector2(-w * 0.2, th * 0.95),
 		])
 
+		# Njihanje: gore-dole i malo u stranu, svaki talas svojim ritmom.
+		# set_loops() ide POSLE tween_property - obrnuto Godot prijavljuje
+		# "Infinite loop detected" (naucili smo na pahuljama u sneg_2).
+		var dy := rng.randf_range(4.0, 9.0)
+		var dur := rng.randf_range(1.6, 3.2)
+		var tw := create_tween()
+		tw.tween_property(holder, "position:y", p.y + dy, dur) \
+			.set_trans(Tween.TRANS_SINE)
+		tw.tween_property(holder, "position:y", p.y, dur) \
+			.set_trans(Tween.TRANS_SINE)
+		tw.set_loops()
+
+	# --- Jata riba ---
+	for school in 12:
+		var cx := rng.randf_range(-300.0, 5000.0)
+		var cy := rng.randf_range(-100.0, 1440.0)
+		var fish_col := Color(0.22, 0.4, 0.54, 0.42)
+		var group := Node2D.new()
+		group.position = Vector2(cx, cy)
+		group.z_index = Z_FISH
+		scenery.add_child(group)
+		for f in rng.randi_range(5, 9):
+			var fp := Vector2(rng.randf_range(-52.0, 52.0),
+				rng.randf_range(-28.0, 28.0))
+			# Telo + repic, ne samo romb.
+			Draw2D.poly(group, fish_col, [
+				fp + Vector2(-8.0, 0), fp + Vector2(0, -4.2),
+				fp + Vector2(8.0, 0), fp + Vector2(0, 4.2)])
+			Draw2D.poly(group, fish_col, [
+				fp + Vector2(7.5, 0), fp + Vector2(13.6, -4.4),
+				fp + Vector2(13.6, 4.4)])
+		# Jato lagano pluta u stranu.
+		var drift := rng.randf_range(30.0, 70.0)
+		var dt := rng.randf_range(5.0, 9.0)
+		var ft := create_tween()
+		ft.tween_property(group, "position:x", cx + drift, dt) \
+			.set_trans(Tween.TRANS_SINE)
+		ft.tween_property(group, "position:x", cx, dt).set_trans(Tween.TRANS_SINE)
+		ft.set_loops()
+
+	# --- Jedrilice: svet je naseljen ---
+	for i in 6:
+		var p := Vector2(rng.randf_range(0.0, 5000.0),
+			rng.randf_range(-100.0, 1400.0))
+		var boat := Node2D.new()
+		boat.position = p
+		boat.z_index = Z_SAILBOATS
+		scenery.add_child(boat)
+		# Trup, jedro, jarbol - vise poligona nego pre.
+		Draw2D.poly(boat, Color(0.98, 0.98, 1.0, 0.62), [
+			Vector2(-6, 3), Vector2(6, 3), Vector2(4.6, 5.6), Vector2(-4.6, 5.6)])
+		Draw2D.poly(boat, Color(0.55, 0.4, 0.28, 0.5), [
+			Vector2(-0.5, -8), Vector2(0.5, -8), Vector2(0.5, 3), Vector2(-0.5, 3)])
+		Draw2D.poly(boat, Color(1, 1, 1, 0.66), [
+			Vector2(0.8, -7.6), Vector2(5.6, 2.2), Vector2(0.8, 2.2)])
+		Draw2D.poly(boat, Color(0.9, 0.5, 0.6, 0.55), [
+			Vector2(-0.8, -6.4), Vector2(-4.4, 2.2), Vector2(-0.8, 2.2)])
+		# Brazda za brodom.
+		Draw2D.poly(boat, Color(1, 1, 1, 0.2), [
+			Vector2(-7, 5.2), Vector2(-15, 6.4), Vector2(-15, 7.2), Vector2(-7, 6.2)])
+		# Ljuljanje na talasima.
+		var bt := create_tween()
+		bt.tween_property(boat, "rotation", 0.075, rng.randf_range(1.8, 2.8)) \
+			.set_trans(Tween.TRANS_SINE)
+		bt.tween_property(boat, "rotation", -0.075, rng.randf_range(1.8, 2.8)) \
+			.set_trans(Tween.TRANS_SINE)
+		bt.set_loops()
 
 func _build_map() -> void:
 	var roads := Node2D.new()
 	roads.name = "Roads"
-	roads.z_index = 1
+	roads.z_index = Z_ROADS
 	add_child(roads)
 
 	for i in Game.level_count() - 1:
@@ -429,7 +597,7 @@ func _add_dot(index: int) -> void:
 	var dot := Node2D.new()
 	dot.name = "Dot%d" % index
 	dot.position = pos
-	dot.z_index = 2
+	dot.z_index = Z_DOTS
 	add_child(dot)
 	_dots.append(dot)
 
@@ -691,9 +859,11 @@ func _process(delta: float) -> void:
 	if _is_web:
 		_poll_web_commands()
 
-	# Glatko zumiranje.
+	# Glatko zumiranje. Posle promene zuma se granice menjaju (pri odzumu
+	# se vidi vise sveta), pa kamera moze da ispadne van - zato clamp.
 	_zoom = lerpf(_zoom, _target_zoom, delta * 8.0)
 	camera.zoom = Vector2(_zoom, _zoom)
+	_clamp_camera()
 
 	if _selected < _dots.size():
 		var target: Vector2 = _dots[_selected].position + Vector2(0, -DOT_R - 30.0)
@@ -706,6 +876,7 @@ func _process(delta: float) -> void:
 			# Cilja malo iznad tacke - vidi se i ostrvo iza nje.
 			var target_c: Vector2 = _dots[_selected].position + Vector2(0, -40.0)
 			camera.position = camera.position.lerp(target_c, delta * 4.0)
+			_clamp_camera()
 
 	for i in _dots.size():
 		var s := 1.0
@@ -717,7 +888,9 @@ func _process(delta: float) -> void:
 ## Zum ide u _input, NE u _unhandled_input: Button nodovi na tackama
 ## presrecu skrol i dodir pre nego sto stigne do _unhandled_input.
 func _input(event: InputEvent) -> void:
-	if _entering:
+	# Dok je meni otvoren mapa ne reaguje - inace SPACE ulazi u nivo
+	# iza menija, a prevlacenje pomera mapu ispod panela.
+	if _entering or (_menu != null and _menu.is_shown()):
 		return
 
 	# --- ZUM: skrol misa / trackpad ---
@@ -745,6 +918,7 @@ func _input(event: InputEvent) -> void:
 		var d: Vector2 = (mm.position - _drag_last) / _zoom
 		if d.length() > 0.5:
 			camera.position -= d
+			_clamp_camera()
 			_drag_last = mm.position
 			_free_camera = true
 		return
@@ -785,6 +959,7 @@ func _input(event: InputEvent) -> void:
 			var d: Vector2 = (dg.position - prev) / _zoom
 			if d.length() > 0.5:
 				camera.position -= d
+				_clamp_camera()
 				_free_camera = true
 			_touches[dg.index] = dg.position
 			return
@@ -805,7 +980,9 @@ func _input(event: InputEvent) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _entering:
+	# Dok je meni otvoren mapa ne reaguje - inace SPACE ulazi u nivo
+	# iza menija, a prevlacenje pomera mapu ispod panela.
+	if _entering or (_menu != null and _menu.is_shown()):
 		return
 
 	# --- IZBOR NIVOA ---
@@ -864,6 +1041,7 @@ func _poll_web_commands() -> void:
 	var py := float(parts[2])
 	if absf(px) > 0.01 or absf(py) > 0.01:
 		camera.position -= Vector2(px, py) / _zoom
+		_clamp_camera()
 		_free_camera = true
 
 
@@ -953,3 +1131,29 @@ func _dot_circle(r: float, col: Color, segments := 28) -> Polygon2D:
 	p.color = col
 	p.polygon = pts
 	return p
+
+## --- GRANICE MAPE ---
+
+## Arhipelag zauzima x: -40..4760, y: 55..1150 (mereno iz Game.ISLANDS).
+## Dodat je pojas okeana oko toga - lepo je videti malo vode oko ostrva,
+## ali ne beskrajno prazno plavo polje.
+const WORLD_MIN := Vector2(-360.0, -260.0)
+const WORLD_MAX := Vector2(5080.0, 1520.0)
+
+
+## Drzi kameru u granicama sveta.
+##
+## Prevlacenjem prstom se ranije moglo odbeci u prazan okean bez orijentira
+## i dete nije umelo da se vrati. Sada se kamera zaustavlja na ivici.
+##
+## Ogranicava se VIDLJIVI pravougaonik, ne centar kamere: pri malom zumu
+## se vidi vise sveta, pa je dozvoljeni pomeraj centra manji. Kad je svet
+## uzi od ekrana (jak odzum), centar se zakljuca na sredinu.
+func _clamp_camera() -> void:
+	var half: Vector2 = get_viewport().get_visible_rect().size * 0.5 / _zoom
+	var lo := WORLD_MIN + half
+	var hi := WORLD_MAX - half
+	var mid := (WORLD_MIN + WORLD_MAX) * 0.5
+	camera.position.x = mid.x if lo.x > hi.x else clampf(camera.position.x, lo.x, hi.x)
+	camera.position.y = mid.y if lo.y > hi.y else clampf(camera.position.y, lo.y, hi.y)
+

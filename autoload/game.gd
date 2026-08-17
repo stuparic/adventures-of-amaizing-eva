@@ -233,6 +233,10 @@ func level_completed(index: int) -> bool:
 
 
 ## Upisi rezultat i zapamti najbolji (najvise zvezdica, pa najkrace vreme).
+##
+## Cuva se i `max` - koliko zvezdica nivo UOPSTE ima. Bez toga meni ne moze
+## da prikaze "12 / 29", jer se ukupan broj zna samo dok nivo tece
+## (Game.total_stars se postavlja pri gradnji nivoa).
 func mark_completed(index: int, stars: int, seconds: float) -> void:
 	var d := level_data(index)
 	if not d.has("id"):
@@ -245,7 +249,42 @@ func mark_completed(index: int, stars: int, seconds: float) -> void:
 		or stars > int(prev.get("stars", -1)) \
 		or (stars == int(prev.get("stars", -1)) and seconds < float(prev.get("time", 1e9)))
 	if better:
-		best[id] = {"stars": stars, "time": seconds}
+		best[id] = {"stars": stars, "time": seconds, "max": total_stars}
+	elif total_stars > 0:
+		# Rezultat nije bolji, ali maksimum ipak zapamti - stariji zapisi
+		# ga nemaju, pa se dopunjava prvim sledecim prolazom.
+		best[id]["max"] = total_stars
+
+
+## Ukupno sakupljenih zvezdica preko svih nivoa - "high score" igre.
+func total_score() -> int:
+	var n := 0
+	for id in best:
+		n += int((best[id] as Dictionary).get("stars", 0))
+	return n
+
+
+## Ukupno moguce zvezdica u nivoima koji su ODIGRANI barem jednom.
+## Nivoi koji nikad nisu igrani se ne racunaju - ne zna se njihov maksimum.
+func total_possible() -> int:
+	var n := 0
+	for id in best:
+		n += int((best[id] as Dictionary).get("max", 0))
+	return n
+
+
+## Koliko je nivoa predjeno.
+func completed_count() -> int:
+	return completed.size()
+
+
+## Koliko nivoa uopste ima scenu (ostali su "uskoro").
+func playable_count() -> int:
+	var n := 0
+	for i in LEVELS.size():
+		if level_exists(i):
+			n += 1
+	return n
 
 
 func best_for(index: int) -> Dictionary:

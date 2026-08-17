@@ -42,7 +42,7 @@ polygon = PackedVector2Array(-38, 9, -23, -10, 3, -14, 24, -5, 38, 9)
 
 [node name="EvaMarker" type="Node2D" parent="."]
 position = Vector2(140, 570)
-z_index = 3
+z_index = 9
 
 [node name="Eva" parent="EvaMarker" instance=ExtResource("3_eva")]
 position = Vector2(-13, 0)
