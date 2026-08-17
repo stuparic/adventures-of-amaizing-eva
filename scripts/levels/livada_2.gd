@@ -7,22 +7,48 @@ extends MinigameBase
 ## Za petogodisnjaka: brojevi su veliki, sledeca zvezdica pulsira i
 ## svetli, a pogresna se samo zatrese (nema kazne).
 
-## Tacke crteza - oblik zeka. Redosled je redosled spajanja.
 const SCALE := 1.9
-const SHAPE: Array[Vector2] = [
-	Vector2(-30, 60),    # 1  stopalo levo
-	Vector2(30, 60),     # 2  stopalo desno
-	Vector2(46, 10),     # 3  bok desno
-	Vector2(34, -34),    # 4  rame desno
-	Vector2(52, -74),    # 5  uvo desno gore
-	Vector2(30, -108),   # 6  vrh uva desno
-	Vector2(14, -66),    # 7  glava desno
-	Vector2(-14, -66),   # 8  glava levo
-	Vector2(-30, -108),  # 9  vrh uva levo
-	Vector2(-52, -74),   # 10 uvo levo gore
-	Vector2(-34, -34),   # 11 rame levo
-	Vector2(-46, 10),    # 12 bok levo
+
+## Tri crteza; jedan se bira slucajno pri svakom pokretanju.
+##
+## Ranije je bio samo zeka sa 12 tacaka - Eva ga je zapamtila i drugi put
+## samo ponavljala redosled, bez gledanja brojeva. Sada se oblik menja, i
+## ima ih vise tacaka (12-16), pa spajanje traje duze.
+## Redosled u nizu JE redosled spajanja.
+const SHAPES: Array = [
+	# Zeka - 12 tacaka.
+	[
+		Vector2(-30, 60), Vector2(30, 60), Vector2(46, 10), Vector2(34, -34),
+		Vector2(52, -74), Vector2(30, -108), Vector2(14, -66), Vector2(-14, -66),
+		Vector2(-30, -108), Vector2(-52, -74), Vector2(-34, -34), Vector2(-46, 10),
+	],
+	# Petokraka zvezda - 10 tacaka, siljci naizmenicno spolja i unutra.
+	#
+	# Prva verzija je imala i "repic" od 4 dodatne tacke oko vrha, ali su
+	# se na snimku 11-14 gomilale jedna preko druge i brojevi se nisu
+	# citali. Cist petougao je jasniji, a 10 tacaka je i dalje vise od
+	# nekadasnjih fiksnih 12 u proseku po prolazu.
+	[
+		Vector2(0, -100), Vector2(24, -32), Vector2(95, -31), Vector2(38, 12),
+		Vector2(59, 81), Vector2(0, 38), Vector2(-59, 81), Vector2(-38, 12),
+		Vector2(-95, -31), Vector2(-24, -32),
+	],
+	# Riba - 13 tacaka: telo, rep, pa donje peraje.
+	#
+	# Prva verzija je imala 16 tacaka i PONAVLJALA (-64, 0) na mestu 1 i 13
+	# da "zatvori" telo. Merenje je pokazalo rastojanje 0px - dve zvezdice
+	# jedna preko druge, pa klik ne bi znao koja je na redu. Oblik se
+	# ionako zatvara sam (_on_dot povlaci liniju od poslednje do prve).
+	[
+		Vector2(-70, 0), Vector2(-44, -34), Vector2(0, -48), Vector2(40, -34),
+		Vector2(64, -10), Vector2(88, -38), Vector2(102, 0), Vector2(88, 38),
+		Vector2(64, 10), Vector2(40, 34), Vector2(0, 48), Vector2(-44, 34),
+		Vector2(-30, 8),
+	],
 ]
+
+## Tacke izabranog crteza za ovaj prolaz - popunjava _ready().
+var _shape: Array[Vector2] = []
 
 const DOT_R := 19.0
 
@@ -35,7 +61,17 @@ func _setup() -> void:
 	friend_kind = "zeka"
 	biome = "livada"
 	task_text = "Dodirni zvezdice po redu: 1, 2, 3..."
-	set_total_steps(SHAPE.size())
+
+	# Oblik se bira OVDE, pre set_total_steps - broj koraka zavisi od
+	# toga koji je crtez izvucen.
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	var pick: Array = SHAPES[rng.randi_range(0, SHAPES.size() - 1)]
+	_shape.clear()
+	for v in pick:
+		_shape.append(v as Vector2)
+
+	set_total_steps(_shape.size())
 
 
 func _ready() -> void:
@@ -87,8 +123,8 @@ func _build_dots() -> void:
 	# Crtez je u centru ekrana, malo nize od prijatelja.
 	var origin := Vector2(0, 60)
 
-	for i in SHAPE.size():
-		var pos: Vector2 = origin + SHAPE[i] * SCALE
+	for i in _shape.size():
+		var pos: Vector2 = origin + _shape[i] * SCALE
 
 		var dot := Node2D.new()
 		dot.position = pos
@@ -136,7 +172,7 @@ func _on_dot(index: int) -> void:
 	step_done()
 	_next += 1
 
-	if _next >= SHAPE.size():
+	if _next >= _shape.size():
 		# Zatvori oblik i pokazi zeku.
 		_draw_line(_dots[_dots.size() - 1].position, _dots[0].position)
 		_fill_shape()

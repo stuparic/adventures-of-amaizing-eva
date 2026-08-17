@@ -2,11 +2,13 @@ extends Node2D
 ## Mapa sveta - level picker. Tacke po klimatskim predelima, spojene
 ## krivudavim putevima, sa drvecem, jezerima i rekom.
 ##
-## VAZNO: ovo je glavna scena, pa se parsira PRE nego sto Godot napuni
-## registar `class_name` globala. Zato se BiomeArt i Draw2D moraju uzeti
-## preko preload() - kao globali (`BiomeArt.foo()`) daju
-## "Identifier not declared" na cistom .godot kesu, tj. na svakom
-## clean buildu u CI-ju. Isti problem je ranije ubio eva.gd.
+## BiomeArt i Draw2D se uzimaju preko preload(), ne kao `class_name`
+## globali.
+##
+## Globali se razresavaju iz .godot/global_script_class_cache.cfg, koji
+## pravi `godot --import`. To CI uvek radi, pa bi i globali radili -
+## ali ne rade ako se projekat pokrene sa obrisanim .godot bez --import
+## (npr. iz skripte). preload() ne zavisi od tog kesa, pa je otporniji.
 ##
 ## Nivoi se citaju iz Game.LEVELS. Nivo koji jos nema scenu prikazuje se kao
 ## zatvorena tacka sa oznakom "uskoro" - kad mu upises scenu, sam se otvori.

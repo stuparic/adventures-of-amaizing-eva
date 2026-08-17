@@ -2,10 +2,10 @@ extends MinigameBase
 ## NIVO 11 — "Prebroj pahulje" (Snežna dolina)
 ##
 ## Na ekranu je grupa pahulja. Dete ih prebroji i dodirne pravi broj.
-## Pet zadataka sa SLUCAJNIM brojem pahulja - drugi prolaz nije isti.
+## Sest zadataka sa SLUCAJNIM brojem pahulja - drugi prolaz nije isti.
 ##
 ## Prilagodjeno petogodisnjaku:
-##  - brojevi idu do 5, ne dalje (koliko dete sigurno prepoznaje)
+##  - brojevi idu do 8: preko 5 dete mora da broji jedno po jedno
 ##  - pahulje su u JASNOM redu, ne razbacane - lakse za brojanje
 ##  - dodir na pahulju je BROJI naglas (ona poskoci i pobeli) - dete
 ##    moze da broji prstom, kao na papiru
@@ -15,24 +15,36 @@ extends MinigameBase
 ## Eva spasava ježa Bodljka.
 
 ## Koliko zadataka u jednom prolazu.
-const TASK_COUNT := 5
+const TASK_COUNT := 6
 
-## Koliko pahulja moze da bude u zadatku. Ne preko 5 - toliko dete
-## sigurno prepoznaje.
-const MIN_FLAKES := 2
-const MAX_FLAKES := 5
+## Koliko pahulja moze da bude u zadatku.
+##
+## Islo je do 5, ali je Eva to presla bez greske - prelako. Sada ide do 8:
+## preko 5 dete vec mora da broji jedno po jedno, ne da prepozna grupu
+## "na prvi pogled" (subitizacija radi do ~4-5). Zato je i dodir na
+## pahulju koji je "prebroji" sada vazniji - to je alatka za brojanje.
+const MIN_FLAKES := 3
+const MAX_FLAKES := 8
+
+## Najvise ovoliko pahulja u jednom redu; ostatak ide u novi red.
+## Osam u jednom redu izlazi iz kadra na telefonu, pa 8 daje dva reda po 4.
+const FLAKES_PER_ROW := 4
 
 ## Brojevi za ovaj prolaz, popunjava se u _ready(). NIJE fiksan niz:
 ## sa fiksnim redosledom dete zapamti odgovore i drugi put samo ponavlja,
 ## isto kao memori sa istim rasporedom.
 var _tasks: Array[int] = []
 
-## Ponudjeni brojevi - uvek 1..5, pa dete uci da bira, ne da pogadja.
+## Ponudjeni brojevi - 1..8, pa dete uci da bira, ne da pogadja.
 ##
-## Mereno: sa 6 dugmadi je dugme padalo na 40.2 fizickih px na telefonu
-## (cilj je 55px za detinji prst). Sa 5 ima mesta za 190px = ~58px.
-## Petogodisnjak ionako sigurnije prepoznaje do 5.
-const CHOICES: Array[int] = [1, 2, 3, 4, 5]
+## Mereno ranije: 6 dugmadi u JEDNOM redu palo je na 40.2 fizickih px na
+## telefonu, ispod cilja od 55px za detinji prst. Zato osam dugmadi ide u
+## DVA reda po cetiri (BTN_ROWS) - meta ostaje ista kao sa pet u redu,
+## a opseg brojeva je veci.
+const CHOICES: Array[int] = [1, 2, 3, 4, 5, 6, 7, 8]
+
+## Dugmadi se slazu u dva reda po cetiri.
+const BTN_PER_ROW := 4
 
 ## Velicina dugmeta sa brojem. Veliko - telefon je primarni klijent.
 ##
@@ -43,8 +55,11 @@ const BTN_SIZE := 190.0
 const BTN_GAP := 10.0
 
 ## Pahulje se crtaju u redu; ovo je razmak izmedju njih.
-const FLAKE_STEP := 118.0
-const FLAKE_R := 40.0
+## Pahulje su vece nego pre (40 -> 52): sa 8 pahulja i dva reda
+## dugmadi ostaje dosta praznog prostora, a veca pahulja je i lakse
+## meta za prst kad je dete "prebrojava" dodirom.
+const FLAKE_STEP := 132.0
+const FLAKE_R := 52.0
 
 var _task := 0
 var _flakes: Array[Node2D] = []
@@ -190,13 +205,24 @@ func _build_tasks() -> void:
 		_tasks.append(n)
 
 	# Ako je slucajno ispalo previse jednolicno, dopuni raznovrsnost.
+	# Indeksi su ogranicena na velicinu niza - TASK_COUNT je promenljiv.
 	var unique := {}
 	for t in _tasks:
 		unique[t] = true
-	if unique.size() < 3:
+	if unique.size() < 3 and _tasks.size() >= 4:
 		_tasks[1] = MIN_FLAKES
 		_tasks[2] = MAX_FLAKES
 		_tasks[3] = MIN_FLAKES + 1
+
+	# Bar jedan zadatak preko 5 - tu dete mora da broji, ne da prepozna
+	# grupu na prvi pogled. To je i poenta ovog nivoa.
+	var has_big := false
+	for t in _tasks:
+		if t > 5:
+			has_big = true
+			break
+	if not has_big and _tasks.size() > 0:
+		_tasks[_tasks.size() - 1] = rng.randi_range(6, MAX_FLAKES)
 
 
 ## Nacrtaj pahulje za trenutni zadatak.
@@ -213,8 +239,8 @@ func _show_task() -> void:
 	_counted.clear()
 
 	var n: int = _tasks[_task]
-	# Pahulje u JASNOM redu (do 3 u redu), ne razbacane - lakse za brojanje.
-	var per_row: int = mini(n, 3)
+	# Pahulje u JASNOM redu, ne razbacane - lakse za brojanje.
+	var per_row: int = mini(n, FLAKES_PER_ROW)
 	var rows: int = int(ceil(float(n) / float(per_row)))
 
 	for i in n:
@@ -295,12 +321,17 @@ func _draw_flake(p: Node2D) -> void:
 ## --- DUGMAD SA BROJEVIMA ---
 
 func _build_buttons() -> void:
-	var total := CHOICES.size() * BTN_SIZE + (CHOICES.size() - 1) * BTN_GAP
+	# Dva reda po BTN_PER_ROW - vidi komentar kod CHOICES.
+	var per_row := BTN_PER_ROW
+	var total := per_row * BTN_SIZE + (per_row - 1) * BTN_GAP
 	var x0 := -total * 0.5 + BTN_SIZE * 0.5
 
 	for i in CHOICES.size():
+		var row := i / per_row
+		var col := i % per_row
 		var b := Node2D.new()
-		b.position = Vector2(x0 + i * (BTN_SIZE + BTN_GAP), 150.0)
+		b.position = Vector2(x0 + col * (BTN_SIZE + BTN_GAP),
+			150.0 + float(row) * (BTN_SIZE + BTN_GAP))
 		_stage.add_child(b)
 		_buttons.append(b)
 
@@ -382,15 +413,39 @@ func _fit_stage() -> void:
 	if vp.x <= 0.0 or vp.y <= 0.0:
 		return
 
-	var total_w := CHOICES.size() * BTN_SIZE + (CHOICES.size() - 1) * BTN_GAP
-	# Visina: pahulje gore (do 2 reda) + dugmad dole.
-	var total_h := 150.0 + BTN_SIZE + 260.0
+	# Sirina po REDU dugmadi (BTN_PER_ROW), ne po svih osam - inace se
+	# scena skupi na pola bez potrebe.
+	var total_w := BTN_PER_ROW * BTN_SIZE + (BTN_PER_ROW - 1) * BTN_GAP
 
+	# Visina se racuna iz STVARNOG opsega sadrzaja, ne kao zbir odoka.
+	# Sadrzaj NIJE centriran oko nule: pahulje su oko y=-150, a dugmad
+	# pocinju na y=+150 i idu nadole. Racun "150 + redovi + 320" je davao
+	# 870px umesto 743px, i istovremeno je scena bila pozicionirana skoro
+	# na nulu - pa je donji red dugmadi izlazio iz kadra. Video na snimku.
+	var btn_rows := int(ceil(float(CHOICES.size()) / float(BTN_PER_ROW)))
+	var flake_rows := int(ceil(float(MAX_FLAKES) / float(FLAKES_PER_ROW)))
+	var top_y := -150.0 - float(flake_rows - 1) * 108.0 - FLAKE_R
+	var bottom_y := 150.0 + float(btn_rows - 1) * (BTN_SIZE + BTN_GAP) \
+		+ BTN_SIZE * 0.5
+	var total_h := bottom_y - top_y
+
+	# TOP_RESERVE je traka sa zadatkom gore; BOTTOM_MARGIN je vazduh dole.
+	# Bez donje margine je racun davao donju ivicu tacno na granici kadra
+	# i zadnji red dugmadi se odsecao - video na snimku.
 	const TOP_RESERVE := 84.0
-	var s := minf((vp.x - 40.0) / total_w, (vp.y - TOP_RESERVE) / total_h)
+	const BOTTOM_MARGIN := 24.0
+	var avail_h := vp.y - TOP_RESERVE - BOTTOM_MARGIN
+	var s := minf((vp.x - 40.0) / total_w, avail_h / total_h)
 	s = minf(s, 1.0)
 	_stage.scale = Vector2(s, s)
-	_stage.position = Vector2(0, TOP_RESERVE * 0.35)
+
+	# Centriraj sadrzaj u slobodnom pojasu izmedju trake i donje margine.
+	# Pojas u ekranskim koordinatama ide od (-vp.y/2 + TOP_RESERVE) do
+	# (vp.y/2 - BOTTOM_MARGIN); scena je u centru viewporta, pa se pomera
+	# tako da centar sadrzaja padne u centar tog pojasa.
+	var band_mid := (-vp.y * 0.5 + TOP_RESERVE + vp.y * 0.5 - BOTTOM_MARGIN) * 0.5
+	var content_mid := (top_y + bottom_y) * 0.5
+	_stage.position = Vector2(0, band_mid - content_mid * s)
 
 	# Kavez sa jezom gore-levo, van pahulja i dugmadi.
 	if _friend != null:

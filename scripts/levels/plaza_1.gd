@@ -18,19 +18,47 @@ const PALETTE: Array[Color] = [
 	Color(1, 0.62, 0.35),      # narandzasta
 ]
 
-## Polja skoljke: [tacke poligona]. Skoljka je lepeza sa 7 rebara
-## plus telo - dovoljno polja da bojenje traje, ne previse da zamori.
+## Polja skoljke: [tacke poligona].
+##
+## Islo je 8 polja (telo + 7 rebara) i Eva je to bojila prebrzo. Sada su
+## rebra podeljena na gornji i donji deo, plus dva bisera - 17 polja.
+## Bojenje traje duze, a slika je bogatija; svako polje je i dalje veliko
+## jer se lepeza siri ka gore.
 const FIELDS: Array = [
-	# Telo skoljke (dno).
-	[Vector2(-92, 60), Vector2(92, 60), Vector2(74, 96), Vector2(-74, 96)],
-	# Sedam rebara lepeze, od leve ka desnoj.
-	[Vector2(-92, 58), Vector2(-104, -24), Vector2(-72, -30), Vector2(-58, 58)],
-	[Vector2(-58, 58), Vector2(-72, -32), Vector2(-40, -62), Vector2(-28, 58)],
-	[Vector2(-28, 58), Vector2(-40, -64), Vector2(-14, -86), Vector2(-6, 58)],
-	[Vector2(-6, 58), Vector2(-14, -88), Vector2(14, -88), Vector2(6, 58)],
-	[Vector2(6, 58), Vector2(14, -86), Vector2(40, -64), Vector2(28, 58)],
-	[Vector2(28, 58), Vector2(40, -62), Vector2(72, -32), Vector2(58, 58)],
-	[Vector2(58, 58), Vector2(72, -30), Vector2(104, -24), Vector2(92, 58)],
+	# Telo skoljke (dno), podeljeno na dva dela.
+	[Vector2(-92, 60), Vector2(0, 60), Vector2(0, 96), Vector2(-74, 96)],
+	[Vector2(0, 60), Vector2(92, 60), Vector2(74, 96), Vector2(0, 96)],
+
+	# Sedam rebara lepeze, svako podeljeno na DONJI i GORNJI deo.
+	# Donji deo ide do y=10, gornji od y=10 do vrha rebra.
+	[Vector2(-92, 58), Vector2(-98, 10), Vector2(-66, 8), Vector2(-58, 58)],
+	[Vector2(-98, 10), Vector2(-104, -24), Vector2(-72, -30), Vector2(-66, 8)],
+
+	[Vector2(-58, 58), Vector2(-66, 8), Vector2(-36, 4), Vector2(-28, 58)],
+	[Vector2(-66, 8), Vector2(-72, -32), Vector2(-40, -62), Vector2(-36, 4)],
+
+	[Vector2(-28, 58), Vector2(-36, 4), Vector2(-10, 2), Vector2(-6, 58)],
+	[Vector2(-36, 4), Vector2(-40, -64), Vector2(-14, -86), Vector2(-10, 2)],
+
+	[Vector2(-6, 58), Vector2(-10, 2), Vector2(10, 2), Vector2(6, 58)],
+	[Vector2(-10, 2), Vector2(-14, -88), Vector2(14, -88), Vector2(10, 2)],
+
+	[Vector2(6, 58), Vector2(10, 2), Vector2(36, 4), Vector2(28, 58)],
+	[Vector2(10, 2), Vector2(14, -86), Vector2(40, -64), Vector2(36, 4)],
+
+	[Vector2(28, 58), Vector2(36, 4), Vector2(66, 8), Vector2(58, 58)],
+	[Vector2(36, 4), Vector2(40, -62), Vector2(72, -32), Vector2(66, 8)],
+
+	[Vector2(58, 58), Vector2(66, 8), Vector2(98, 10), Vector2(92, 58)],
+	[Vector2(66, 8), Vector2(72, -30), Vector2(104, -24), Vector2(98, 10)],
+
+	# Dva bisera pored skoljke - promena ritma posle uskih rebara.
+	# Osmougaonici, ne rombovi: romb od 20px je na snimku izgledao kao
+	# sitna tackica pored krupnih rebara.
+	[Vector2(-150, 74), Vector2(-140, 56), Vector2(-122, 48), Vector2(-104, 56),
+		Vector2(-96, 74), Vector2(-104, 92), Vector2(-122, 100), Vector2(-140, 92)],
+	[Vector2(96, 74), Vector2(104, 56), Vector2(122, 48), Vector2(140, 56),
+		Vector2(150, 74), Vector2(140, 92), Vector2(122, 100), Vector2(104, 92)],
 ]
 
 const ORIGIN := Vector2(40, 30)

@@ -16,13 +16,22 @@ extends MinigameBase
 
 ## Koliko parova. 6 parova = 12 karata.
 ##
-## Mreza je 4x3. Merio sam oba oblika sa kvadratnim kartama: 6x2 puni
-## sirinu (6 kolona + kolona za kavez ~ ceo viewport), pa sirina postane
-## ogranicenje; 4x3 ostavlja vise mesta po x, a kvadratna karta ne trosi
-## visinu, tako da karta ispada NAJVECA u 4x3.
-const PAIRS := 6
+## Osam parova u mrezi 4x4.
+##
+## Islo je 6 parova (4x3), ali je Eva to resavala bez muke. Osam parova
+## trazi pravo pamcenje: sa 16 karata dete mora da drzi u glavi gde je
+## sta, dok se 12 karata moglo "prevrnuti" i sistematski.
+##
+## Cetvrti red staje bez smanjivanja mreze, ali samo ako je karta NISKA.
+## Mereno (fizickih px na 390px telefonu, cilj 55):
+##   220x150 u 4x3 -> 67.0px  (staro)
+##   220x150 u 4x4 -> 55.4px  skala pada na 0.83, mreza se skuplja
+##   210x110 u 4x4 -> 64.0px  skala 1.0, karta ostaje krupna
+## Visina je ogranicenje jer je bazni viewport samo 620px, pa je karta
+## siroka a niska: sirina je ono cime prst gadja.
+const PAIRS := 8
 const COLS := 4
-const ROWS := 3
+const ROWS := 4
 
 ## Velicina karte. NAMERNO velika - telefon je primarni klijent, a
 ## detinji prst je neprecizan.
@@ -42,9 +51,10 @@ const ROWS := 3
 ## 3 reda x 200px ne staju i _fit_grid mora da smanji celu mrezu.
 ## Resenje: karta je SIROKA a niska. Sirina je ono sto prst pogadja po
 ## x, a niski redovi staju u 620px bez smanjivanja.
-##   220x150 u 4x3  -> ovde
-const CARD_W := 220.0
-const CARD_H := 150.0
+##   220x150 u 4x3  -> bilo pre 8 parova
+##   210x110 u 4x4  -> ovde (vidi merenje kod PAIRS)
+const CARD_W := 210.0
+const CARD_H := 110.0
 const GAP_X := 20.0
 const GAP_Y := 16.0
 
@@ -52,6 +62,10 @@ const GAP_Y := 16.0
 const PEEK_TIME := 0.9
 
 ## Motivi: ime + boja. Oblik crta _draw_motif po imenu.
+##
+## Osam motiva za osam parova. Svaki ima JASNO drugaciju siluetu i boju -
+## dete pamti "crvena lubenica" i "plavi leptir", ne nijansu. Dva slicna
+## motiva bi igru pretvorila u test vida, ne pamcenja.
 const MOTIFS: Array[Dictionary] = [
 	{"id": "banana", "col": Color(0.98, 0.82, 0.24)},
 	{"id": "ananas", "col": Color(0.95, 0.7, 0.2)},
@@ -59,6 +73,8 @@ const MOTIFS: Array[Dictionary] = [
 	{"id": "list", "col": Color(0.3, 0.68, 0.36)},
 	{"id": "kokos", "col": Color(0.55, 0.38, 0.24)},
 	{"id": "papagaj", "col": Color(0.35, 0.62, 0.95)},
+	{"id": "lubenica", "col": Color(0.94, 0.28, 0.36)},
+	{"id": "leptir", "col": Color(0.62, 0.44, 0.95)},
 ]
 
 ## Karta u igri.
@@ -495,6 +511,59 @@ func _draw_motif(p: Node2D, id: String, col: Color) -> void:
 			# Cuperak.
 			Draw2D.poly(p, Color(0.98, 0.75, 0.25), [
 				Vector2(-12, -32), Vector2(-6, -46), Vector2(-2, -30)])
+
+		"lubenica":
+			# Kriska: zelena kora, beli sloj, crvena sredina, semenke.
+			# Polukrug sa ravnom stranom GORE - jasno drugacija silueta
+			# od svih ostalih motiva.
+			var seg := 16
+			var kora := PackedVector2Array()
+			for i in seg + 1:
+				var a: float = PI * float(i) / float(seg)
+				kora.append(Vector2(cos(a) * 44.0, sin(a) * 44.0) + Vector2(0, -16))
+			Draw2D.poly(p, Color(0.24, 0.56, 0.28), kora)
+			var beli := PackedVector2Array()
+			for i in seg + 1:
+				var a: float = PI * float(i) / float(seg)
+				beli.append(Vector2(cos(a) * 38.0, sin(a) * 38.0) + Vector2(0, -16))
+			Draw2D.poly(p, Color(0.96, 0.98, 0.93), beli)
+			var crveni := PackedVector2Array()
+			for i in seg + 1:
+				var a: float = PI * float(i) / float(seg)
+				crveni.append(Vector2(cos(a) * 33.0, sin(a) * 33.0) + Vector2(0, -16))
+			Draw2D.poly(p, col, crveni)
+			# Semenke u dva reda, prate oblik kriske.
+			for i in 4:
+				var t := (float(i) - 1.5) * 15.0
+				_circle(p, Vector2(t, 2.0), 3.6, Color(0.16, 0.12, 0.1))
+			for i in 3:
+				var t := (float(i) - 1.0) * 16.0
+				_circle(p, Vector2(t, -13.0), 3.6, Color(0.16, 0.12, 0.1))
+
+		"leptir":
+			# Cetiri krila, telo, pipci. Simetricno i "leprsavo".
+			for side in [-1.0, 1.0]:
+				# Gornje krilo - veliko.
+				Draw2D.poly(p, col, [
+					Vector2(0, -6), Vector2(side * 40, -40),
+					Vector2(side * 44, -12), Vector2(side * 12, 0)])
+				# Donje krilo - manje i okruglije.
+				Draw2D.poly(p, Color(0.82, 0.6, 0.98), [
+					Vector2(0, 2), Vector2(side * 34, 12),
+					Vector2(side * 30, 36), Vector2(side * 8, 12)])
+				# Tacke na krilima - kao pravi leptir.
+				_circle(p, Vector2(side * 26, -22), 6.0, Color(1, 0.95, 0.5, 0.9))
+				_circle(p, Vector2(side * 20, 20), 4.0, Color(1, 0.95, 0.5, 0.8))
+			# Telo.
+			Draw2D.poly(p, Color(0.3, 0.22, 0.36), [
+				Vector2(-5, -22), Vector2(5, -22), Vector2(4, 30), Vector2(-4, 30)])
+			_circle(p, Vector2(0, -26), 8.0, Color(0.3, 0.22, 0.36))
+			# Pipci.
+			for side in [-1.0, 1.0]:
+				Draw2D.poly(p, Color(0.3, 0.22, 0.36), [
+					Vector2(side * 2, -30), Vector2(side * 16, -44),
+					Vector2(side * 18, -41), Vector2(side * 4, -28)])
+				_circle(p, Vector2(side * 17, -44), 4.0, Color(0.98, 0.8, 0.3))
 
 
 ## Pravougaonik sa zaobljenim uglovima - karta ne treba da ima ostre uglove.

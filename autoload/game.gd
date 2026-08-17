@@ -5,16 +5,27 @@ extends Node
 # --- TEZINA: ovo su brojke koje menjas kad Eva igra ---
 # Sve je namerno "lako": veliki skok, sporo padanje, puno vremena za gresku.
 
-const PLAYER_SPEED := 150.0          # brzina hodanja (px/s)
-const PLAYER_JUMP_VELOCITY := -370.0 # jacina skoka (negativno = gore)
-const PLAYER_GRAVITY_SCALE := 0.72   # <1 = sporije padanje, vise vremena u vazduhu
+## Skok je namerno JAK, jer je merenje pokazalo da je stara vrednost bila
+## pretezak za dete:
+##
+## Ranije (JUMP=-370, GS=0.72, kazna za pustanje 1.7x) skok je nosio 171px
+## SAMO ako se taster DRZI. Kad dete samo tapne - a petogodisnjak skoro
+## uvek tapne - nosio je 113px, dok su praznine u nivoima do 144px. Tap
+## dakle nije prelazio ni obicne praznine, pa je igra izgledala pokvareno.
+##
+## Sada tap nosi 194px, drzanje 224px: dete prelazi ceo nivo i bez ucenja
+## da taster treba drzati. Drzanje i dalje daje visi skok, pa se vestina
+## nagradjuje - samo nije uslov za prolaz.
+const PLAYER_SPEED := 162.0          # brzina hodanja (px/s)
+const PLAYER_JUMP_VELOCITY := -400.0 # jacina skoka (negativno = gore)
+const PLAYER_GRAVITY_SCALE := 0.64   # <1 = sporije padanje, vise vremena u vazduhu
 
 ## Coyote time: koliko dugo posle silaska sa platforme skok jos radi.
 ## Dete cesto pritisne skok tek kad je vec palo sa ivice - ovo to prasta.
-const COYOTE_TIME := 0.18
+const COYOTE_TIME := 0.25
 
 ## Jump buffer: ako pritisne skok malo pre sletanja, skok se pamti i odradi.
-const JUMP_BUFFER_TIME := 0.20
+const JUMP_BUFFER_TIME := 0.28
 
 ## Neranjivost posle udarca - dovoljno duga da dete stigne da se izmakne.
 const INVULN_TIME := 2.0

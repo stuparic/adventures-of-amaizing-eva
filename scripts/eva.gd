@@ -48,13 +48,15 @@ var _base_gravity: float = ProjectSettings.get_setting("physics/2d/default_gravi
 ## fallback na iste vrednosti kao u game.gd, da Eva radi i ako je ucitana
 ## pre autoload-a.
 
+## MORA da prati game.gd - ako se razlikuje, Eva na mapi (koja se ucitava
+## pre autoload-a) igra po drugoj fizici od Eve u nivou.
 const FALLBACK := {
-	"COYOTE_TIME": 0.18,
-	"JUMP_BUFFER_TIME": 0.20,
+	"COYOTE_TIME": 0.25,
+	"JUMP_BUFFER_TIME": 0.28,
 	"INVULN_TIME": 2.0,
-	"PLAYER_SPEED": 150.0,
-	"PLAYER_JUMP_VELOCITY": -370.0,
-	"PLAYER_GRAVITY_SCALE": 0.72,
+	"PLAYER_SPEED": 162.0,
+	"PLAYER_JUMP_VELOCITY": -400.0,
+	"PLAYER_GRAVITY_SCALE": 0.64,
 }
 
 
@@ -184,10 +186,14 @@ func _apply_gravity(delta: float) -> void:
 		velocity.y = minf(velocity.y + _base_gravity * GLIDE_GRAVITY * delta, 110.0)
 		return
 
-	# Milost 1: kad drzi skok, pada jos sporije -> skok se "produzava",
-	# a kad pusti, pada malo brze. Daje osecaj kontrole bez preciznosti.
+	# Milost 1: kad drzi skok, skok se "produzava"; kad pusti, pada malo brze.
+	#
+	# Kazna za pustanje je BLAGA (1.2, ne 1.7). Merenje je pokazalo da je sa
+	# 1.7 tap davao 113px a drzanje 171px - razlika od 51%, pa dete koje ne
+	# drzi taster nije moglo da preskoci ni obicnu prazninu. Sa 1.2 tap nosi
+	# 194px: prelazi sve, a drzanje i dalje nosi dalje.
 	if velocity.y < 0.0 and not Input.is_action_pressed("jump"):
-		g *= 1.7
+		g *= 1.2
 
 	velocity.y = minf(velocity.y + g * delta, 700.0)
 
