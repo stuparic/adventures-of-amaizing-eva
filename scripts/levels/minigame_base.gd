@@ -57,9 +57,11 @@ func win() -> void:
 	_done = true
 
 	Audio.play("meow", 0.0)
-	if not Audio.has_voice_win():
-		Audio.play("win")
-		Audio.play_win_music()
+	# Glas imenuje TOG prijatelja - isto kao u platformerima.
+	if not Audio.play_friend_voice(friend_kind):
+		if not Audio.has_voice_win():
+			Audio.play("win")
+			Audio.play_win_music()
 
 	Game.rescued_friend = _friend.friend_name() if _friend else "prijatelja"
 	Game.stop_timer()

@@ -289,6 +289,44 @@ Posle toga pokreni igru — u konzoli treba da vidis
 - Da se vrati fanfara: samo obrisi `audio/voice_win.wav` (i `.import` fajl).
 - Eva moze i sama da snimi sebe — to je cesto zabavnije od tvog glasa.
 
+### Glas po prijatelju: "Bravo Eva! Oslobodila si macu Carlija!"
+
+Osim jednog opsteg glasa (gore), igra ume da pusti **snimak za svakog
+prijatelja posebno**, sa njegovim imenom. Ima ih 33.
+
+Snima se alatom koji te vodi kroz sve recenice:
+
+```bash
+python3 tools/snimi_glas.py
+```
+
+Alat ispisuje recenicu, ti pritisnes ENTER i govoris. Posle svake mozes da
+poslusas (`p`) i ponovis (`r`), preskocis (`d`) ili prekines (`q` — sto je
+snimljeno ostaje). Traje oko 10 minuta za svih 34 (33 prijatelja + jedna
+opsta rezerva).
+
+Snimci idu u `audio/voice/<vrsta>.wav`, npr. `audio/voice/maca.wav`.
+**Nisu obavezni** i ne commituju se u repo (licni su, kao `voice_win.wav`).
+
+Kako se bira sta se pusta, po redu:
+
+1. `audio/voice/<vrsta>.wav` — snimak za tog prijatelja
+2. `audio/voice/_opste.wav` — opsta recenica ("...novog drugara!")
+3. `audio/voice_win.wav` — stari jedan glas
+4. sinteticka fanfara — ako nema nijednog snimka
+
+**Preporuka:** instaliraj `sox` (`brew install sox`) pre snimanja. Alat radi
+i sa `ffmpeg`, ali `sox` ume da skine tisinu s pocetka i kraja, pa glas ne
+"kasni" u igri.
+
+Prvi put ce macOS pitati za dozvolu za mikrofon
+(System Settings → Privacy & Security → Microphone).
+
+**Zasto ne sinteticki glas:** probali smo macOS `say` sa hrvatskim glasom
+(Lana) — jedini koji cita nasa imena. Zvuci robotski i bez emocije, a
+"bravo!" koje zvuci nezainteresovano je gore od nikakvog. Tvoj glas dete
+prepoznaje i to je poenta.
+
 ### Detalji na assetima
 
 Svi likovi i objekti su prepravljeni sa mnogo vise poligona — sitniji pikseli,

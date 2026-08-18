@@ -50,6 +50,20 @@ const VOICE_DB := -1.0
 ## Dok glas govori, muzika se utisa jos vise da ne smeta razumevanju.
 const MUSIC_DUCK_VOICE_DB := -30.0
 
+## --- GLAS PO PRIJATELJU (opciono) ---
+##
+## Ako postoji audio/voice/<vrsta>.wav, pusta se kad Eva oslobodi tog
+## prijatelja: "Bravo Eva! Oslobodila si macu Carlija!".
+##
+## Snima se alatom tools/snimi_glas.py. Fajlovi su LICNI i gitignorovani,
+## kao voice_win.wav - igra radi i bez njih.
+##
+## audio/voice/_opste.wav je rezerva: ako za nekog prijatelja nema snimka,
+## pusta se opsta recenica ("...novog drugara!").
+const VOICE_DIR := "res://audio/voice/"
+const VOICE_FALLBACK := "_opste"
+const VOICE_EXTS: Array[String] = [".wav", ".ogg", ".mp3"]
+
 var _streams: Dictionary = {}
 var _voices: Array[AudioStreamPlayer] = []
 var _voice_idx := 0
@@ -57,6 +71,10 @@ var _music: AudioStreamPlayer
 var _music_win: AudioStreamPlayer
 var _voice_win: AudioStreamPlayer
 var _has_voice_win := false
+## Glas po prijatelju: vrsta -> AudioStream. Ucitava se lenjo, na prvi
+## poziv, da start igre ne ceka 33 fajla.
+var _friend_voices: Dictionary = {}
+var _voice_friend: AudioStreamPlayer
 var _muted := false
 var _duck_tween: Tween = null
 
@@ -154,6 +172,7 @@ func _ready() -> void:
 	add_child(_music_win)
 
 	_load_voice_win()
+	_setup_friend_voice()
 	_load_mode()
 
 
@@ -190,6 +209,78 @@ func _load_voice_win() -> void:
 
 func has_voice_win() -> bool:
 	return _has_voice_win
+
+
+## --- GLAS PO PRIJATELJU ---
+
+func _setup_friend_voice() -> void:
+	# Isti bus i glasnoca kao voice_win: to je poruka detetu, mora da se
+	# cuje jasno i kad je muzika tiha.
+	_voice_friend = AudioStreamPlayer.new()
+	_voice_friend.bus = BUS_SFX
+	_voice_friend.volume_db = VOICE_DB
+	_apply_web_playback(_voice_friend)
+	add_child(_voice_friend)
+
+
+## Ucitaj snimak za jednog prijatelja. Vraca null ako ga nema.
+##
+## Lenjo: prvi poziv trazi fajl, ostali citaju iz kesa. Kesira se i
+## NEUSPEH (kao null), da se fajl ne trazi 33 puta po nivou.
+func _load_friend_voice(kind: String) -> AudioStream:
+	if _friend_voices.has(kind):
+		return _friend_voices[kind]
+
+	var found: AudioStream = null
+	for ext in VOICE_EXTS:
+		var path := VOICE_DIR + kind + ext
+		# ResourceLoader.exists() a ne load() - load() na fajl koji ne
+		# postoji ispisuje gresku u konzolu.
+		if not ResourceLoader.exists(path):
+			continue
+		var stream: AudioStream = load(path)
+		if stream == null:
+			continue
+		# Glas ne sme da se vrti u petlji.
+		if stream is AudioStreamWAV:
+			(stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_DISABLED
+		elif stream is AudioStreamOggVorbis:
+			(stream as AudioStreamOggVorbis).loop = false
+		elif stream is AudioStreamMP3:
+			(stream as AudioStreamMP3).loop = false
+		found = stream
+		break
+
+	_friend_voices[kind] = found
+	return found
+
+
+## Ima li snimak za ovog prijatelja (ili opstu rezervu)?
+func has_friend_voice(kind: String) -> bool:
+	if _load_friend_voice(kind) != null:
+		return true
+	return _load_friend_voice(VOICE_FALLBACK) != null
+
+
+## Pusti "Bravo Eva! Oslobodila si <prijatelja>!".
+##
+## Ako za tu vrstu nema snimka, pusta opstu recenicu. Ako ni nje nema,
+## vraca false i nivo pusta obicnu fanfaru.
+func play_friend_voice(kind: String) -> bool:
+	if _muted:
+		return false
+
+	var stream := _load_friend_voice(kind)
+	if stream == null:
+		stream = _load_friend_voice(VOICE_FALLBACK)
+	if stream == null:
+		return false
+
+	_voice_friend.stream = stream
+	_voice_friend.play()
+	# Utisaj muziku dok govori, pa je vrati.
+	duck_music(stream.get_length(), MUSIC_DUCK_VOICE_DB)
+	return true
 
 
 ## Pusti zvucni efekat. `name` je kljuc iz SFX_DB (bez "sfx_" prefiksa).

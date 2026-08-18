@@ -16,3 +16,7 @@ audio/voice_win.ogg
 audio/voice_win.ogg.import
 audio/voice_win.mp3
 audio/voice_win.mp3.import
+
+# Snimljeni glas po prijatelju - licni snimci, kao voice_win.
+# Pravi ih tools/snimi_glas.py. Igra radi i bez njih.
+audio/voice/

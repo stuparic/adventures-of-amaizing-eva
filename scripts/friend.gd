@@ -105,9 +105,12 @@ func _on_body(body: Node) -> void:
 	set_deferred("monitoring", false)
 
 	Audio.play("meow", 0.0)
-	if not Audio.has_voice_win():
-		Audio.play("win")
-		Audio.play_win_music()
+	# Glas imenuje TOG prijatelja ("...oslobodila si macu Carlija!").
+	# Ako snimka nema, ide stari put: opsti glas ili fanfara.
+	if not Audio.play_friend_voice(kind):
+		if not Audio.has_voice_win():
+			Audio.play("win")
+			Audio.play_win_music()
 
 	Game.rescued_friend = friend_name()
 
