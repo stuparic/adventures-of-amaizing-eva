@@ -312,9 +312,9 @@ func _add_ocean_waves(rng: RandomNumberGenerator) -> void:
 	# Ostrva se crtaju posle, u istom Scenery, pa ostaju iznad.
 	zones.z_index = Z_WATER_ZONES
 	scenery.add_child(zones)
-	for i in 30:
-		var cx := rng.randf_range(-500.0, 5200.0)
-		var cy := rng.randf_range(-200.0, 1500.0)
+	for i in 70:
+		var cx := rng.randf_range(-700.0, 6300.0)
+		var cy := rng.randf_range(-400.0, 4000.0)
 		var rw := rng.randf_range(600.0, 1400.0)
 		var rh := rng.randf_range(380.0, 860.0)
 		var pts := PackedVector2Array()
@@ -333,9 +333,9 @@ func _add_ocean_waves(rng: RandomNumberGenerator) -> void:
 	# (greben + dve senke) i NJISE se - more se krece i kad dete stoji.
 	# Animacija je tween per talas: 150 talasa x 1 tween je jeftino jer se
 	# menja samo position, bez ponovnog crtanja poligona.
-	for i in 260:
-		var p := Vector2(rng.randf_range(-500.0, 5200.0),
-			rng.randf_range(-200.0, 1500.0))
+	for i in 620:
+		var p := Vector2(rng.randf_range(-700.0, 6300.0),
+			rng.randf_range(-400.0, 4000.0))
 		# Sirina 30-70px, ne 11-26: mapa se najcesce gleda odzumirano
 		# (ceo arhipelag), a tamo je talas od 16px sirok 5px na ekranu -
 		# prakticno nevidljiv. Video na snimku celog arhipelaga.
@@ -374,9 +374,9 @@ func _add_ocean_waves(rng: RandomNumberGenerator) -> void:
 		tw.set_loops()
 
 	# --- Jata riba ---
-	for school in 12:
-		var cx := rng.randf_range(-300.0, 5000.0)
-		var cy := rng.randf_range(-100.0, 1440.0)
+	for school in 26:
+		var cx := rng.randf_range(-500.0, 6100.0)
+		var cy := rng.randf_range(-300.0, 3900.0)
 		var fish_col := Color(0.22, 0.4, 0.54, 0.42)
 		var group := Node2D.new()
 		group.position = Vector2(cx, cy)
@@ -402,9 +402,9 @@ func _add_ocean_waves(rng: RandomNumberGenerator) -> void:
 		ft.set_loops()
 
 	# --- Jedrilice: svet je naseljen ---
-	for i in 6:
-		var p := Vector2(rng.randf_range(0.0, 5000.0),
-			rng.randf_range(-100.0, 1400.0))
+	for i in 14:
+		var p := Vector2(rng.randf_range(-400.0, 6100.0),
+			rng.randf_range(-300.0, 3900.0))
 		var boat := Node2D.new()
 		boat.position = p
 		boat.z_index = Z_SAILBOATS
@@ -1137,8 +1137,10 @@ func _dot_circle(r: float, col: Color, segments := 28) -> Polygon2D:
 ## Arhipelag zauzima x: -40..4760, y: 55..1150 (mereno iz Game.ISLANDS).
 ## Dodat je pojas okeana oko toga - lepo je videti malo vode oko ostrva,
 ## ali ne beskrajno prazno plavo polje.
-const WORLD_MIN := Vector2(-360.0, -260.0)
-const WORLD_MAX := Vector2(5080.0, 1520.0)
+## Granice su prosirene kad je dodat drugi red ostrva (9 novih).
+## Mereno iz Game.ISLANDS sa plicakom 1.42x: x -200..5780, y -48..3576.
+const WORLD_MIN := Vector2(-520.0, -360.0)
+const WORLD_MAX := Vector2(6100.0, 3900.0)
 
 
 ## Drzi kameru u granicama sveta.

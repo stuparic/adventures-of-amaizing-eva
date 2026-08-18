@@ -54,6 +54,69 @@ const PALETTES := {
 		"ground2": Color(0.25, 0.21, 0.24),
 		"accent": Color(0.92, 0.42, 0.16),
 	},
+	"podvodni": {
+		"shallow": Color(0.4, 0.72, 0.82),
+		"sand": Color(0.78, 0.84, 0.8),
+		"ground": Color(0.36, 0.62, 0.66),
+		"ground2": Color(0.26, 0.48, 0.54),
+		"accent": Color(0.45, 0.85, 0.8),
+	},
+	"oblaci": {
+		"shallow": Color(0.78, 0.88, 0.96),
+		"sand": Color(0.96, 0.96, 0.99),
+		"ground": Color(0.92, 0.94, 0.99),
+		"ground2": Color(0.82, 0.86, 0.95),
+		"accent": Color(0.7, 0.8, 0.96),
+	},
+	"pecina": {
+		"shallow": Color(0.46, 0.5, 0.66),
+		"sand": Color(0.5, 0.48, 0.58),
+		"ground": Color(0.38, 0.36, 0.5),
+		"ground2": Color(0.28, 0.26, 0.4),
+		"accent": Color(0.62, 0.82, 0.95),
+	},
+	"bajka": {
+		"shallow": Color(0.6, 0.78, 0.8),
+		"sand": Color(0.88, 0.84, 0.72),
+		"ground": Color(0.46, 0.68, 0.44),
+		"ground2": Color(0.34, 0.54, 0.36),
+		"accent": Color(0.85, 0.45, 0.75),
+	},
+	"slatkisi": {
+		"shallow": Color(0.78, 0.86, 0.94),
+		"sand": Color(0.99, 0.93, 0.85),
+		"ground": Color(0.97, 0.78, 0.85),
+		"ground2": Color(0.9, 0.64, 0.75),
+		"accent": Color(0.98, 0.5, 0.62),
+	},
+	"svemir": {
+		"shallow": Color(0.3, 0.32, 0.5),
+		"sand": Color(0.56, 0.54, 0.62),
+		"ground": Color(0.42, 0.4, 0.52),
+		"ground2": Color(0.31, 0.3, 0.42),
+		"accent": Color(0.66, 0.55, 0.95),
+	},
+	"mocvara": {
+		"shallow": Color(0.44, 0.6, 0.5),
+		"sand": Color(0.7, 0.72, 0.56),
+		"ground": Color(0.42, 0.54, 0.34),
+		"ground2": Color(0.3, 0.42, 0.26),
+		"accent": Color(0.55, 0.68, 0.3),
+	},
+	"bambus": {
+		"shallow": Color(0.56, 0.78, 0.74),
+		"sand": Color(0.86, 0.86, 0.68),
+		"ground": Color(0.56, 0.72, 0.42),
+		"ground2": Color(0.44, 0.6, 0.34),
+		"accent": Color(0.72, 0.82, 0.36),
+	},
+	"rif": {
+		"shallow": Color(0.5, 0.85, 0.88),
+		"sand": Color(0.96, 0.92, 0.8),
+		"ground": Color(0.72, 0.84, 0.78),
+		"ground2": Color(0.58, 0.72, 0.7),
+		"accent": Color(0.98, 0.55, 0.6),
+	},
 }
 
 
@@ -77,7 +140,14 @@ static func draw_island(parent: Node2D, biome: String, center: Vector2,
 
 	# Gustina prati POVRSINU ostrva: na 700x470 treba ~4x vise nego na
 	# 350x230. Referenca je 300x190 (originalna velicina).
-	var density := clampf((size.x * size.y) / (300.0 * 190.0), 0.5, 5.0)
+	#
+	# Gornja granica je 2.6, ne 5.0. Kad je arhipelag narastao na 15 ostrva,
+	# mereno je 8082 Polygon2D u sceni i 37 FPS na desktopu - na telefonu
+	# bi bilo neigrivo. Razlaganje je pokazalo da 5506 poligona (76%) dolazi
+	# od ostrva, a samo 1750 od mora; ubijanje SVIH 660 tvinova nije pomoglo
+	# (37 -> 34 FPS), pa problem nije animacija nego broj cvorova.
+	# Sa 2.6 velika ostrva i dalje izgledaju puna - decor je i tako gust.
+	var density := clampf((size.x * size.y) / (300.0 * 190.0), 0.5, 2.6)
 
 	# Vegetacija i detalji po biomu.
 	match biome:
@@ -87,6 +157,15 @@ static func draw_island(parent: Node2D, biome: String, center: Vector2,
 		"pustinja": _decor_pustinja(parent, center, size, pal, rng, density)
 		"sneg":     _decor_sneg(parent, center, size, pal, rng, density)
 		"vulkan":   _decor_vulkan(parent, center, size, pal, rng, density)
+		"podvodni": _decor_podvodni(parent, center, size, pal, rng, density)
+		"oblaci":   _decor_oblaci(parent, center, size, pal, rng, density)
+		"pecina":   _decor_pecina(parent, center, size, pal, rng, density)
+		"bajka":    _decor_bajka(parent, center, size, pal, rng, density)
+		"slatkisi": _decor_slatkisi(parent, center, size, pal, rng, density)
+		"svemir":   _decor_svemir(parent, center, size, pal, rng, density)
+		"mocvara":  _decor_mocvara(parent, center, size, pal, rng, density)
+		"bambus":   _decor_bambus(parent, center, size, pal, rng, density)
+		"rif":      _decor_rif(parent, center, size, pal, rng, density)
 
 
 ## Nepravilan zatvoren oblik: jedinicni radijusi sa "wobble"-om.
@@ -476,3 +555,298 @@ static func _poly(parent: Node, col: Color, points: Variant) -> void:
 	p.color = col
 	p.polygon = points if points is PackedVector2Array else PackedVector2Array(points)
 	parent.add_child(p)
+
+
+## --- DEKOR NOVIH OSTRVA ---
+##
+## Svako ostrvo mora da se PREPOZNA sa mape i pri jakom odzumu, pa svako
+## ima drugaciju siluetu, ne samo drugu boju: kupole, oblaci, kristali,
+## pecurke, torte, rakete, trska, bambus, korali.
+
+## Podvodni grad: kupole sa mehurima, alge, potonuli stubovi.
+static func _decor_podvodni(parent: Node2D, c: Vector2, size: Vector2,
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	# Kupole - staklena zvona grada.
+	for i in int(4 * dens):
+		var p := _spot(c, size, rng, 0.6)
+		var r: float = rng.randf_range(20.0, 34.0)
+		var pts := PackedVector2Array()
+		for k in 11:
+			var a: float = PI + PI * float(k) / 10.0
+			pts.append(p + Vector2(cos(a) * r, sin(a) * r * 0.85))
+		_poly(parent, Color(0.55, 0.85, 0.88, 0.5), pts)
+		_poly(parent, Color(0.75, 0.95, 0.95, 0.35), _blob_pts(
+			p + Vector2(-r * 0.3, -r * 0.35), r * 0.28, 8))
+		# Stub ispod kupole.
+		_poly(parent, Color(0.5, 0.66, 0.7), [
+			p + Vector2(-4, 0), p + Vector2(4, 0),
+			p + Vector2(3, 12), p + Vector2(-3, 12)])
+	# Alge - talasaste trake nagore.
+	for i in int(9 * dens):
+		var p := _spot(c, size, rng, 0.8)
+		var h: float = rng.randf_range(18.0, 34.0)
+		var line := []
+		for k in 5:
+			var t := float(k) / 4.0
+			line.append(p + Vector2(sin(t * 5.0) * 6.0, -h * t))
+		_ribbon(parent, line, 4.0, Color(0.3, 0.66, 0.5, 0.9))
+	# Mehuri.
+	for i in int(10 * dens):
+		var p := _spot(c, size, rng, 0.85)
+		_blob(parent, p, rng.randf_range(2.5, 5.5), Color(1, 1, 1, 0.5))
+
+
+## Ostrvo u oblacima: slojevi oblaka, duga, lebdece stene.
+static func _decor_oblaci(parent: Node2D, c: Vector2, size: Vector2,
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	# Debeli oblaci - vise spojenih krugova.
+	for i in int(7 * dens):
+		var p := _spot(c, size, rng, 0.78)
+		var r: float = rng.randf_range(12.0, 22.0)
+		for k in 4:
+			_blob(parent, p + Vector2((float(k) - 1.5) * r * 0.7,
+				sin(float(k)) * r * 0.25), r * rng.randf_range(0.7, 1.0),
+				Color(1, 1, 1, 0.85))
+	# Duga - tri luka.
+	var rp := c + Vector2(size.x * 0.18, size.y * 0.1)
+	const RAINBOW: Array[Color] = [
+		Color(0.95, 0.5, 0.55, 0.55), Color(0.98, 0.82, 0.4, 0.55),
+		Color(0.5, 0.78, 0.9, 0.55)]
+	for band in 3:
+		var rr: float = size.x * 0.2 - float(band) * 7.0
+		var line := []
+		for k in 9:
+			var a: float = PI + PI * float(k) / 8.0
+			line.append(rp + Vector2(cos(a) * rr, sin(a) * rr * 0.6))
+		_ribbon(parent, line, 6.0, RAINBOW[band])
+	# Lebdece stene ispod oblaka.
+	for i in int(4 * dens):
+		var p := _spot(c, size, rng, 0.7)
+		_rock(parent, p, rng.randf_range(6.0, 11.0), Color(0.72, 0.76, 0.86), rng)
+
+
+## Kristalna pecina: kristali, staklaste barice, tamne stene.
+static func _decor_pecina(parent: Node2D, c: Vector2, size: Vector2,
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	# Kristali - siljate prizme, po dva-tri u grupi.
+	const CRYSTAL: Array[Color] = [
+		Color(0.6, 0.82, 0.96), Color(0.78, 0.66, 0.96), Color(0.55, 0.95, 0.88)]
+	for i in int(10 * dens):
+		var p := _spot(c, size, rng, 0.76)
+		var col: Color = CRYSTAL[rng.randi_range(0, 2)]
+		for k in rng.randi_range(2, 3):
+			var off := Vector2(float(k) * rng.randf_range(6.0, 11.0) - 8.0, 0)
+			var h: float = rng.randf_range(14.0, 26.0)
+			var w: float = rng.randf_range(4.0, 7.0)
+			_poly(parent, col, [
+				p + off + Vector2(-w, 0), p + off + Vector2(0, -h),
+				p + off + Vector2(w, 0)])
+			# Svetliji greben - kristal se sjaji.
+			_poly(parent, Color(1, 1, 1, 0.45), [
+				p + off + Vector2(-w * 0.3, 0), p + off + Vector2(0, -h),
+				p + off + Vector2(w * 0.1, 0)])
+	# Tamne stene.
+	for i in int(6 * dens):
+		var p := _spot(c, size, rng, 0.84)
+		_rock(parent, p, rng.randf_range(6.0, 13.0), Color(0.3, 0.28, 0.4), rng)
+	# Barica koja odbija svetlo.
+	var lp := c + Vector2(-size.x * 0.2, size.y * 0.18)
+	_poly(parent, Color(0.45, 0.7, 0.9, 0.6), _blob_pts(lp, size.x * 0.11, 12))
+
+
+## Carobna suma: velike pecurke, svici, cvetne staze.
+static func _decor_bajka(parent: Node2D, c: Vector2, size: Vector2,
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	# Pecurke - crvena kapa sa tackama, bela stabljika.
+	for i in int(8 * dens):
+		var p := _spot(c, size, rng, 0.74)
+		var s: float = rng.randf_range(0.8, 1.4)
+		_poly(parent, Color(0.98, 0.97, 0.92), [
+			p + Vector2(-3 * s, 0), p + Vector2(3 * s, 0),
+			p + Vector2(2.4 * s, -9 * s), p + Vector2(-2.4 * s, -9 * s)])
+		var cap := PackedVector2Array()
+		for k in 9:
+			var a: float = PI + PI * float(k) / 8.0
+			cap.append(p + Vector2(0, -8 * s) + Vector2(cos(a) * 10 * s, sin(a) * 7 * s))
+		_poly(parent, Color(0.92, 0.3, 0.36), cap)
+		for k in 3:
+			_blob(parent, p + Vector2((float(k) - 1) * 4.0 * s, -11 * s),
+				1.7 * s, Color(1, 1, 1, 0.9))
+	# Drvece sa ljubicastim krosnjama - bajkovito, ne obicno zeleno.
+	for i in int(5 * dens):
+		var p := _spot(c, size, rng, 0.66)
+		_tree_round(parent, p, rng.randf_range(0.9, 1.3),
+			Color(0.68, 0.4, 0.72), Color(0.82, 0.55, 0.85), rng)
+	# Svici.
+	for i in int(12 * dens):
+		var p := _spot(c, size, rng, 0.86)
+		_blob(parent, p, rng.randf_range(1.6, 3.0), Color(1, 0.97, 0.55, 0.85))
+
+
+## Ostrvo slatkisa: torte, lizalice, poliv od glazure.
+static func _decor_slatkisi(parent: Node2D, c: Vector2, size: Vector2,
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	# Torte - troslojne, sa visnjom.
+	for i in int(5 * dens):
+		var p := _spot(c, size, rng, 0.66)
+		var w: float = rng.randf_range(12.0, 20.0)
+		_poly(parent, Color(0.86, 0.6, 0.42), [
+			p + Vector2(-w, 0), p + Vector2(w, 0),
+			p + Vector2(w * 0.85, -7), p + Vector2(-w * 0.85, -7)])
+		_poly(parent, Color(0.99, 0.94, 0.88), [
+			p + Vector2(-w * 0.85, -7), p + Vector2(w * 0.85, -7),
+			p + Vector2(w * 0.7, -13), p + Vector2(-w * 0.7, -13)])
+		_poly(parent, Color(0.97, 0.55, 0.68), [
+			p + Vector2(-w * 0.7, -13), p + Vector2(w * 0.7, -13),
+			p + Vector2(w * 0.55, -19), p + Vector2(-w * 0.55, -19)])
+		_blob(parent, p + Vector2(0, -22), 3.4, Color(0.9, 0.2, 0.3))
+	# Lizalice - spirala na stapicu.
+	for i in int(7 * dens):
+		var p := _spot(c, size, rng, 0.78)
+		_poly(parent, Color(0.98, 0.98, 0.95), [
+			p + Vector2(-1.4, 0), p + Vector2(1.4, 0),
+			p + Vector2(1.4, -14), p + Vector2(-1.4, -14)])
+		_blob(parent, p + Vector2(0, -18), rng.randf_range(5.0, 8.0),
+			Color(0.98, 0.45, 0.6) if i % 2 == 0 else Color(0.55, 0.8, 0.95))
+		_blob(parent, p + Vector2(-1.5, -19.5), 2.2, Color(1, 1, 1, 0.7))
+	# Bombone razbacane.
+	for i in int(10 * dens):
+		var p := _spot(c, size, rng, 0.86)
+		_blob(parent, p, rng.randf_range(2.2, 4.0),
+			Color(0.99, 0.8, 0.35) if i % 3 == 0 else Color(0.7, 0.5, 0.95))
+
+
+## Zvezdana stanica: rakete, krateri, zvezde, prstenasta planeta.
+static func _decor_svemir(parent: Node2D, c: Vector2, size: Vector2,
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	# Krateri.
+	for i in int(8 * dens):
+		var p := _spot(c, size, rng, 0.84)
+		var r: float = rng.randf_range(7.0, 15.0)
+		_blob(parent, p, r, Color(0.32, 0.31, 0.42))
+		_blob(parent, p + Vector2(0, -1.5), r * 0.7, Color(0.46, 0.44, 0.56))
+	# Rakete - trup, nos, krilca.
+	for i in int(3 * dens):
+		var p := _spot(c, size, rng, 0.6)
+		_poly(parent, Color(0.95, 0.96, 0.99), [
+			p + Vector2(-6, 0), p + Vector2(6, 0),
+			p + Vector2(5, -18), p + Vector2(-5, -18)])
+		_poly(parent, Color(0.9, 0.35, 0.4), [
+			p + Vector2(-5, -18), p + Vector2(5, -18), p + Vector2(0, -30)])
+		_poly(parent, Color(0.75, 0.78, 0.88), [
+			p + Vector2(-6, 0), p + Vector2(-11, 7), p + Vector2(-6, -6)])
+		_poly(parent, Color(0.75, 0.78, 0.88), [
+			p + Vector2(6, 0), p + Vector2(11, 7), p + Vector2(6, -6)])
+		_blob(parent, p + Vector2(0, -13), 2.8, Color(0.55, 0.85, 0.98))
+	# Zvezde.
+	for i in int(14 * dens):
+		var p := _spot(c, size, rng, 0.9)
+		var r: float = rng.randf_range(1.8, 3.6)
+		_poly(parent, Color(1, 1, 0.9, 0.9), [
+			p + Vector2(0, -r * 2.2), p + Vector2(r * 0.7, 0),
+			p + Vector2(0, r * 2.2), p + Vector2(-r * 0.7, 0)])
+
+
+## Zelena mocvara: trska, lokvanji, mutna voda, panjevi.
+static func _decor_mocvara(parent: Node2D, c: Vector2, size: Vector2,
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	# Mutne barice - vise njih, mocvara je vodena.
+	for i in 3:
+		var lp := c + Vector2(size.x * (0.24 * float(i) - 0.24),
+			size.y * (0.12 + 0.1 * float(i % 2)))
+		_poly(parent, Color(0.34, 0.46, 0.38, 0.8),
+			_blob_pts(lp, size.x * rng.randf_range(0.1, 0.15), 13))
+		# Lokvanji na barici.
+		for k in 3:
+			var q := lp + Vector2(rng.randf_range(-26.0, 26.0),
+				rng.randf_range(-14.0, 14.0))
+			_blob(parent, q, rng.randf_range(4.0, 7.0), Color(0.42, 0.66, 0.36))
+			_blob(parent, q + Vector2(1.5, -1.0), 2.0, Color(0.95, 0.8, 0.9))
+	# Trska - tanke stabljike sa smedjim vrhom.
+	for i in int(14 * dens):
+		var p := _spot(c, size, rng, 0.84)
+		var h: float = rng.randf_range(14.0, 26.0)
+		_poly(parent, Color(0.46, 0.58, 0.3), [
+			p + Vector2(-1.2, 0), p + Vector2(1.2, 0),
+			p + Vector2(1.0, -h), p + Vector2(-1.0, -h)])
+		_poly(parent, Color(0.52, 0.36, 0.2), [
+			p + Vector2(-2.2, -h), p + Vector2(2.2, -h),
+			p + Vector2(1.6, -h - 7.0), p + Vector2(-1.6, -h - 7.0)])
+	# Panjevi.
+	for i in int(4 * dens):
+		var p := _spot(c, size, rng, 0.72)
+		_poly(parent, Color(0.4, 0.3, 0.2), [
+			p + Vector2(-7, 0), p + Vector2(7, 0),
+			p + Vector2(6, -9), p + Vector2(-6, -9)])
+		_blob(parent, p + Vector2(0, -9), 6.2, Color(0.52, 0.4, 0.26))
+
+
+## Bambusov gaj: visoke bambusove stabljike sa kolencima, kamene staze.
+static func _decor_bambus(parent: Node2D, c: Vector2, size: Vector2,
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	# Bambus - grupe visokih stabljika sa vidljivim kolencima.
+	for i in int(9 * dens):
+		var p := _spot(c, size, rng, 0.76)
+		for k in rng.randi_range(2, 4):
+			var x := p.x + float(k) * rng.randf_range(5.0, 9.0) - 8.0
+			var h: float = rng.randf_range(24.0, 44.0)
+			var w: float = rng.randf_range(1.8, 3.0)
+			_poly(parent, Color(0.5, 0.68, 0.32), [
+				Vector2(x - w, p.y), Vector2(x + w, p.y),
+				Vector2(x + w * 0.8, p.y - h), Vector2(x - w * 0.8, p.y - h)])
+			# Kolenca - tamnije crtice.
+			var seg := int(h / 9.0)
+			for j in seg:
+				var yy := p.y - float(j + 1) * 9.0
+				_poly(parent, Color(0.36, 0.52, 0.24), [
+					Vector2(x - w, yy), Vector2(x + w, yy),
+					Vector2(x + w, yy + 1.4), Vector2(x - w, yy + 1.4)])
+			# Listovi na vrhu.
+			for j in 2:
+				var side := 1.0 if j == 0 else -1.0
+				_poly(parent, Color(0.44, 0.64, 0.28), [
+					Vector2(x, p.y - h), Vector2(x + side * 10.0, p.y - h - 5.0),
+					Vector2(x + side * 3.0, p.y - h + 3.0)])
+	# Kamena staza.
+	for i in int(6 * dens):
+		var p := _spot(c, size, rng, 0.82)
+		_rock(parent, p, rng.randf_range(4.0, 8.0), Color(0.66, 0.66, 0.6), rng)
+
+
+## Koralni rif: koralne grane, morske zvezde, skoljke, bistra voda.
+static func _decor_rif(parent: Node2D, c: Vector2, size: Vector2,
+		pal: Dictionary, rng: RandomNumberGenerator, dens: float) -> void:
+	# Korali - razgranati, u jarkim bojama.
+	const CORAL: Array[Color] = [
+		Color(0.98, 0.52, 0.58), Color(0.98, 0.72, 0.4),
+		Color(0.68, 0.5, 0.92), Color(0.45, 0.82, 0.75)]
+	for i in int(11 * dens):
+		var p := _spot(c, size, rng, 0.78)
+		var col: Color = CORAL[rng.randi_range(0, 3)]
+		var h: float = rng.randf_range(12.0, 22.0)
+		# Stablo.
+		_poly(parent, col, [
+			p + Vector2(-2.6, 0), p + Vector2(2.6, 0),
+			p + Vector2(2.0, -h), p + Vector2(-2.0, -h)])
+		# Grane na obe strane.
+		for k in 3:
+			var t := 0.35 + float(k) * 0.22
+			var side := 1.0 if k % 2 == 0 else -1.0
+			var b: Vector2 = p + Vector2(0, -h * t)
+			_poly(parent, col, [
+				b, b + Vector2(side * 9.0, -6.0 - float(k)),
+				b + Vector2(side * 6.5, -1.0)])
+	# Morske zvezde.
+	for i in int(5 * dens):
+		var p := _spot(c, size, rng, 0.84)
+		var r: float = rng.randf_range(5.0, 8.0)
+		var pts := PackedVector2Array()
+		for k in 10:
+			var a := TAU * float(k) / 10.0 - PI * 0.5
+			var rr: float = r if k % 2 == 0 else r * 0.42
+			pts.append(p + Vector2(cos(a), sin(a)) * rr)
+		_poly(parent, Color(0.98, 0.62, 0.3), pts)
+	# Skoljke i pesak.
+	for i in int(7 * dens):
+		var p := _spot(c, size, rng, 0.88)
+		_blob(parent, p, rng.randf_range(2.4, 4.2), Color(0.99, 0.92, 0.85, 0.9))

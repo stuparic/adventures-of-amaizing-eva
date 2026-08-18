@@ -20,10 +20,21 @@ const EvaScene := preload("res://scenes/eva.tscn")
 const BudScene := preload("res://scenes/budzumbora.tscn")
 
 ## Svi prijatelji po redu nivoa - isti redosled kao u Game.LEVELS.
+## Svi prijatelji, u redu u kom se spasavaju.
+##
+## MORA da prati Game.LEVELS: svaki nivo ima svog prijatelja i finale ih
+## prikazuje sve. Ako se doda nivo a ovo se ne dopuni, novi prijatelj
+## nedostaje na zavrsnoj slici. Provereno testom koji uporedjuje ova dva
+## spiska.
 const ALL_FRIENDS: Array[String] = [
 	"maca", "zeka", "veverica", "delfin", "ptica",
 	"panda", "koala", "kornjaca", "lisica", "sova",
 	"pingvin", "jez", "macak", "kuca",
+	# Drugi red arhipelaga.
+	"hobotnica", "morskikonj", "labud", "zmaj", "slepimis", "krtica",
+	"jelen", "vila", "medvedic", "vevericaB", "vanzemaljac", "robot",
+	"dabar", "vidra", "crvenapanda", "zmajcic", "mornarka", "rakic",
+	"feniks",
 ]
 
 var _sky: ColorRect

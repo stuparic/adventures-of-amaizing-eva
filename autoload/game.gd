@@ -62,6 +62,36 @@ const ISLANDS: Array[Dictionary] = [
 	 "pos": Vector2(3560, 880),  "size": Vector2(760, 510)},
 	{"id": "vulkan",   "name": "Vatrena gora",    "biome": "vulkan",
 	 "pos": Vector2(4400, 340),  "size": Vector2(720, 500)},
+
+	# --- Drugi red arhipelaga ---
+	#
+	# Novih 9 ostrva ide u DRUGI RED ispod prvog, ne u nastavku linije: u
+	# jednom redu bi mapa bila koridor od ~12000px, sto je na telefonu
+	# neupotrebljivo. Lanac zato ide desno do "podvodni", pa se vraca
+	# unazad, pa spusta - kao zmija.
+	#
+	# Razmaci su MERENI prema postojecim ostrvima: u normalizovanoj metrici
+	# (1.0 = ivice se dodiruju) postojeci susedi su na 1.41-1.59, a ovde
+	# nijedan par nije blizi od 1.41. Prva verzija je imala povratni red
+	# previse visoko (dzungla-slatkisi na 0.64) i ostrva su se preklapala.
+	{"id": "podvodni", "name": "Podvodni grad",    "biome": "podvodni",
+	 "pos": Vector2(5240, 900),  "size": Vector2(760, 510)},
+	{"id": "oblaci",   "name": "Ostrvo u oblacima", "biome": "oblaci",
+	 "pos": Vector2(4640, 1500), "size": Vector2(760, 500)},
+	{"id": "pecina",   "name": "Kristalna pećina", "biome": "pecina",
+	 "pos": Vector2(3800, 2040), "size": Vector2(780, 520)},
+	{"id": "bajka",    "name": "Čarobna šuma",     "biome": "bajka",
+	 "pos": Vector2(2960, 1500), "size": Vector2(760, 500)},
+	{"id": "slatkisi", "name": "Ostrvo slatkiša",  "biome": "slatkisi",
+	 "pos": Vector2(2120, 2040), "size": Vector2(780, 520)},
+	{"id": "svemir",   "name": "Zvezdana stanica", "biome": "svemir",
+	 "pos": Vector2(1280, 1500), "size": Vector2(760, 500)},
+	{"id": "mocvara",  "name": "Zelena močvara",   "biome": "mocvara",
+	 "pos": Vector2(440, 2040),  "size": Vector2(780, 520)},
+	{"id": "bambus",   "name": "Bambusov gaj",     "biome": "bambus",
+	 "pos": Vector2(1050, 2740), "size": Vector2(780, 520)},
+	{"id": "rif",      "name": "Koralni rif",      "biome": "rif",
+	 "pos": Vector2(1950, 3220), "size": Vector2(760, 500)},
 ]
 
 ## NIVOI. `island` je id ostrva; `pos` je pozicija tacke.
@@ -134,6 +164,82 @@ const LEVELS: Array[Dictionary] = [
 	{"id": "vulkan_2", "name": "Vrh vulkana", "scene": "res://scenes/levels/vulkan_2.tscn",
 	 "island": "vulkan", "pos": Vector2(4580, 420), "kind": "platform",
 	 "friend": "kuca"},
+	# Vulkan je bio jedino ostrvo bez mini-igre - dodata da svako ostrvo
+	# ima i jednu, kao na ostalim ostrvima.
+	{"id": "vulkan_3", "name": "Ponovi vatru", "scene": "res://scenes/levels/vulkan_3.tscn",
+	 "island": "vulkan", "pos": Vector2(4340, 480), "kind": "sequence",
+	 "friend": "feniks"},
+	# --- Podvodni grad ---
+	{"id": "podvodni_1", "name": "Potonuli grad", "scene": "res://scenes/levels/podvodni_1.tscn",
+	 "island": "podvodni", "pos": Vector2(5070, 840), "kind": "platform",
+	 "friend": "hobotnica"},
+	{"id": "podvodni_2", "name": "Uklopi oblike", "scene": "res://scenes/levels/podvodni_2.tscn",
+	 "island": "podvodni", "pos": Vector2(5410, 1010), "kind": "shapes",
+	 "friend": "morskikonj"},
+
+	# --- Ostrvo u oblacima ---
+	{"id": "oblaci_1", "name": "Skok po oblacima", "scene": "res://scenes/levels/oblaci_1.tscn",
+	 "island": "oblaci", "pos": Vector2(4470, 1440), "kind": "platform",
+	 "friend": "labud"},
+	{"id": "oblaci_2", "name": "Ponovi redosled", "scene": "res://scenes/levels/oblaci_2.tscn",
+	 "island": "oblaci", "pos": Vector2(4810, 1610), "kind": "sequence",
+	 "friend": "zmaj"},
+
+	# --- Kristalna pećina ---
+	{"id": "pecina_1", "name": "Mračni hodnik", "scene": "res://scenes/levels/pecina_1.tscn",
+	 "island": "pecina", "pos": Vector2(3630, 1980), "kind": "platform",
+	 "friend": "slepimis"},
+	{"id": "pecina_2", "name": "Nađi različito", "scene": "res://scenes/levels/pecina_2.tscn",
+	 "island": "pecina", "pos": Vector2(3970, 2150), "kind": "odd",
+	 "friend": "krtica"},
+
+	# --- Čarobna šuma ---
+	{"id": "bajka_1", "name": "Pečurke i vile", "scene": "res://scenes/levels/bajka_1.tscn",
+	 "island": "bajka", "pos": Vector2(2790, 1440), "kind": "platform",
+	 "friend": "jelen"},
+	{"id": "bajka_2", "name": "Prva glasa", "scene": "res://scenes/levels/bajka_2.tscn",
+	 "island": "bajka", "pos": Vector2(3130, 1610), "kind": "letters",
+	 "friend": "vila"},
+
+	# --- Ostrvo slatkiša ---
+	{"id": "slatkisi_1", "name": "Kolač i karamela", "scene": "res://scenes/levels/slatkisi_1.tscn",
+	 "island": "slatkisi", "pos": Vector2(1950, 1980), "kind": "platform",
+	 "friend": "medvedic"},
+	{"id": "slatkisi_2", "name": "Saberi bombone", "scene": "res://scenes/levels/slatkisi_2.tscn",
+	 "island": "slatkisi", "pos": Vector2(2290, 2150), "kind": "addition",
+	 "friend": "vevericaB"},
+
+	# --- Zvezdana stanica ---
+	{"id": "svemir_1", "name": "Skok bez gravitacije", "scene": "res://scenes/levels/svemir_1.tscn",
+	 "island": "svemir", "pos": Vector2(1110, 1440), "kind": "platform",
+	 "friend": "vanzemaljac"},
+	{"id": "svemir_2", "name": "Lavirint do rakete", "scene": "res://scenes/levels/svemir_2.tscn",
+	 "island": "svemir", "pos": Vector2(1450, 1610), "kind": "maze",
+	 "friend": "robot"},
+
+	# --- Zelena močvara ---
+	{"id": "mocvara_1", "name": "Preko trske", "scene": "res://scenes/levels/mocvara_1.tscn",
+	 "island": "mocvara", "pos": Vector2(270, 1980), "kind": "platform",
+	 "friend": "dabar"},
+	{"id": "mocvara_2", "name": "Uklopi oblike 2", "scene": "res://scenes/levels/mocvara_2.tscn",
+	 "island": "mocvara", "pos": Vector2(610, 2150), "kind": "shapes",
+	 "friend": "vidra"},
+
+	# --- Bambusov gaj ---
+	{"id": "bambus_1", "name": "Uz bambus", "scene": "res://scenes/levels/bambus_1.tscn",
+	 "island": "bambus", "pos": Vector2(880, 2680), "kind": "platform",
+	 "friend": "crvenapanda"},
+	{"id": "bambus_2", "name": "Ponovi melodiju", "scene": "res://scenes/levels/bambus_2.tscn",
+	 "island": "bambus", "pos": Vector2(1220, 2850), "kind": "sequence",
+	 "friend": "zmajcic"},
+
+	# --- Koralni rif ---
+	{"id": "rif_1", "name": "Kroz koral", "scene": "res://scenes/levels/rif_1.tscn",
+	 "island": "rif", "pos": Vector2(1780, 3160), "kind": "platform",
+	 "friend": "mornarka"},
+	{"id": "rif_2", "name": "Nađi različito 2", "scene": "res://scenes/levels/rif_2.tscn",
+	 "island": "rif", "pos": Vector2(2120, 3330), "kind": "odd",
+	 "friend": "rakic"},
 ]
 
 ## Koji su nivoi zavrseni - kljuc je `id` iz LEVELS.
