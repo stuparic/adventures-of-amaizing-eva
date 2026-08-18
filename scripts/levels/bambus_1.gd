@@ -123,6 +123,20 @@ func _build_checkpoints() -> void:
 ## Pozadina nivoa. Ostrvo na mapi crta BiomeArt; ovo je scenografija IZA
 ## platformi, pa je namerno blago i bez jarkih boja - inace se platforme
 ## izgube u sarenilu.
+##
+## VISINE SU MERENE. Kamera prati Evu i pokazuje samo y -73..+73 na
+## telefonu, -136..+136 na desktopu (Eva je na y=0). Nivo se uspinje do
+## y=-290, pa je koristan opseg priblizno -330..+60.
+##
+## Prva verzija je crtala po y -720..+80 (kao da je kadar visok 800px) i
+## skoro se NISTA nije videlo - kristali i planete su bili iznad kadra.
+## Zato: ono sto raste iz zemlje ide od y=60 nagore, a ono sto "visi u
+## vazduhu" ide u opseg -300..-40, gde kamera zaista gleda.
+##
+## Ono sto raste iz zemlje vezano je za y=6, ne y=60: tlo je Rect2 koje
+## POCINJE na y=0 (debelo 60px), pa je njegova gornja ivica na nuli.
+## Dekor na y=60 zavrsi na DNU bloka tla i ne vidi se - to je prva verzija
+## i radila pogresno. Radni nivo sneg_1 iz istog razloga koristi y=50.
 func _draw_bg(_lvl: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 22359
@@ -133,23 +147,24 @@ func _draw_bg(_lvl: Node) -> void:
 
 	# Svetlo zelena izmaglica.
 	Draw2D.poly(bg, Color(0.55, 0.72, 0.42, 0.24), [
-		Vector2(-100, -640), Vector2(3200, -640),
+		Vector2(-100, -340), Vector2(3200, -340),
 		Vector2(3200, 80), Vector2(-100, 80)])
-	# Bambus u tri sloja - gusta sumica.
-	const B_ALPHA: Array[float] = [0.85, 0.6, 0.4]
+
+	# Bambus u tri sloja - visok, iz zemlje. Ovo je glavni motiv nivoa.
+	const B_ALPHA: Array[float] = [0.85, 0.6, 0.42]
 	for layer_i in 3:
 		var alpha: float = B_ALPHA[layer_i]
-		for i in 26:
+		for i in 30:
 			var x := rng.randf_range(-60.0, 3160.0)
-			var h := rng.randf_range(180.0, 480.0) * (1.0 - float(layer_i) * 0.2)
+			var h: float = rng.randf_range(140.0, 340.0) * (1.0 - float(layer_i) * 0.18)
 			var w := rng.randf_range(5.0, 10.0)
 			Draw2D.poly(bg, Color(0.46, 0.64, 0.3, alpha), [
-				Vector2(x - w, 60), Vector2(x + w, 60),
-				Vector2(x + w * 0.8, 60 - h), Vector2(x - w * 0.8, 60 - h)])
+				Vector2(x - w, 6), Vector2(x + w, 6),
+				Vector2(x + w * 0.8, 6 - h), Vector2(x - w * 0.8, 6 - h)])
 			# Kolenca.
-			var seg := int(h / 44.0)
+			var seg := int(h / 40.0)
 			for j in seg:
-				var yy := 60.0 - float(j + 1) * 44.0
+				var yy := 6.0 - float(j + 1) * 40.0
 				Draw2D.poly(bg, Color(0.34, 0.5, 0.22, alpha), [
 					Vector2(x - w, yy), Vector2(x + w, yy),
 					Vector2(x + w, yy + 5.0), Vector2(x - w, yy + 5.0)])
@@ -157,7 +172,13 @@ func _draw_bg(_lvl: Node) -> void:
 			for j in 3:
 				var side := 1.0 if j % 2 == 0 else -1.0
 				Draw2D.poly(bg, Color(0.42, 0.62, 0.26, alpha), [
-					Vector2(x, 60 - h + float(j) * 18.0),
-					Vector2(x + side * 40.0, 60 - h - 14.0 + float(j) * 18.0),
-					Vector2(x + side * 12.0, 60 - h + 10.0 + float(j) * 18.0)])
+					Vector2(x, 6 - h + float(j) * 16.0),
+					Vector2(x + side * 36.0, 6 - h - 12.0 + float(j) * 16.0),
+					Vector2(x + side * 11.0, 6 - h + 9.0 + float(j) * 16.0)])
 
+	# Latice u vazduhu.
+	for i in 64:
+		var x := rng.randf_range(-60.0, 3160.0)
+		var y := rng.randf_range(-290.0, 30.0)
+		Draw2D.circle(bg, Vector2(x, y), rng.randf_range(2.5, 4.5),
+			Color(0.95, 0.9, 0.6, 0.5))

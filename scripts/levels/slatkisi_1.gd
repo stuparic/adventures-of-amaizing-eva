@@ -123,6 +123,20 @@ func _build_checkpoints() -> void:
 ## Pozadina nivoa. Ostrvo na mapi crta BiomeArt; ovo je scenografija IZA
 ## platformi, pa je namerno blago i bez jarkih boja - inace se platforme
 ## izgube u sarenilu.
+##
+## VISINE SU MERENE. Kamera prati Evu i pokazuje samo y -73..+73 na
+## telefonu, -136..+136 na desktopu (Eva je na y=0). Nivo se uspinje do
+## y=-290, pa je koristan opseg priblizno -330..+60.
+##
+## Prva verzija je crtala po y -720..+80 (kao da je kadar visok 800px) i
+## skoro se NISTA nije videlo - kristali i planete su bili iznad kadra.
+## Zato: ono sto raste iz zemlje ide od y=60 nagore, a ono sto "visi u
+## vazduhu" ide u opseg -300..-40, gde kamera zaista gleda.
+##
+## Ono sto raste iz zemlje vezano je za y=6, ne y=60: tlo je Rect2 koje
+## POCINJE na y=0 (debelo 60px), pa je njegova gornja ivica na nuli.
+## Dekor na y=60 zavrsi na DNU bloka tla i ne vidi se - to je prva verzija
+## i radila pogresno. Radni nivo sneg_1 iz istog razloga koristi y=50.
 func _draw_bg(_lvl: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 21348
@@ -133,36 +147,41 @@ func _draw_bg(_lvl: Node) -> void:
 
 	# Roze nebo.
 	Draw2D.poly(bg, Color(0.99, 0.82, 0.88, 0.4), [
-		Vector2(-100, -640), Vector2(3200, -640),
+		Vector2(-100, -340), Vector2(3200, -340),
 		Vector2(3200, 80), Vector2(-100, 80)])
-	# Torte u daljini kao brda.
-	for i in 12:
-		var x := rng.randf_range(-100.0, 3200.0)
-		var w := rng.randf_range(90.0, 200.0)
-		var h := rng.randf_range(70.0, 150.0)
-		Draw2D.poly(bg, Color(0.9, 0.7, 0.55, 0.55), [
-			Vector2(x - w, 60), Vector2(x + w, 60),
-			Vector2(x + w * 0.85, 60 - h * 0.5),
-			Vector2(x - w * 0.85, 60 - h * 0.5)])
-		Draw2D.poly(bg, Color(0.99, 0.94, 0.9, 0.6), [
-			Vector2(x - w * 0.85, 60 - h * 0.5), Vector2(x + w * 0.85, 60 - h * 0.5),
-			Vector2(x + w * 0.7, 60 - h), Vector2(x - w * 0.7, 60 - h)])
-		Draw2D.circle(bg, Vector2(x, 60 - h - 12.0), 14.0,
-			Color(0.9, 0.25, 0.35, 0.7))
-	# Lizalice.
-	for i in 18:
-		var x := rng.randf_range(-60.0, 3160.0)
-		var hh := rng.randf_range(50.0, 120.0)
-		Draw2D.poly(bg, Color(0.98, 0.98, 0.95, 0.7), [
-			Vector2(x - 3, 60), Vector2(x + 3, 60),
-			Vector2(x + 3, 60 - hh), Vector2(x - 3, 60 - hh)])
-		Draw2D.circle(bg, Vector2(x, 60 - hh - 16.0), 18.0,
-			Color(0.98, 0.45, 0.6, 0.75) if i % 2 == 0
-			else Color(0.55, 0.8, 0.95, 0.75))
-	# Bombone u vazduhu.
-	for i in 26:
-		var x := rng.randf_range(-60.0, 3160.0)
-		var y := rng.randf_range(-500.0, 20.0)
-		Draw2D.circle(bg, Vector2(x, y), rng.randf_range(4.0, 9.0),
-			Color(0.99, 0.8, 0.35, 0.6))
 
+	# Torte kao brda - iz zemlje.
+	for i in 14:
+		var x := rng.randf_range(-100.0, 3200.0)
+		var w := rng.randf_range(70.0, 160.0)
+		var h := rng.randf_range(60.0, 130.0)
+		Draw2D.poly(bg, Color(0.9, 0.7, 0.55, 0.55), [
+			Vector2(x - w, 6), Vector2(x + w, 6),
+			Vector2(x + w * 0.85, 6 - h * 0.5),
+			Vector2(x - w * 0.85, 6 - h * 0.5)])
+		Draw2D.poly(bg, Color(0.99, 0.94, 0.9, 0.6), [
+			Vector2(x - w * 0.85, 6 - h * 0.5), Vector2(x + w * 0.85, 6 - h * 0.5),
+			Vector2(x + w * 0.7, 6 - h), Vector2(x - w * 0.7, 6 - h)])
+		Draw2D.circle(bg, Vector2(x, 6 - h - 12.0), 14.0,
+			Color(0.9, 0.25, 0.35, 0.7))
+
+	# Lizalice - na stapicu iz zemlje.
+	for i in 22:
+		var x := rng.randf_range(-60.0, 3160.0)
+		var hh := rng.randf_range(50.0, 130.0)
+		Draw2D.poly(bg, Color(0.98, 0.98, 0.95, 0.75), [
+			Vector2(x - 3, 6), Vector2(x + 3, 6),
+			Vector2(x + 3, 6 - hh), Vector2(x - 3, 6 - hh)])
+		Draw2D.circle(bg, Vector2(x, 6 - hh - 16.0), 18.0,
+			Color(0.98, 0.45, 0.6, 0.8) if i % 2 == 0
+			else Color(0.55, 0.8, 0.95, 0.8))
+		Draw2D.circle(bg, Vector2(x - 5, 6 - hh - 21.0), 6.0,
+			Color(1, 1, 1, 0.55))
+
+	# Bombone u vazduhu - u vidljivom opsegu.
+	for i in 90:
+		var x := rng.randf_range(-60.0, 3160.0)
+		var y := rng.randf_range(-300.0, 30.0)
+		Draw2D.circle(bg, Vector2(x, y), rng.randf_range(4.0, 9.0),
+			Color(0.99, 0.8, 0.35, 0.6) if i % 3 == 0
+			else Color(0.7, 0.5, 0.95, 0.55))

@@ -126,6 +126,20 @@ func _build_checkpoints() -> void:
 ## Pozadina nivoa. Ostrvo na mapi crta BiomeArt; ovo je scenografija IZA
 ## platformi, pa je namerno blago i bez jarkih boja - inace se platforme
 ## izgube u sarenilu.
+##
+## VISINE SU MERENE. Kamera prati Evu i pokazuje samo y -73..+73 na
+## telefonu, -136..+136 na desktopu (Eva je na y=0). Nivo se uspinje do
+## y=-290, pa je koristan opseg priblizno -330..+60.
+##
+## Prva verzija je crtala po y -720..+80 (kao da je kadar visok 800px) i
+## skoro se NISTA nije videlo - kristali i planete su bili iznad kadra.
+## Zato: ono sto raste iz zemlje ide od y=60 nagore, a ono sto "visi u
+## vazduhu" ide u opseg -300..-40, gde kamera zaista gleda.
+##
+## Ono sto raste iz zemlje vezano je za y=6, ne y=60: tlo je Rect2 koje
+## POCINJE na y=0 (debelo 60px), pa je njegova gornja ivica na nuli.
+## Dekor na y=60 zavrsi na DNU bloka tla i ne vidi se - to je prva verzija
+## i radila pogresno. Radni nivo sneg_1 iz istog razloga koristi y=50.
 func _draw_bg(_lvl: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20000
@@ -136,28 +150,34 @@ func _draw_bg(_lvl: Node) -> void:
 
 	# Zelenkasti sumrak - dublje je tamnije.
 	Draw2D.poly(bg, Color(0.2, 0.45, 0.5, 0.3), [
-		Vector2(-100, -620), Vector2(3200, -620),
+		Vector2(-100, -340), Vector2(3200, -340),
 		Vector2(3200, 80), Vector2(-100, 80)])
-	# Mehuri koji se dizu.
-	for i in 40:
-		var x := rng.randf_range(-60.0, 3160.0)
-		var y := rng.randf_range(-560.0, 40.0)
-		Draw2D.circle(bg, Vector2(x, y), rng.randf_range(3.0, 9.0),
-			Color(1, 1, 1, rng.randf_range(0.15, 0.35)))
-	# Alge iz dna.
-	for i in 24:
-		var x := rng.randf_range(-60.0, 3160.0)
-		var h := rng.randf_range(60.0, 180.0)
-		Draw2D.poly(bg, Color(0.2, 0.5, 0.4, 0.5), [
-			Vector2(x - 7, 60), Vector2(x + 7, 60),
-			Vector2(x + 3, 60 - h), Vector2(x - 3, 60 - h)])
-	# Potonule kupole u daljini.
-	for i in 7:
-		var x := rng.randf_range(0.0, 3100.0)
-		var r := rng.randf_range(50.0, 110.0)
+
+	# Potonule kupole - rastu IZ ZEMLJE, pa su vezane za y=60.
+	for i in 9:
+		var cx := rng.randf_range(0.0, 3100.0)
+		var r := rng.randf_range(46.0, 96.0)
 		var pts := PackedVector2Array()
 		for k in 12:
 			var a: float = PI + PI * float(k) / 11.0
-			pts.append(Vector2(x + cos(a) * r, 60 + sin(a) * r * 0.8))
-		Draw2D.poly(bg, Color(0.3, 0.5, 0.55, 0.35), pts)
+			pts.append(Vector2(cx + cos(a) * r, 60.0 + sin(a) * r * 0.8))
+		Draw2D.poly(bg, Color(0.3, 0.5, 0.55, 0.4), pts)
+		# Stub ispod kupole.
+		Draw2D.poly(bg, Color(0.26, 0.44, 0.5, 0.4), [
+			Vector2(cx - 7, 6), Vector2(cx + 7, 6),
+			Vector2(cx + 5, 6 - r * 0.5), Vector2(cx - 5, 6 - r * 0.5)])
 
+	# Alge - iz dna nagore, u kadru.
+	for i in 30:
+		var x := rng.randf_range(-60.0, 3160.0)
+		var h := rng.randf_range(40.0, 150.0)
+		Draw2D.poly(bg, Color(0.2, 0.5, 0.4, 0.5), [
+			Vector2(x - 7, 6), Vector2(x + 7, 6),
+			Vector2(x + 3, 6 - h), Vector2(x - 3, 6 - h)])
+
+	# Mehuri - u vazduhu, ali u VIDLJIVOM opsegu.
+	for i in 120:
+		var x := rng.randf_range(-60.0, 3160.0)
+		var y := rng.randf_range(-300.0, 40.0)
+		Draw2D.circle(bg, Vector2(x, y), rng.randf_range(3.0, 9.0),
+			Color(1, 1, 1, rng.randf_range(0.15, 0.35)))

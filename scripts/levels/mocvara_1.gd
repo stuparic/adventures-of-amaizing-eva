@@ -126,6 +126,20 @@ func _build_checkpoints() -> void:
 ## Pozadina nivoa. Ostrvo na mapi crta BiomeArt; ovo je scenografija IZA
 ## platformi, pa je namerno blago i bez jarkih boja - inace se platforme
 ## izgube u sarenilu.
+##
+## VISINE SU MERENE. Kamera prati Evu i pokazuje samo y -73..+73 na
+## telefonu, -136..+136 na desktopu (Eva je na y=0). Nivo se uspinje do
+## y=-290, pa je koristan opseg priblizno -330..+60.
+##
+## Prva verzija je crtala po y -720..+80 (kao da je kadar visok 800px) i
+## skoro se NISTA nije videlo - kristali i planete su bili iznad kadra.
+## Zato: ono sto raste iz zemlje ide od y=60 nagore, a ono sto "visi u
+## vazduhu" ide u opseg -300..-40, gde kamera zaista gleda.
+##
+## Ono sto raste iz zemlje vezano je za y=6, ne y=60: tlo je Rect2 koje
+## POCINJE na y=0 (debelo 60px), pa je njegova gornja ivica na nuli.
+## Dekor na y=60 zavrsi na DNU bloka tla i ne vidi se - to je prva verzija
+## i radila pogresno. Radni nivo sneg_1 iz istog razloga koristi y=50.
 func _draw_bg(_lvl: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 22022
@@ -136,30 +150,38 @@ func _draw_bg(_lvl: Node) -> void:
 
 	# Mutno zelena izmaglica.
 	Draw2D.poly(bg, Color(0.3, 0.42, 0.3, 0.3), [
-		Vector2(-100, -620), Vector2(3200, -620),
+		Vector2(-100, -340), Vector2(3200, -340),
 		Vector2(3200, 80), Vector2(-100, 80)])
-	# Trska - gusta, ispred i iza.
-	for i in 70:
+
+	# Mrtva drveta - iz zemlje, visoka.
+	for i in 14:
 		var x := rng.randf_range(-60.0, 3160.0)
-		var h := rng.randf_range(40.0, 130.0)
-		var a := rng.randf_range(0.35, 0.75)
-		Draw2D.poly(bg, Color(0.4, 0.5, 0.26, a), [
-			Vector2(x - 2.5, 60), Vector2(x + 2.5, 60),
-			Vector2(x + 1.5, 60 - h), Vector2(x - 1.5, 60 - h)])
-		Draw2D.poly(bg, Color(0.5, 0.34, 0.2, a), [
-			Vector2(x - 4.5, 60 - h), Vector2(x + 4.5, 60 - h),
-			Vector2(x + 3, 60 - h - 16.0), Vector2(x - 3, 60 - h - 16.0)])
-	# Mrtva drveta u izmaglici.
-	for i in 10:
-		var x := rng.randf_range(-60.0, 3160.0)
-		var h := rng.randf_range(120.0, 260.0)
-		Draw2D.poly(bg, Color(0.28, 0.26, 0.2, 0.5), [
-			Vector2(x - 8, 60), Vector2(x + 8, 60),
-			Vector2(x + 4, 60 - h), Vector2(x - 4, 60 - h)])
+		var h := rng.randf_range(110.0, 250.0)
+		Draw2D.poly(bg, Color(0.28, 0.26, 0.2, 0.55), [
+			Vector2(x - 8, 6), Vector2(x + 8, 6),
+			Vector2(x + 4, 6 - h), Vector2(x - 4, 6 - h)])
 		for k in 3:
 			var side := 1.0 if k % 2 == 0 else -1.0
-			Draw2D.poly(bg, Color(0.28, 0.26, 0.2, 0.5), [
-				Vector2(x, 60 - h * (0.5 + float(k) * 0.15)),
-				Vector2(x + side * 34.0, 60 - h * (0.62 + float(k) * 0.15)),
-				Vector2(x, 60 - h * (0.56 + float(k) * 0.15))])
+			Draw2D.poly(bg, Color(0.28, 0.26, 0.2, 0.55), [
+				Vector2(x, 6 - h * (0.5 + float(k) * 0.15)),
+				Vector2(x + side * 30.0, 6 - h * (0.62 + float(k) * 0.15)),
+				Vector2(x, 6 - h * (0.56 + float(k) * 0.15))])
 
+	# Trska - gusta, iz zemlje.
+	for i in 80:
+		var x := rng.randf_range(-60.0, 3160.0)
+		var h := rng.randf_range(30.0, 110.0)
+		var a := rng.randf_range(0.4, 0.8)
+		Draw2D.poly(bg, Color(0.4, 0.5, 0.26, a), [
+			Vector2(x - 2.5, 6), Vector2(x + 2.5, 6),
+			Vector2(x + 1.5, 6 - h), Vector2(x - 1.5, 6 - h)])
+		Draw2D.poly(bg, Color(0.5, 0.34, 0.2, a), [
+			Vector2(x - 4.5, 6 - h), Vector2(x + 4.5, 6 - h),
+			Vector2(x + 3, 6 - h - 14.0), Vector2(x - 3, 6 - h - 14.0)])
+
+	# Muve nad mocvarom - sitne tackice u vazduhu.
+	for i in 70:
+		var x := rng.randf_range(-60.0, 3160.0)
+		var y := rng.randf_range(-260.0, 30.0)
+		Draw2D.circle(bg, Vector2(x, y), rng.randf_range(1.6, 3.0),
+			Color(0.2, 0.24, 0.16, 0.5))

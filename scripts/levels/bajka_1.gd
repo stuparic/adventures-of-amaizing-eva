@@ -123,6 +123,20 @@ func _build_checkpoints() -> void:
 ## Pozadina nivoa. Ostrvo na mapi crta BiomeArt; ovo je scenografija IZA
 ## platformi, pa je namerno blago i bez jarkih boja - inace se platforme
 ## izgube u sarenilu.
+##
+## VISINE SU MERENE. Kamera prati Evu i pokazuje samo y -73..+73 na
+## telefonu, -136..+136 na desktopu (Eva je na y=0). Nivo se uspinje do
+## y=-290, pa je koristan opseg priblizno -330..+60.
+##
+## Prva verzija je crtala po y -720..+80 (kao da je kadar visok 800px) i
+## skoro se NISTA nije videlo - kristali i planete su bili iznad kadra.
+## Zato: ono sto raste iz zemlje ide od y=60 nagore, a ono sto "visi u
+## vazduhu" ide u opseg -300..-40, gde kamera zaista gleda.
+##
+## Ono sto raste iz zemlje vezano je za y=6, ne y=60: tlo je Rect2 koje
+## POCINJE na y=0 (debelo 60px), pa je njegova gornja ivica na nuli.
+## Dekor na y=60 zavrsi na DNU bloka tla i ne vidi se - to je prva verzija
+## i radila pogresno. Radni nivo sneg_1 iz istog razloga koristi y=50.
 func _draw_bg(_lvl: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 21011
@@ -133,35 +147,39 @@ func _draw_bg(_lvl: Node) -> void:
 
 	# Ljubicasti sumrak - bajkovito, ne obicna suma.
 	Draw2D.poly(bg, Color(0.42, 0.3, 0.5, 0.26), [
-		Vector2(-100, -640), Vector2(3200, -640),
+		Vector2(-100, -340), Vector2(3200, -340),
 		Vector2(3200, 80), Vector2(-100, 80)])
-	# Drvece sa ljubicastim krosnjama.
-	for i in 22:
+
+	# Drvece sa ljubicastim krosnjama - iz zemlje nagore.
+	for i in 26:
 		var x := rng.randf_range(-60.0, 3160.0)
-		var h := rng.randf_range(150.0, 330.0)
+		var h := rng.randf_range(120.0, 300.0)
 		Draw2D.poly(bg, Color(0.34, 0.24, 0.3, 0.8), [
-			Vector2(x - 12, 60), Vector2(x + 12, 60),
-			Vector2(x + 7, 60 - h), Vector2(x - 7, 60 - h)])
+			Vector2(x - 12, 6), Vector2(x + 12, 6),
+			Vector2(x + 7, 6 - h), Vector2(x - 7, 6 - h)])
 		for k in 3:
-			Draw2D.circle(bg, Vector2(x + (float(k) - 1.0) * 30.0,
-				60 - h - 10.0), rng.randf_range(38.0, 62.0),
-				Color(0.6, 0.36, 0.66, 0.75))
-	# Velike pecurke.
-	for i in 14:
+			Draw2D.circle(bg, Vector2(x + (float(k) - 1.0) * 26.0, 6 - h - 8.0),
+				rng.randf_range(30.0, 52.0), Color(0.6, 0.36, 0.66, 0.75))
+
+	# Velike pecurke - na zemlji.
+	for i in 20:
 		var x := rng.randf_range(-60.0, 3160.0)
-		var s := rng.randf_range(0.8, 1.8)
-		Draw2D.poly(bg, Color(0.96, 0.94, 0.9, 0.8), [
-			Vector2(x - 6 * s, 60), Vector2(x + 6 * s, 60),
-			Vector2(x + 4 * s, 60 - 22 * s), Vector2(x - 4 * s, 60 - 22 * s)])
+		var s := rng.randf_range(0.9, 2.0)
+		Draw2D.poly(bg, Color(0.96, 0.94, 0.9, 0.85), [
+			Vector2(x - 6 * s, 6), Vector2(x + 6 * s, 6),
+			Vector2(x + 4 * s, 6 - 22 * s), Vector2(x - 4 * s, 6 - 22 * s)])
 		var cap := PackedVector2Array()
 		for k in 10:
 			var a: float = PI + PI * float(k) / 9.0
-			cap.append(Vector2(x + cos(a) * 24 * s, 60 - 20 * s + sin(a) * 16 * s))
-		Draw2D.poly(bg, Color(0.9, 0.32, 0.42, 0.85), cap)
-	# Svici.
-	for i in 34:
-		var x := rng.randf_range(-60.0, 3160.0)
-		var y := rng.randf_range(-460.0, 40.0)
-		Draw2D.circle(bg, Vector2(x, y), rng.randf_range(2.5, 5.0),
-			Color(1, 0.97, 0.5, rng.randf_range(0.4, 0.8)))
+			cap.append(Vector2(x + cos(a) * 24 * s, 6 - 20 * s + sin(a) * 16 * s))
+		Draw2D.poly(bg, Color(0.9, 0.32, 0.42, 0.9), cap)
+		for k in 3:
+			Draw2D.circle(bg, Vector2(x + (float(k) - 1.0) * 9.0 * s,
+				6 - 26 * s), 2.6 * s, Color(1, 1, 1, 0.9))
 
+	# Svici - u vazduhu, u vidljivom opsegu.
+	for i in 110:
+		var x := rng.randf_range(-60.0, 3160.0)
+		var y := rng.randf_range(-300.0, 40.0)
+		Draw2D.circle(bg, Vector2(x, y), rng.randf_range(2.5, 5.0),
+			Color(1, 0.97, 0.5, rng.randf_range(0.45, 0.85)))

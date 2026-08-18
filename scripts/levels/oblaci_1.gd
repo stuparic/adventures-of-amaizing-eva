@@ -123,6 +123,20 @@ func _build_checkpoints() -> void:
 ## Pozadina nivoa. Ostrvo na mapi crta BiomeArt; ovo je scenografija IZA
 ## platformi, pa je namerno blago i bez jarkih boja - inace se platforme
 ## izgube u sarenilu.
+##
+## VISINE SU MERENE. Kamera prati Evu i pokazuje samo y -73..+73 na
+## telefonu, -136..+136 na desktopu (Eva je na y=0). Nivo se uspinje do
+## y=-290, pa je koristan opseg priblizno -330..+60.
+##
+## Prva verzija je crtala po y -720..+80 (kao da je kadar visok 800px) i
+## skoro se NISTA nije videlo - kristali i planete su bili iznad kadra.
+## Zato: ono sto raste iz zemlje ide od y=60 nagore, a ono sto "visi u
+## vazduhu" ide u opseg -300..-40, gde kamera zaista gleda.
+##
+## Ono sto raste iz zemlje vezano je za y=6, ne y=60: tlo je Rect2 koje
+## POCINJE na y=0 (debelo 60px), pa je njegova gornja ivica na nuli.
+## Dekor na y=60 zavrsi na DNU bloka tla i ne vidi se - to je prva verzija
+## i radila pogresno. Radni nivo sneg_1 iz istog razloga koristi y=50.
 func _draw_bg(_lvl: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20337
@@ -133,22 +147,23 @@ func _draw_bg(_lvl: Node) -> void:
 
 	# Svetlo nebo.
 	Draw2D.poly(bg, Color(0.8, 0.9, 0.99, 0.5), [
-		Vector2(-100, -700), Vector2(3200, -700),
+		Vector2(-100, -340), Vector2(3200, -340),
 		Vector2(3200, 80), Vector2(-100, 80)])
-	# Slojevi oblaka - vise spojenih krugova, kao pravi oblak.
-	for i in 26:
+
+	# Oblaci - vise spojenih krugova, u vidljivom opsegu.
+	for i in 70:
 		var x := rng.randf_range(-100.0, 3200.0)
-		var y := rng.randf_range(-620.0, 40.0)
-		var r := rng.randf_range(26.0, 62.0)
+		var y := rng.randf_range(-300.0, 30.0)
+		var r := rng.randf_range(22.0, 52.0)
 		for k in 5:
 			Draw2D.circle(bg, Vector2(x + (float(k) - 2.0) * r * 0.62,
 				y + sin(float(k)) * r * 0.2),
 				r * rng.randf_range(0.6, 1.0), Color(1, 1, 1, 0.5))
-	# Daleke ptice.
-	for i in 9:
+
+	# Ptice - visoko, ali u kadru.
+	for i in 32:
 		var x := rng.randf_range(0.0, 3100.0)
-		var y := rng.randf_range(-520.0, -160.0)
-		Draw2D.poly(bg, Color(0.6, 0.66, 0.78, 0.5), [
+		var y := rng.randf_range(-290.0, -90.0)
+		Draw2D.poly(bg, Color(0.6, 0.66, 0.78, 0.55), [
 			Vector2(x - 12, y), Vector2(x, y - 5), Vector2(x + 12, y),
 			Vector2(x, y - 1)])
-

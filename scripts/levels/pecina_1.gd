@@ -123,6 +123,20 @@ func _build_checkpoints() -> void:
 ## Pozadina nivoa. Ostrvo na mapi crta BiomeArt; ovo je scenografija IZA
 ## platformi, pa je namerno blago i bez jarkih boja - inace se platforme
 ## izgube u sarenilu.
+##
+## VISINE SU MERENE. Kamera prati Evu i pokazuje samo y -73..+73 na
+## telefonu, -136..+136 na desktopu (Eva je na y=0). Nivo se uspinje do
+## y=-290, pa je koristan opseg priblizno -330..+60.
+##
+## Prva verzija je crtala po y -720..+80 (kao da je kadar visok 800px) i
+## skoro se NISTA nije videlo - kristali i planete su bili iznad kadra.
+## Zato: ono sto raste iz zemlje ide od y=60 nagore, a ono sto "visi u
+## vazduhu" ide u opseg -300..-40, gde kamera zaista gleda.
+##
+## Ono sto raste iz zemlje vezano je za y=6, ne y=60: tlo je Rect2 koje
+## POCINJE na y=0 (debelo 60px), pa je njegova gornja ivica na nuli.
+## Dekor na y=60 zavrsi na DNU bloka tla i ne vidi se - to je prva verzija
+## i radila pogresno. Radni nivo sneg_1 iz istog razloga koristi y=50.
 func _draw_bg(_lvl: Node) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20674
@@ -133,26 +147,32 @@ func _draw_bg(_lvl: Node) -> void:
 
 	# Mrak - pecina je tamna, ali ne crna (platforme moraju da se vide).
 	Draw2D.poly(bg, Color(0.14, 0.13, 0.22, 0.55), [
-		Vector2(-100, -700), Vector2(3200, -700),
+		Vector2(-100, -340), Vector2(3200, -340),
 		Vector2(3200, 80), Vector2(-100, 80)])
-	# Stalaktiti sa svoda.
-	for i in 30:
+
+	# Stalaktiti - VISE sa svoda, pa vise sa vrha kadra nadole.
+	for i in 34:
 		var x := rng.randf_range(-60.0, 3160.0)
-		var h := rng.randf_range(50.0, 150.0)
+		var h := rng.randf_range(40.0, 120.0)
 		var w := rng.randf_range(12.0, 26.0)
 		Draw2D.poly(bg, Color(0.26, 0.24, 0.36), [
-			Vector2(x - w, -620), Vector2(x + w, -620), Vector2(x, -620 + h)])
-	# Kristali koji svetle - jedini izvor boje.
+			Vector2(x - w, -330), Vector2(x + w, -330), Vector2(x, -330 + h)])
+
+	# Kristali - RASTU IZ ZEMLJE, pa su vezani za y=60. Jedini izvor boje.
 	const CRYS: Array[Color] = [
-		Color(0.6, 0.82, 0.96, 0.75), Color(0.78, 0.66, 0.96, 0.75),
-		Color(0.55, 0.95, 0.88, 0.75)]
-	for i in 26:
+		Color(0.6, 0.82, 0.96, 0.8), Color(0.78, 0.66, 0.96, 0.8),
+		Color(0.55, 0.95, 0.88, 0.8)]
+	for i in 40:
 		var x := rng.randf_range(-60.0, 3160.0)
-		var y := rng.randf_range(-520.0, 50.0)
-		var h := rng.randf_range(18.0, 40.0)
+		var h := rng.randf_range(26.0, 78.0)
+		var w := rng.randf_range(9.0, 20.0)
 		var col: Color = CRYS[i % 3]
 		Draw2D.poly(bg, col, [
-			Vector2(x - 8, y), Vector2(x, y - h), Vector2(x + 8, y)])
-		Draw2D.circle(bg, Vector2(x, y - h * 0.4), h * 0.4,
-			Color(col.r, col.g, col.b, 0.12))
-
+			Vector2(x - w, 6), Vector2(x, 6 - h), Vector2(x + w, 6)])
+		# Svetliji greben - kristal se sjaji.
+		Draw2D.poly(bg, Color(1, 1, 1, 0.3), [
+			Vector2(x - w * 0.3, 6), Vector2(x, 6 - h),
+			Vector2(x + w * 0.1, 6)])
+		# Blagi oreol oko kristala.
+		Draw2D.circle(bg, Vector2(x, 6 - h * 0.5), h * 0.45,
+			Color(col.r, col.g, col.b, 0.1))
