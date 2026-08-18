@@ -113,18 +113,15 @@ func _build() -> void:
 	total.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	trow.add_child(total)
 
-	# --- Spisak nivoa, skrolabilan ---
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(PANEL_W - PAD * 2, 340)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	col.add_child(scroll)
-
-	_rows_box = VBoxContainer.new()
-	_rows_box.add_theme_constant_override("separation", 6)
-	_rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_rows_box)
-
-	# --- Dugmad dole ---
+	# --- Dugmad: IZNAD liste, ne ispod ---
+	#
+	# Moraju biti iznad jer Godot NE odseca klik po granicama
+	# ScrollContainer-a. Mereno: scroll je visok 340px, ali lista od 14
+	# nivoa unutra je 1144px i njena deca ostaju klikabilna van scroll-a.
+	# Kad su dugmad bila ispod liste, nevidljiv red-nivo (y=550, h=62) je
+	# prekrivao "OBRISI SVE" (y=562) i klik je isao na red - potvrda za
+	# brisanje nikad nije iskakala, pa reset "nije radio".
+	# clip_contents ne pomaze: on odseca iscrtavanje, ne pogadjanje klika.
 	var btns := HBoxContainer.new()
 	btns.add_theme_constant_override("separation", 14)
 	btns.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -138,6 +135,30 @@ func _build() -> void:
 	))
 	btns.add_child(_make_button("OBRIŠI SVE", Color(0.9, 0.45, 0.45),
 		_ask_reset))
+
+	# --- Spisak nivoa, skrolabilan ---
+	#
+	# clip_contents = true je OBAVEZNO. Bez njega ScrollContainer odseca
+	# samo GRAFIKU, ali njegova deca ostaju klikabilna van njegovih granica:
+	# lista od 14 nivoa je visoka 1144px, prelivala se preko dna panela i
+	# jedan nevidljiv red-nivo je prekrivao dugme "OBRISI SVE" (mereno:
+	# red na y=550 h=62 preko dugmeta na y=562) - klik je isao na red, pa
+	# potvrda za brisanje nikad nije iskakala.
+	#
+	# size_flags_vertical = FILL drzi visinu na custom_minimum_size, inace
+	# VBoxContainer rastegne scroll po sadrzaju i skrol nema smisla.
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(PANEL_W - PAD * 2, 340)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.clip_contents = true
+	scroll.size_flags_vertical = Control.SIZE_FILL
+	col.add_child(scroll)
+
+	_rows_box = VBoxContainer.new()
+	_rows_box.add_theme_constant_override("separation", 6)
+	_rows_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_rows_box)
+
 
 
 ## Dugme u stilu HUD-a. focus_mode = NONE je OBAVEZNO: fokusirano dugme
@@ -336,21 +357,92 @@ func _level_row(index: int) -> Control:
 ## --- Reset napretka ---
 ##
 ## Trazi potvrdu: dete moze slucajno da pritisne, a ovo brise sve.
+##
+## Potvrda je obican Control panel, NE ConfirmationDialog.
+##
+## ConfirmationDialog je Window. Kao dete ovog CanvasLayer-a bio je
+## "embedded", a `_root` (Control preko celog ekrana sa mouse_filter =
+## STOP) presretao je klik pre njega - dugme "Obrisi" se videlo ali se
+## nije moglo kliknuti. Mereno: emit_signal("pressed") na OK dugmetu je
+## resetovao (178 -> 0), a pravi klik misem na tacne koordinate nije
+## menjao nista (178 -> 178). Takodje su mu koordinate bile u prostoru
+## Window-a (OK na (182,67)) a ne ekrana (dijalog na (482,307)).
 func _ask_reset() -> void:
 	Audio.play("hurt")
-	var dlg := ConfirmationDialog.new()
-	dlg.title = "Obriši napredak?"
-	dlg.dialog_text = "Sve zvezdice i vremena će biti obrisani.\nOvo se ne može vratiti."
-	dlg.ok_button_text = "Obriši"
-	dlg.cancel_button_text = "Ne"
-	add_child(dlg)
-	dlg.confirmed.connect(func() -> void:
-		Game.reset_progress()
-		Audio.play("checkpoint")
-		_refresh()
-		dlg.queue_free()
-		# Mapa mora da se prekrca da se katanci i boje puteva osveze.
-		get_tree().reload_current_scene()
-	)
-	dlg.canceled.connect(func() -> void: dlg.queue_free())
-	dlg.popup_centered()
+
+	# Preko celog ekrana, iznad menija - hvata klik da se ne moze
+	# slucajno pritisnuti nesto ispod.
+	# PASS, ne STOP: STOP na cvoru preko celog ekrana pojede klik PRE svoje
+	# dece, pa dugmad "NE"/"OBRISI" nisu reagovala (mereno: 0 pritisaka).
+	# PASS pusti klik deci, a sam ga zaustavi ako nije pogodio nista - tako
+	# se ne moze kliknuti kroz potvrdu na meni ispod.
+	var over := Control.new()
+	over.name = "ResetConfirm"
+	over.set_anchors_preset(Control.PRESET_FULL_RECT)
+	over.mouse_filter = Control.MOUSE_FILTER_PASS
+	_root.add_child(over)
+
+	var shade := ColorRect.new()
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	shade.color = Color(0.05, 0.08, 0.14, 0.6)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	over.add_child(shade)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	over.add_child(center)
+
+	var box := PanelContainer.new()
+	box.custom_minimum_size = Vector2(560, 0)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bst := StyleBoxFlat.new()
+	bst.bg_color = Color(1, 0.98, 0.95)
+	bst.set_corner_radius_all(22)
+	bst.set_border_width_all(6)
+	bst.border_color = Color(0.9, 0.45, 0.45)
+	bst.set_content_margin_all(24)
+	box.add_theme_stylebox_override("panel", bst)
+	center.add_child(box)
+
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 16)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(col)
+
+	var q := Label.new()
+	q.text = "Obrisati sve zvezdice?"
+	q.add_theme_font_size_override("font_size", 32)
+	q.add_theme_color_override("font_color", Color(0.75, 0.3, 0.3))
+	q.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	q.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(q)
+
+	var sub := Label.new()
+	sub.text = "Igra počinje od početka.\nOvo se ne može vratiti."
+	sub.add_theme_font_size_override("font_size", 21)
+	sub.add_theme_color_override("font_color", Color(0.4, 0.4, 0.45))
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(sub)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(row)
+
+	# "NE" je prvo i plavo - lakse je odustati nego obrisati.
+	row.add_child(_make_button("NE", Color(0.42, 0.66, 0.9),
+		func() -> void:
+			Audio.play("checkpoint")
+			over.queue_free()
+	))
+	row.add_child(_make_button("OBRIŠI", Color(0.9, 0.4, 0.4),
+		func() -> void:
+			Game.reset_progress()
+			Audio.play("star")
+			over.queue_free()
+			hide_menu()
+			# Mapa se prekrca da se katanci i boje puteva osveze.
+			get_tree().reload_current_scene()
+	))
